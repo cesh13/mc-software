@@ -1,0 +1,13 @@
+{
+  "name": "@accounting/shared",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./src/schemas.ts",
+  "types": "./src/schemas.ts",
+  "exports": {
+    ".": "./src/schemas.ts"
+  },
+  "dependencies": {
+    "zod": "^3.22.4"
+  }
+}

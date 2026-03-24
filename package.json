@@ -1,0 +1,25 @@
+{
+  "name": "accounting-platform",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel --filter \"./apps/*\" dev",
+    "build": "pnpm --filter \"./packages/*\" build && pnpm --filter \"./apps/*\" build",
+    "db:init": "tsx scripts/init-database.ts",
+    "db:generate": "pnpm --filter api db:generate",
+    "db:push": "pnpm --filter api db:push",
+    "create-admin": "tsx scripts/create-admin-simple.ts",
+    "create-client-user": "tsx scripts/create-client-user.ts",
+    "delete-user": "tsx scripts/delete-user.ts",
+    "provision-client": "tsx scripts/provision-client.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3",
+    "tsx": "^4.7.0",
+    "postgres": "^3.4.3",
+    "dotenv": "^16.4.1",
+    "bcryptjs": "^2.4.3",
+    "@types/bcryptjs": "^2.4.6"
+  }
+}
