@@ -2,6 +2,8 @@
 
 import { useSession } from "@/lib/auth-client";
 
+import { Card } from "@/components/ui/card";
+
 export default function DashboardPage() {
   const { data: session } = useSession();
   
@@ -20,7 +22,7 @@ export default function DashboardPage() {
 
   return (
     <div className="px-4 py-6 sm:px-0">
-      <div className="bg-white shadow rounded-lg p-6">
+      <Card className="p-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">
           Welcome to Accounting Platform
         </h1>
@@ -29,7 +31,7 @@ export default function DashboardPage() {
             ? "You are logged in as an administrator."
             : `You are logged in to client: ${userMeta?.clientSlug || "Unknown"}`}
         </p>
-      </div>
+      </Card>
     </div>
   );
 }

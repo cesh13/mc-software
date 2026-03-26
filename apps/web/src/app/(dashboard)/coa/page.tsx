@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
+import { Card } from "@/components/ui/card";
+
 export default function CoaPage() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
@@ -67,7 +69,7 @@ export default function CoaPage() {
 
   return (
     <div className="px-4 py-6 sm:px-0">
-      <div className="bg-white shadow rounded-lg p-6">
+      <Card className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Chart of Accounts</h1>
           <button
@@ -201,7 +203,7 @@ export default function CoaPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
