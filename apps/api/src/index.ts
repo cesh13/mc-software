@@ -1,49 +1,62 @@
-import "./env.js";
-import { Hono } from "hono";
-import { cors } from "hono/cors";
-import { logger } from "hono/logger";
-import { serve } from "@hono/node-server";
-import { env } from "./env.js";
-import { auth } from "./lib/auth.js";
-import { requireAuth, requireClientSchema, requireAdmin } from "./middleware/auth.js";
-import coaRouter from "./routes/coa.js";
-import adminRouter from "./routes/admin.js";
+import { serve } from '@hono/node-server'
+import { serveStatic } from '@hono/node-server/serve-static'
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+import { openDatabase } from './db/client.js'
+import { runPlatformMigrations } from './db/migrate.js'
+import { initAuth, getAuth } from './lib/auth.js'
+import { loadModules } from './lib/module-loader.js'
+import { getSettings } from './lib/settings.js'
+import setup from './routes/setup.js'
+import modulesRoute from './routes/modules.js'
+import users from './routes/users.js'
+import appSettings from './routes/app-settings.js'
 
-const app = new Hono();
+async function start() {
+  // 1. Open encrypted DB
+  await openDatabase()
 
-// Middleware
-app.use("*", logger());
-app.use(
-  "*",
-  cors({
-    origin: env.WEB_URL,
-    credentials: true,
-    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization", "X-Client-Slug"],
+  // 2. Run platform migrations (platform tables always first)
+  await runPlatformMigrations()
+
+  // 3. Initialize auth (needs open DB)
+  initAuth()
+
+  const app = new Hono()
+
+  app.use('*', cors({ origin: '*', credentials: true }))
+
+  // 4. Platform routes
+  app.get('/health', (c) => c.json({ ok: true, ts: new Date().toISOString() }))
+  app.route('/api/setup', setup)
+  app.route('/api/modules', modulesRoute)
+  app.route('/api/users', users)
+  app.route('/api/settings', appSettings)
+
+  // Better Auth handles /api/auth/* itself
+  app.on(['GET', 'POST'], '/api/auth/**', (c) => getAuth().handler(c.req.raw))
+
+  // 5. Load enabled modules (their migrations → routes) in dependency order
+  await loadModules(app)
+
+  // 6. Serve built Next.js static files
+  // In production the tray app sets ACCOUNTING_UI_DIR.
+  // In dev, Next.js runs separately on its own port.
+  const uiDir = process.env.ACCOUNTING_UI_DIR
+  if (uiDir) {
+    app.use('*', serveStatic({ root: uiDir }))
+    // Fallback: serve index.html for SPA navigation
+    app.use('*', serveStatic({ path: `${uiDir}/index.html` }))
+  }
+
+  // 7. Listen
+  const port = Number(process.env.PORT ?? (await getSettings('port')) ?? 3001)
+  serve({ fetch: app.fetch, port, hostname: '0.0.0.0' }, (info) => {
+    console.log(`Accounting Platform API running on http://0.0.0.0:${info.port}`)
   })
-);
+}
 
-// Health check
-app.get("/health", (c) => c.json({ status: "ok" }));
-
-// Auth routes (public)
-app.on(["GET", "POST"], "/api/auth/**", (c) => auth.handler(c.req.raw));
-
-// Admin routes (require auth + admin role)
-app.use("/api/admin/*", requireAuth);
-app.use("/api/admin/*", requireAdmin);
-app.route("/api/admin", adminRouter);
-
-// Client routes (require auth + client schema)
-app.use("/api/*", requireAuth);
-app.use("/api/*", requireClientSchema);
-app.route("/api/coa", coaRouter);
-
-console.log(`🚀 API server starting on port ${env.PORT}`);
-
-serve({
-  fetch: app.fetch,
-  port: env.PORT,
-});
-
-console.log(`✅ API server running at http://localhost:${env.PORT}`);
+start().catch((err) => {
+  console.error('Fatal startup error:', err)
+  process.exit(1)
+})

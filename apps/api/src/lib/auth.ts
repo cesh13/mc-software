@@ -1,55 +1,45 @@
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { publicDb } from "../db/client.js";
-import { env } from "../env.js";
-import * as schema from "../db/public-schema.js";
+import { betterAuth } from 'better-auth'
+import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import { admin } from 'better-auth/plugins'
+import { getDb } from '../db/client.js'
+import * as schema from '../db/schema.js'
 
-export const auth = betterAuth({
-  database: drizzleAdapter(publicDb, {
-    provider: "pg",
-    schema: {
-      user: schema.user,
-      account: schema.account,
-      session: schema.session,
-      verification: schema.verification,
+function createAuth() {
+  return betterAuth({
+    database: drizzleAdapter(getDb(), {
+      provider: 'sqlite',
+      schema: {
+        user: schema.user,
+        session: schema.session,
+        account: schema.account,
+        verification: schema.verification,
+      },
+    }),
+    emailAndPassword: { enabled: true },
+    session: {
+      expiresIn: 8 * 60 * 60,
+      updateAge: 60 * 60,
+      cookieCache: { enabled: false },
     },
-  }),
-  emailAndPassword: {
-    enabled: true,
-    requireEmailVerification: false,
-    minPasswordLength: 8,
-    maxPasswordLength: 128,
-  },
-  baseURL: env.BETTER_AUTH_URL,
-  trustedOrigins: [env.WEB_URL],
-  session: {
-    expiresIn: 60 * 60 * 24 * 7, // 7 days
-    updateAge: 60 * 60 * 24, // 1 day
-  },
-  user: {
-    additionalFields: {
-      metadata: {
-        type: "string",
-        required: false,
-        returned: true,
-      },
-      banned: {
-        type: "boolean",
-        required: false,
-        defaultValue: false,
-        returned: true,
-      },
-      bannedAt: {
-        type: "date",
-        required: false,
-        returned: true,
-      },
-    },
-  },
-  advanced: {
-    generateId: () => crypto.randomUUID(),
-  },
-});
+    plugins: [
+      admin({
+        defaultRole: 'member',
+        adminRoles: ['owner', 'admin'],
+      }),
+    ],
+  })
+}
 
-export type Session = typeof auth.$Infer.Session.session;
-export type User = typeof auth.$Infer.Session.user;
+type AuthInstance = ReturnType<typeof createAuth>
+
+let _auth: AuthInstance | null = null
+
+export function initAuth(): AuthInstance {
+  _auth = createAuth()
+  return _auth
+}
+
+export function getAuth(): AuthInstance {
+  if (!_auth) throw new Error('Auth not initialized')
+  return _auth
+}

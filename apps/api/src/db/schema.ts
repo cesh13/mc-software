@@ -1,124 +1,73 @@
-import { pgTable, varchar, boolean, timestamp, uuid, numeric, pgEnum } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
 
-// Enums
-export const accountTypeEnum = pgEnum("account_type", ["asset", "liability", "equity", "revenue", "expense"]);
-export const normalBalanceEnum = pgEnum("normal_balance", ["debit", "credit"]);
-export const journalEntryStatusEnum = pgEnum("journal_entry_status", ["draft", "posted", "void"]);
+// ── Better Auth tables ──────────────────────────────────────────────────────
 
-// Accounts
-export const accounts = pgTable("accounts", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  code: varchar("code", { length: 20 }).notNull().unique(),
-  name: varchar("name", { length: 200 }).notNull(),
-  type: accountTypeEnum("type").notNull(),
-  normalBalance: normalBalanceEnum("normal_balance").notNull(),
-  parentId: uuid("parent_id"),
-  description: varchar("description", { length: 500 }),
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+export const user = sqliteTable('user', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
+  image: text('image'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+  // admin plugin
+  role: text('role').notNull().default('member'),
+  banned: integer('banned', { mode: 'boolean' }).default(false),
+  banReason: text('ban_reason'),
+  banExpires: text('ban_expires'),
+})
 
-export const accountsRelations = relations(accounts, ({ one, many }) => ({
-  parent: one(accounts, {
-    fields: [accounts.parentId],
-    references: [accounts.id],
-  }),
-  children: many(accounts),
-}));
+export const session = sqliteTable('session', {
+  id: text('id').primaryKey(),
+  expiresAt: text('expires_at').notNull(),
+  token: text('token').notNull().unique(),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  impersonatedBy: text('impersonated_by'),
+})
 
-// Vendors
-export const vendors = pgTable("vendors", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  code: varchar("code", { length: 20 }).notNull().unique(),
-  name: varchar("name", { length: 200 }).notNull(),
-  email: varchar("email", { length: 200 }),
-  phone: varchar("phone", { length: 50 }),
-  address: varchar("address", { length: 500 }),
-  apAccountId: uuid("ap_account_id").notNull(),
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+export const account = sqliteTable('account', {
+  id: text('id').primaryKey(),
+  accountId: text('account_id').notNull(),
+  providerId: text('provider_id').notNull(),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  idToken: text('id_token'),
+  accessTokenExpiresAt: text('access_token_expires_at'),
+  refreshTokenExpiresAt: text('refresh_token_expires_at'),
+  scope: text('scope'),
+  password: text('password'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
 
-export const vendorsRelations = relations(vendors, ({ one }) => ({
-  apAccount: one(accounts, {
-    fields: [vendors.apAccountId],
-    references: [accounts.id],
-  }),
-}));
+export const verification = sqliteTable('verification', {
+  id: text('id').primaryKey(),
+  identifier: text('identifier').notNull(),
+  value: text('value').notNull(),
+  expiresAt: text('expires_at').notNull(),
+  createdAt: text('created_at'),
+  updatedAt: text('updated_at'),
+})
 
-// Customers
-export const customers = pgTable("customers", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  code: varchar("code", { length: 20 }).notNull().unique(),
-  name: varchar("name", { length: 200 }).notNull(),
-  email: varchar("email", { length: 200 }),
-  phone: varchar("phone", { length: 50 }),
-  address: varchar("address", { length: 500 }),
-  arAccountId: uuid("ar_account_id").notNull(),
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+// ── Platform tables ─────────────────────────────────────────────────────────
 
-export const customersRelations = relations(customers, ({ one }) => ({
-  arAccount: one(accounts, {
-    fields: [customers.arAccountId],
-    references: [accounts.id],
-  }),
-}));
+export const settings = sqliteTable('settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
 
-// Fiscal Periods
-export const fiscalPeriods = pgTable("fiscal_periods", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: varchar("name", { length: 100 }).notNull(),
-  startDate: timestamp("start_date").notNull(),
-  endDate: timestamp("end_date").notNull(),
-  isClosed: boolean("is_closed").notNull().default(false),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-// Journal Entries
-export const journalEntries = pgTable("journal_entries", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  entryNumber: varchar("entry_number", { length: 50 }).notNull().unique(),
-  entryDate: timestamp("entry_date").notNull(),
-  description: varchar("description", { length: 500 }).notNull(),
-  status: journalEntryStatusEnum("status").notNull().default("draft"),
-  fiscalPeriodId: uuid("fiscal_period_id").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-export const journalEntriesRelations = relations(journalEntries, ({ one, many }) => ({
-  fiscalPeriod: one(fiscalPeriods, {
-    fields: [journalEntries.fiscalPeriodId],
-    references: [fiscalPeriods.id],
-  }),
-  lines: many(journalLines),
-}));
-
-// Journal Lines
-export const journalLines = pgTable("journal_lines", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  journalEntryId: uuid("journal_entry_id").notNull(),
-  accountId: uuid("account_id").notNull(),
-  debit: numeric("debit", { precision: 18, scale: 2 }).notNull().default("0.00"),
-  credit: numeric("credit", { precision: 18, scale: 2 }).notNull().default("0.00"),
-  description: varchar("description", { length: 500 }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-export const journalLinesRelations = relations(journalLines, ({ one }) => ({
-  journalEntry: one(journalEntries, {
-    fields: [journalLines.journalEntryId],
-    references: [journalEntries.id],
-  }),
-  account: one(accounts, {
-    fields: [journalLines.accountId],
-    references: [accounts.id],
-  }),
-}));
+export const modules = sqliteTable('modules', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  version: text('version').notNull(),
+  isEnabled: integer('is_enabled', { mode: 'boolean' }).notNull().default(false),
+  isAlwaysOn: integer('is_always_on', { mode: 'boolean' }).notNull().default(false),
+  enabledAt: text('enabled_at'),
+  installedAt: text('installed_at').notNull(),
+})

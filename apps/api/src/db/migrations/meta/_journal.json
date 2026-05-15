@@ -1,19 +1,19 @@
 {
-  "version": "5",
-  "dialect": "pg",
+  "version": "7",
+  "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
-      "version": "5",
-      "when": 1774378852951,
-      "tag": "0000_silly_doorman",
+      "version": "6",
+      "when": 1778874167246,
+      "tag": "0000_unusual_mac_gargan",
       "breakpoints": true
     },
     {
       "idx": 1,
-      "version": "7",
-      "when": 1774388157278,
-      "tag": "0001_add_user_banned_fields",
+      "version": "6",
+      "when": 1778874247422,
+      "tag": "0001_mysterious_magus",
       "breakpoints": true
     }
   ]

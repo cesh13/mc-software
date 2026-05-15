@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ["@accounting/shared"],
-};
+  output: 'export',
+  trailingSlash: true,
+  images: { unoptimized: true },
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig
