@@ -3,13 +3,13 @@ import Providers from './providers'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Accounting Platform',
-  description: 'Local-first accounting platform',
+  title: 'MC Software',
+  description: 'Sistema contable',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="es">
       <body>
         <Providers>{children}</Providers>
       </body>

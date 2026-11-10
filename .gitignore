@@ -11,3 +11,4 @@ release/
 # Legacy Visual FoxPro ERP source + client data (reference only, never commit)
 MCERP/
 !.env.example
+*.tsbuildinfo
