@@ -1,32 +1,20 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
+import { glEntryTypes, glCostCenters, glFiscalYears, glPeriods } from './schema/setup.js'
+import { glJournalEntries, glJournalLines } from './schema/entries.js'
+import { glBudgets } from './schema/budgets.js'
 
-export const glFiscalPeriods = sqliteTable('gl_fiscal_periods', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  startDate: text('start_date').notNull(),
-  endDate: text('end_date').notNull(),
-  isClosed: integer('is_closed', { mode: 'boolean' }).notNull().default(false),
-  createdAt: text('created_at').notNull(),
-})
+export * from './schema/setup.js'
+export * from './schema/entries.js'
+export * from './schema/budgets.js'
 
-export const glJournalEntries = sqliteTable('gl_journal_entries', {
-  id: text('id').primaryKey(),
-  date: text('date').notNull(),
-  reference: text('reference'),
-  memo: text('memo'),
-  periodId: text('period_id').notNull(),
-  createdBy: text('created_by').notNull(),
-  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
-  createdAt: text('created_at').notNull(),
-})
+// Statement layouts (legacy ESTADO01/02/03) are not modeled yet: they wait on
+// open question 8 (one report engine with templates) and the .frx extraction.
 
-export const glJournalLines = sqliteTable('gl_journal_lines', {
-  id: text('id').primaryKey(),
-  entryId: text('entry_id').notNull(),
-  accountId: text('account_id').notNull(),
-  debit: text('debit').notNull().default('0.00'),
-  credit: text('credit').notNull().default('0.00'),
-  memo: text('memo'),
-})
-
-export default { glFiscalPeriods, glJournalEntries, glJournalLines }
+export default {
+  glEntryTypes,
+  glCostCenters,
+  glFiscalYears,
+  glPeriods,
+  glJournalEntries,
+  glJournalLines,
+  glBudgets,
+}

@@ -63,6 +63,8 @@ Reglas de la plataforma: tablas con prefijo, montos como TEXT + decimal.js, sin 
 - `gl_fiscal_years` — empresa_id, name, start (AAAA-MM), end (AAAA-MM).
 - `gl_periods` — empresa_id, year, month, status (`open | closed`), closed_by, closed_at.
 - `gl_journal_entries` — empresa_id, period (`AAAA-MM`), entry_type_id, number, date, concept,
+  status (`borrador | aplicada`; solo las aplicadas cuentan en saldos y deben cuadrar),
+  imported_unbalanced (partida del legado importada con cargos ≠ abonos),
   source (`manual | bancos | iva | cierre | importado`), source_ref, is_active, created_by, timestamps.
   Único: `(empresa_id, period, entry_type_id, number)`.
 - `gl_journal_lines` — entry_id, line_no, account_id, cost_center_id, detail, debit, credit, collect_date (fcobro).
@@ -73,13 +75,28 @@ Reglas de la plataforma: tablas con prefijo, montos como TEXT + decimal.js, sin 
 (con roll-up por jerarquía). Si el volumen lo exige, se agrega una tabla caché que se
 actualiza en la misma transacción.
 
-### Cambios al scaffold actual
+### Estado del schema (implementado 2026-11-10)
 
-- `coa_accounts`: agregar `empresa_id`, `level`, `is_detail`, `requires_cost_center`,
-  `budget_group_id`; cambiar `type` a los 7 tipos legados; quitar el `unique` global de `code`.
-- `gl_fiscal_periods` → dividir en `gl_fiscal_years` + `gl_periods` mensuales.
-- `gl_journal_entries`: agregar `empresa_id`, `entry_type_id`, `number`, `period`, `source`.
-- `gl_journal_lines`: agregar `cost_center_id`, `line_no`.
+Implementado en `apps/api/src/db/schema-core.ts`, `modules/chart-of-accounts/schema.ts` y
+`modules/general-ledger/schema/`, con migraciones generadas. Diferencias con lo propuesto arriba:
+
+- Los grupos de presupuesto viven en chart-of-accounts como `coa_budget_groups` (no
+  `gl_budget_groups`): son un atributo de la cuenta y el catálogo no puede depender del GL.
+- `gl_periods` usa una columna `period` (`AAAA-MM`) en vez de `year` + `month`. Un mes sin
+  fila está abierto.
+- `gl_entry_types.number_width`: ancho del correlativo (6; `CP` usa 7).
+- `gl_statement_layouts` / `gl_statement_lines` **no se crearon**: esperan la pregunta 8 y la
+  extracción de los `.frx`.
+- `core_empresas.moneda` guarda un código ISO (por defecto `USD`). En el legado `moneda` es un
+  código numérico (se observó el valor `2`); el importador debe traducirlo.
+- La configuración contable por empresa (cuentas de IVA, tasas) aún no tiene tabla.
+- `gl_budgets`: el índice único no impide duplicados cuando `cost_center_id` es nulo
+  (en SQLite los nulos son distintos); la API debe validarlo.
+
+Llaves foráneas entre módulos: los módulos no se importan entre sí. Cada módulo declara en
+`refs.ts` un stub de las tablas ajenas que referencia (`core_empresas`, `coa_accounts`); el
+stub no se exporta desde `schema.ts`, así que drizzle-kit genera la llave foránea real sin
+crear ni alterar la tabla ajena. Migraciones de un módulo: `pnpm db:generate` en su carpeta.
 
 ## Migración de datos (DBF → SQLite)
 

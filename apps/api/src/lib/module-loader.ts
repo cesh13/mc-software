@@ -58,7 +58,13 @@ export async function loadModules(app: Hono): Promise<void> {
   for (const manifest of sorted) {
     const migrationsDir = path.join(modulesDir, manifest.id, 'migrations')
     if (existsSync(migrationsDir)) {
-      migrate(db, { migrationsFolder: migrationsDir })
+      // Each module tracks its own migrations. With the shared default table,
+      // drizzle skips any migration older than the newest one already applied,
+      // so a module migration generated before a platform one would never run.
+      migrate(db, {
+        migrationsFolder: migrationsDir,
+        migrationsTable: `__drizzle_migrations_${manifest.id.replace(/-/g, '_')}`,
+      })
     }
 
     const router = (await manifest.router()) as Hono

@@ -15,6 +15,13 @@
       "when": 1778874247422,
       "tag": "0001_mysterious_magus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794352780214,
+      "tag": "0002_moaning_captain_marvel",
+      "breakpoints": true
     }
   ]
 }

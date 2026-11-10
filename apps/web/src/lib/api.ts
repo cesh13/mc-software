@@ -1,10 +1,10 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+import { getApiBase } from './api-base'
 
 export async function apiFetch<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(`${getApiBase()}${path}`, {
     ...init,
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...init?.headers },

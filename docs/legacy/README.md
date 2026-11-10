@@ -3,6 +3,7 @@
 Punto de partida para cualquier sesión que trabaje en la migración del sistema anterior.
 Resume **dónde está el sistema viejo, cómo lo leemos, qué decidimos y en qué vamos**.
 Actualizar la sección *Progreso* al terminar cada módulo.
+El despliegue (servidor + clientes en red local) está en [docs/architecture.md](../architecture.md).
 
 ## 1. Dónde está el sistema anterior
 
@@ -85,7 +86,7 @@ Hallazgos útiles:
 
 | Módulo | Spec | Schema | API/UI | Importador | Paridad |
 |---|---|---|---|---|---|
-| CONTAC | ✅ [docs/legacy/contac](contac/README.md) — 16 preguntas abiertas | ⏳ scaffold no coincide (ver data-model) | — | — | — |
+| CONTAC | ✅ [docs/legacy/contac](contac/README.md) — 11 preguntas abiertas (las 5 que bloqueaban el schema ya están decididas) | ✅ core + catálogo + GL (sin estados ni configuración contable; ver data-model) | — | — | — |
 | BANCOC | — | — | — | — | — |
 | cxc64 | — | — | — | — | — |
 | INV64 | — | — | — | — | — |
@@ -95,7 +96,14 @@ Hallazgos útiles:
 | plan64 | — | — | — | — | — |
 
 Pendientes generales:
-- Responder [open-questions de CONTAC](contac/open-questions.md) con el negocio.
+- Responder las 11 [open-questions de CONTAC](contac/open-questions.md) restantes con el negocio
+  (decididas: 1, 2, 4, 5 y 13).
+- Las decisiones 1, 2, 4 y 13 se revisaron contra los datos de `MCERP/CONTAC` (2026-11-10): no las
+  contradicen, pero **solo hay una empresa** en disco (1 período, enero–diciembre, sin catálogo
+  alterno, 1 partida descuadrada de 5,215). Falta repetir la revisión con datos de más clientes
+  (`dbf/DBF.rar` no se abrió).
+- Hallazgos de esa revisión para el importador: `EMPRESAS.DBF` está en `fuente/`, no en `dbf/`;
+  `moneda` es un código numérico; hay 6 partidas en `DETAPART` sin encabezado en `PARTIDAS`;
+  `PERIODO` dice 2018 pero el libro cubre 2020-03 a 2024-03.
 - Extraer reportes `.frx` en detalle (se hará al construir cada reporte).
-- Ajustar `coa_accounts` y tablas `gl_*` al modelo del spec.
 - Confirmar qué opciones de menú ya no se usan (hay pantallas duplicadas, ej. `cgpar01` = `CGMPAR01`).

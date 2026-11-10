@@ -3,7 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "db:generate": "drizzle-kit generate"
+  },
   "dependencies": {
-    "@accounting/shared": "workspace:*"
+    "@accounting/shared": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.4"
   }
 }

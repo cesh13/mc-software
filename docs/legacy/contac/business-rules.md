@@ -25,7 +25,8 @@ Extraídas de `cgmpar01.scx`, `CGMPAR01.PRG`, `CGADIPAR.PRG`, `cgposteo.prg`,
 - No se puede eliminar una cuenta con movimientos, con saldos o con sub-cuentas.
 - Altas, cambios y bajas quedan en la **bitácora**.
 - Se puede crear la cuenta "al vuelo" desde la captura de partidas si no existe.
-- Existe un catálogo alterno **por período fiscal** (`periodo.cata`) — ver preguntas abiertas.
+- Existe un catálogo alterno **por período fiscal** (`periodo.cata`).
+  **Nueva plataforma:** un solo catálogo por empresa; el importador avisa si encuentra uno alterno.
 
 ## 3. Tipos de partida (comprobantes)
 
@@ -35,6 +36,8 @@ Extraídas de `cgmpar01.scx`, `CGMPAR01.PRG`, `CGADIPAR.PRG`, `cgposteo.prg`,
 - Si la integración con Bancos está activa, el número no puede chocar con uno ya
   asignado en el módulo de Bancos ("COMPROBANTE YA ASIGNADO EN EL SISTEMA DE BANCOS").
 - Si al grabar el número ya fue tomado por otro usuario, se reasigna el siguiente.
+- **Nueva plataforma:** se mantiene la numeración por tipo y por mes. El número de una
+  partida anulada no se reutiliza.
 
 ## 4. Captura de partidas (Elaboración de Partidas)
 
@@ -54,6 +57,8 @@ Al grabar:
 
 - Si cargos ≠ abonos muestra "La partida NO CUADRA por X". Si la configuración
   `cfg_cuadre` está activa, **no deja grabar**; si no, graba descuadrada.
+- **Nueva plataforma:** la partida descuadrada solo se puede grabar como **borrador**
+  (no afecta saldos ni reportes); aplicarla exige cargos = abonos. `cfg_cuadre` desaparece.
 - Modificar = reversar la partida anterior y grabar la nueva (afecta saldos).
 - Si alguna línea usa la cuenta de **IVA crédito fiscal** configurada → habilita
   "Ingresar al IVA" (registro en libro de compras). Si usa la cuenta de **renta** →
@@ -93,6 +98,10 @@ jerarquía). Desaparece el riesgo de saldos desincronizados y el "Posteo del Mes
    - si la cuenta usa centros de costo, una línea por centro de costo.
 3. La diferencia va a la cuenta de utilidad: utilidad → abono, pérdida → cargo.
 4. Se puede ver, imprimir y luego **aplicar** (graba como partida normal y queda en bitácora).
+
+**Nueva plataforma:** la partida de cierre lleva `source = cierre` y el Estado de Resultados
+la excluye. No hay partida de apertura: los saldos de balance se arrastran al calcularse
+desde las líneas. El año fiscal es configurable (enero–diciembre por defecto).
 
 ## 8. Configuración por empresa (`BANCOCFG.MEM`)
 

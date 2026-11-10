@@ -27,8 +27,8 @@ function createAuth() {
     // it, requests from localhost:3000 (dev) or any LAN IP are rejected (403).
     // NOTE: Better Auth also calls this during init with no request (undefined),
     // so we must guard with optional chaining.
-    trustedOrigins: async (request: Request) => {
-      const origin = (request as Request | undefined)?.headers?.get('origin') ?? ''
+    trustedOrigins: async (request?: Request) => {
+      const origin = request?.headers?.get('origin') ?? ''
       return origin ? [origin] : []
     },
     // Expose role + banned fields in session so requireRole middleware can read them
