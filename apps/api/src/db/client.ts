@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3-multiple-ciphers'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
+import { mkdirSync } from 'fs'
 import path from 'path'
 import { getCipherKey } from './cipher.js'
 import * as schema from './schema.js'
@@ -16,13 +17,16 @@ export async function openDatabase() {
   if (_db) return _db
 
   const key = await getCipherKey()
-  const dbPath = path.join(getDataDir(), 'accounting.db')
+  const dataDir = getDataDir()
+  mkdirSync(dataDir, { recursive: true })
+  const dbPath = path.join(dataDir, 'accounting.db')
 
   const sqlite = new Database(dbPath)
 
-  // Encrypt with SQLCipher AES-256
-  sqlite.pragma(`key="${key}"`)
-  sqlite.pragma('cipher=sqlcipher')
+  // SQLCipher: cipher config must come before key.
+  // better-sqlite3-multiple-ciphers defaults to sqlcipher4 — this is explicit.
+  sqlite.pragma("cipher = 'sqlcipher'")
+  sqlite.pragma(`key = "${key}"`)
 
   // Performance + safety settings
   sqlite.pragma('journal_mode=WAL')

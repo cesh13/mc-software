@@ -12,7 +12,6 @@ setup.get('/status', async (c) => {
   return c.json({ needsSetup: firstUser.length === 0 })
 })
 
-// Disabled after first use — enforced by the needsSetup check
 setup.post('/complete', async (c) => {
   const db = getDb()
   const existing = await db.select({ id: user.id }).from(user).limit(1)
@@ -27,17 +26,46 @@ setup.post('/complete', async (c) => {
   }>()
 
   const auth = getAuth()
-  const result = await auth.api.signUpEmail({
-    body: { name, email, password },
-  })
+  const authBase = process.env.BETTER_AUTH_URL ?? 'http://localhost:3001'
 
-  // Promote the first account to owner directly in the DB
-  await db
-    .update(user)
-    .set({ role: 'owner', updatedAt: new Date().toISOString() })
-    .where(eq(user.id, result.user.id))
+  try {
+    // Call auth.handler with a synthetic Request so sign-up goes through
+    // the exact same code path as a real browser request. This avoids the
+    // raw auth.api.* server-side calling convention, which requires an
+    // internal request context that is tricky to construct manually.
+    const signUpReq = new Request(`${authBase}/api/auth/sign-up/email`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name, email, password }),
+    })
 
-  return c.json({ success: true })
+    const signUpRes = await auth.handler(signUpReq)
+
+    if (!signUpRes.ok) {
+      const errText = await signUpRes.text()
+      console.error('[setup] sign-up failed:', signUpRes.status, errText)
+      return c.json({ error: `Sign-up failed (${signUpRes.status}): ${errText}` }, 500)
+    }
+
+    const responseData = (await signUpRes.json()) as { user?: { id?: string } }
+    const userId = responseData?.user?.id
+
+    if (!userId) {
+      console.error('[setup] no user ID in sign-up response:', responseData)
+      return c.json({ error: 'User created but no ID returned — check server logs' }, 500)
+    }
+
+    // Elevate to owner role (Better Auth always assigns defaultValue 'member')
+    await db
+      .update(user)
+      .set({ role: 'owner', updatedAt: new Date() })
+      .where(eq(user.id, userId))
+
+    return c.json({ success: true })
+  } catch (err) {
+    console.error('[setup] error:', err)
+    return c.json({ error: String(err) }, 500)
+  }
 })
 
 export default setup

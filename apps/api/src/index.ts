@@ -24,7 +24,11 @@ async function start() {
 
   const app = new Hono()
 
-  app.use('*', cors({ origin: '*', credentials: true }))
+  // Allow any LAN origin to reach the API (clients connect by IP/hostname).
+  // Echo back whatever Origin is sent — required so credentials work on any
+  // LAN address without hardcoding IPs. A wildcard '*' + credentials is
+  // forbidden by the CORS spec and silently breaks cookie-based auth.
+  app.use('*', cors({ origin: (o) => o, credentials: true }))
 
   // 4. Platform routes
   app.get('/health', (c) => c.json({ ok: true, ts: new Date().toISOString() }))
