@@ -16,5 +16,6 @@ export const manifest: ModuleManifest = {
   },
   schema: async () => (await import('./schema.js')).default,
   router: async () => (await import('./routes.js')).default,
-  pages: async () => ({ index: (await import('./pages/index.js')).default }),
+  // Screens live in apps/web (static export cannot load module pages at runtime).
+  pages: async () => ({}),
 }
