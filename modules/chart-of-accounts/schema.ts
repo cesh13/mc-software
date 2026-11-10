@@ -6,23 +6,10 @@ import {
   uniqueIndex,
   type AnySQLiteColumn,
 } from 'drizzle-orm/sqlite-core'
+import { ACCOUNT_TYPES, DEBIT_NATURE_TYPES, type AccountType } from '@accounting/shared'
 import { coreEmpresasRef } from './refs.js'
 
-// Legacy `tipocta` 1..7, in the same order.
-export const ACCOUNT_TYPES = [
-  'activo',
-  'pasivo',
-  'capital',
-  'gastos',
-  'ingresos',
-  'orden',
-  'contra',
-] as const
-export type AccountType = (typeof ACCOUNT_TYPES)[number]
-
-// Debit-natured types: balance = previous + debits − credits.
-// The rest are credit-natured: balance = previous − debits + credits.
-export const DEBIT_NATURE_TYPES: readonly AccountType[] = ['activo', 'gastos', 'orden']
+export { ACCOUNT_TYPES, DEBIT_NATURE_TYPES, type AccountType }
 
 // Budget groupings (legacy AGRUPA / `codigoa`). An attribute of the account,
 // so it lives here and not in general-ledger.
