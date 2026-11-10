@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": ["*.ts", "schema/**/*.ts", "services/**/*.ts", "routes/**/*.ts", "lib/**/*.ts"],
+  "exclude": ["node_modules", "drizzle.config.ts"]
+}

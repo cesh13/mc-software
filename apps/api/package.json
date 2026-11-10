@@ -7,9 +7,14 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc && tsc-alias",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/db/migrate.ts"
+    "db:migrate": "tsx src/db/migrate.ts",
+    "test": "tsx --test \"tests/**/*.test.ts\"",
+    "type-check": "tsc --noEmit",
+    "legacy:import": "tsx src/cli/import-contac.ts",
+    "type-check:tests": "tsc -p tsconfig.test.json"
   },
   "dependencies": {
+    "@accounting/legacy-import": "workspace:*",
     "@accounting/shared": "workspace:*",
     "@hono/node-server": "^1.13.0",
     "better-auth": "^1.2.0",

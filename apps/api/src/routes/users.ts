@@ -3,13 +3,13 @@ import { eq } from 'drizzle-orm'
 import { getDb } from '../db/client.js'
 import { user } from '../db/schema.js'
 import { requireRole } from '../middleware/auth.js'
+import { ROLES, type Role } from '@accounting/shared'
 
-const VALID_ROLES = ['owner', 'admin', 'member'] as const
-type Role = (typeof VALID_ROLES)[number]
+const VALID_ROLES: readonly Role[] = ROLES
 
 const users = new Hono()
 
-users.get('/', requireRole('owner', 'admin'), async (c) => {
+users.get('/', requireRole('owner', 'admin', 'supervisor'), async (c) => {
   const db = getDb()
   const all = await db
     .select({ id: user.id, name: user.name, email: user.email, role: user.role, banned: user.banned })

@@ -2,3 +2,4 @@ packages:
   - 'apps/*'
   - 'modules/*'
   - 'packages/*'
+  - 'tools/legacy-import'

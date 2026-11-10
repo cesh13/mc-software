@@ -6,6 +6,11 @@ import { openDatabase } from './db/client.js'
 import { runPlatformMigrations } from './db/migrate.js'
 import { initAuth, getAuth } from './lib/auth.js'
 import { loadModules } from './lib/module-loader.js'
+import { handleError, type PlatformDeps } from './middleware/module-context.js'
+import { sessionUser } from './middleware/auth.js'
+import { getDb } from './db/client.js'
+import { createEmpresasRoute } from './routes/empresas.js'
+import type { Db } from '@accounting/shared/server'
 import { getSettings } from './lib/settings.js'
 import setup from './routes/setup.js'
 import modulesRoute from './routes/modules.js'
@@ -23,6 +28,8 @@ async function start() {
   initAuth()
 
   const app = new Hono()
+  app.onError(handleError)
+  const deps: PlatformDeps = { db: () => getDb() as unknown as Db, resolveUser: sessionUser }
 
   // Allow any LAN origin to reach the API (clients connect by IP/hostname).
   // Echo back whatever Origin is sent — required so credentials work on any
@@ -36,12 +43,14 @@ async function start() {
   app.route('/api/modules', modulesRoute)
   app.route('/api/users', users)
   app.route('/api/settings', appSettings)
+  app.route('/api/empresas', createEmpresasRoute(deps))
 
   // Better Auth handles /api/auth/* itself
   app.on(['GET', 'POST'], '/api/auth/**', (c) => getAuth().handler(c.req.raw))
 
   // 5. Load enabled modules (their migrations → routes) in dependency order
-  await loadModules(app)
+  const loaded = await loadModules(app, deps)
+  console.log(`Modules loaded: ${loaded.join(', ') || 'none'}`)
 
   // 6. Serve built Next.js static files
   // In production the tray app sets ACCOUNTING_UI_DIR.
