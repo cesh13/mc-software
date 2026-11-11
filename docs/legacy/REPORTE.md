@@ -23,10 +23,17 @@ Documento para retomar el trabajo. Se actualiza al final de cada sesión de trab
 | Base de la web (empresa, mes de trabajo, menú, componentes) | Hecho | [web-guide.md](../web-guide.md) |
 | Pantallas: catálogo, revisión del catálogo | Hecho; cargan en navegador con datos reales | `apps/web/src/components/contabilidad/coa` |
 | Pantallas: cierre de mes, cierre anual, 6 reportes | Hecho; cargan en navegador con datos reales | `apps/web/src/components/contabilidad/reports` |
-| Pantallas: partidas, tipos de partida, centros de costo | Ver **Pendiente** | `apps/web/src/components/contabilidad/entries` |
+| Pantallas: partidas, tipos de partida, centros de costo | Hecho; partidas carga, entra a edición y graba con sesión real. Flujo de teclado sin probar | `apps/web/src/components/contabilidad/entries` |
 | Paridad con el sistema anterior | Parcial: ver **Paridad** | — |
 
-Pruebas automáticas: 81 en `apps/api` (`pnpm --filter @accounting/api test`).
+Pruebas automáticas: 81 en `apps/api` (`pnpm --filter @accounting/api test`). La web compila como
+exportación estática (`pnpm build:web`, 22 páginas).
+
+Probado a mano en navegador, contra una base cifrada temporal con los datos reales: inicio de
+sesión, catálogo (619 cuentas), los 6 reportes, cierre de mes, y en partidas: abrir la última
+partida del mes, entrar a Agregar (propone el número siguiente), grabar una partida cuadrada,
+rechazo de una descuadrada y anulación. **No probado:** captura con teclado línea por línea,
+modificar, copiar, buscar, impresión, ni la apariencia (no hubo capturas de pantalla).
 
 ## Cómo probarlo
 
@@ -106,8 +113,11 @@ Las 11 preguntas abiertas de CONTAC siguen en [open-questions.md](contac/open-qu
 
 ## Pendiente
 
-- **Probar en navegador la captura de partidas** de punta a punta con teclado (agregar,
-  modificar, borrador, anular, copiar) y la impresión de cada reporte.
+- **Probar con una persona la captura de partidas** con teclado (agregar líneas, modificar,
+  borrador, copiar, buscar) y la impresión de cada reporte. Es lo que más probablemente
+  necesite ajustes.
+- La pantalla de partidas no muestra la fecha de cobro (`fcobro`, pregunta 6) y, al modificar
+  una partida importada que sigue descuadrada, solo ofrece guardarla como borrador.
 - **Partida de apertura** en el importador para clientes sin historial completo (no hizo falta aquí).
 - **Tablas y pantallas no construidas:** diseñador de estados de resultados (pregunta 8),
   presupuestos (solo se importan), configuración contable por empresa (cuentas de IVA, tasas),
