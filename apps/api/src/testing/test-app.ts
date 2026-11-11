@@ -9,6 +9,7 @@ import * as schema from '../db/schema.js'
 import { loadModules } from '../lib/module-loader.js'
 import { EMPRESA_HEADER, handleError, type PlatformDeps } from '../middleware/module-context.js'
 import { createEmpresasRoute } from '../routes/empresas.js'
+import { createUsersRoute, type CreateAccount } from '../routes/users.js'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(here, '..', '..', '..', '..')
@@ -35,7 +36,7 @@ export type TestSqlite = {
 
 // In-memory platform for tests: real migrations, real module routers, no
 // encryption and no Better Auth (the caller is taken from test headers).
-export async function createTestApp(opts: { modules: string[] }) {
+export async function createTestApp(opts: { modules: string[]; createAccount?: CreateAccount }) {
   const raw = new Database(':memory:')
   raw.pragma('foreign_keys=ON')
   const sqlite: TestSqlite = raw
@@ -61,6 +62,7 @@ export async function createTestApp(opts: { modules: string[] }) {
   const app = new Hono()
   app.onError(handleError)
   app.route('/api/empresas', createEmpresasRoute(deps))
+  app.route('/api/users', createUsersRoute(deps, { createAccount: opts.createAccount }))
   const loaded = await loadModules(app, deps, {
     modulesDir: path.join(repoRoot, 'modules'),
     only: opts.modules,

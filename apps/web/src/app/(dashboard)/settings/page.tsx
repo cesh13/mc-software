@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { isRole, ROLE_LABELS } from '@accounting/shared'
+import Link from 'next/link'
 import { apiFetch, errorMessage } from '@/lib/api'
 import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,6 @@ import { Alert, Loading, PageHeader } from '@/components/ui/feedback'
 import { Table, Td, Th, rowClass } from '@/components/ui/table'
 
 type Module = { id: string; name: string; version: string; isEnabled: boolean; isAlwaysOn: boolean }
-type User = { id: string; name: string; email: string; role: string }
 
 export default function SettingsPage() {
   const qc = useQueryClient()
@@ -22,11 +21,6 @@ export default function SettingsPage() {
   const { data: modules, isLoading, error } = useQuery<Module[]>({
     queryKey: ['modules'],
     queryFn: () => apiFetch('/api/modules'),
-  })
-  const { data: users } = useQuery<User[]>({
-    queryKey: ['users'],
-    queryFn: () => apiFetch('/api/users'),
-    enabled: role === 'owner' || role === 'admin' || role === 'supervisor',
   })
 
   const toggleModule = useMutation({
@@ -81,31 +75,13 @@ export default function SettingsPage() {
         )}
       </section>
 
-      {(role === 'owner' || role === 'admin' || role === 'supervisor') && (
-        <section className="mt-8">
-          <h2 className="mb-3 text-sm font-semibold text-gray-800">Usuarios</h2>
-          {users && (
-            <Table>
-              <thead>
-                <tr>
-                  <Th>Nombre</Th>
-                  <Th>Correo electrónico</Th>
-                  <Th>Rol</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr key={u.id} className={rowClass}>
-                    <Td className="font-medium">{u.name}</Td>
-                    <Td>{u.email}</Td>
-                    <Td>{isRole(u.role) ? ROLE_LABELS[u.role] : u.role}</Td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
-        </section>
-      )}
+      <section className="mt-8">
+        <h2 className="mb-1 text-sm font-semibold text-gray-800">Usuarios</h2>
+        <p className="text-sm text-gray-600">
+          Los usuarios, sus roles y sus empresas se administran en{' '}
+          <Link href="/usuarios" className="text-blue-700 underline">Usuarios</Link>.
+        </p>
+      </section>
     </div>
   )
 }

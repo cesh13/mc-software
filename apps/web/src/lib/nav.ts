@@ -34,6 +34,7 @@ export const NAV: NavGroup[] = [
     title: 'Administración',
     links: [
       { label: 'Empresas', path: '/empresas', permission: 'supervise' },
+      { label: 'Usuarios', path: '/usuarios', permission: 'supervise' },
       { label: 'Configuración', path: '/settings', permission: 'supervise' },
     ],
   },

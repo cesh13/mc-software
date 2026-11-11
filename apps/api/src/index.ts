@@ -14,7 +14,7 @@ import type { Db } from '@accounting/shared/server'
 import { getSettings } from './lib/settings.js'
 import setup from './routes/setup.js'
 import modulesRoute from './routes/modules.js'
-import users from './routes/users.js'
+import { createUsersRoute } from './routes/users.js'
 import appSettings from './routes/app-settings.js'
 
 async function start() {
@@ -41,7 +41,7 @@ async function start() {
   app.get('/health', (c) => c.json({ ok: true, ts: new Date().toISOString() }))
   app.route('/api/setup', setup)
   app.route('/api/modules', modulesRoute)
-  app.route('/api/users', users)
+  app.route('/api/users', createUsersRoute(deps))
   app.route('/api/settings', appSettings)
   app.route('/api/empresas', createEmpresasRoute(deps))
 
