@@ -3,6 +3,7 @@
 Punto de partida para cualquier sesión que trabaje en la migración del sistema anterior.
 Resume **dónde está el sistema viejo, cómo lo leemos, qué decidimos y en qué vamos**.
 Actualizar la sección *Progreso* al terminar cada módulo.
+**Estado actual, supuestos, preguntas y bloqueos: [REPORTE.md](REPORTE.md).**
 El despliegue (servidor + clientes en red local) está en [docs/architecture.md](../architecture.md).
 
 ## 1. Dónde está el sistema anterior
@@ -86,7 +87,7 @@ Hallazgos útiles:
 
 | Módulo | Spec | Schema | API/UI | Importador | Paridad |
 |---|---|---|---|---|---|
-| CONTAC | ✅ [docs/legacy/contac](contac/README.md) — 11 preguntas abiertas (las 5 que bloqueaban el schema ya están decididas) | ✅ core + catálogo + GL (sin estados ni configuración contable; ver data-model) | — | — | — |
+| CONTAC | ✅ [docs/legacy/contac](contac/README.md) — 11 preguntas abiertas | ✅ core + catálogo + GL | ✅ API con 69 pruebas; pantallas hechas, captura de partidas sin probar a fondo | ✅ [import.md](contac/import.md) | ⚠️ cálculo verificado; no cuadra limpio contra `SALDOS` (ver [REPORTE](REPORTE.md)) |
 | BANCOC | — | — | — | — | — |
 | cxc64 | — | — | — | — | — |
 | INV64 | — | — | — | — | — |
