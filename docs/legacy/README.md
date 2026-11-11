@@ -91,7 +91,7 @@ Hallazgos útiles:
 | BANCOC (+ CxP) | ✅ [docs/legacy/bancoc](bancoc/README.md) — 34 preguntas abiertas | — | — | — | — |
 | cxc64 | ✅ [docs/legacy/cxc64](cxc64/README.md) — 36 preguntas abiertas | — | — | — | — |
 | INV64 | — | — | — | — | — |
-| LOTE64 | — | — | — | — | — |
+| LOTE64 | ✅ [docs/legacy/lote64](lote64/README.md) | — | — | — | — |
 | IVA64 | ✅ [docs/legacy/iva64](iva64/README.md) | — | — | — | — |
 | AFIJO64 | — | — | — | — | — |
 | plan64 | — | — | — | — | — |
