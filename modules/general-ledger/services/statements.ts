@@ -5,7 +5,7 @@ import { glJournalEntries as e } from '../schema.js'
 import { centsToMoney, toCents } from '../lib/cents.js'
 import type { Ctx } from '../lib/context.js'
 import { Chart } from './accounts.js'
-import { rolledBalances, section, sectionTotal } from './balances.js'
+import { isTopOfType, rolledBalances, section, sectionTotal } from './balances.js'
 import { selectEntries } from './entries-read.js'
 import { linesOf } from './entry-detail.js'
 import { fiscalYearOf } from './fiscal-years.js'
@@ -39,7 +39,7 @@ export function balanceSheet(ctx: Ctx, period: string): BalanceSheet {
   const resultOf = (pick: 'prev' | 'current') => {
     let r = 0n
     for (const a of chart.accounts) {
-      if (!a.isDetail || (a.type !== 'ingresos' && a.type !== 'gastos')) continue
+      if (!isTopOfType(chart, a) || (a.type !== 'ingresos' && a.type !== 'gastos')) continue
       const s = sums.get(a.accountId)
       if (!s) continue
       const net = pick === 'prev' ? s.prevCredit - s.prevDebit : s.credit - s.debit
