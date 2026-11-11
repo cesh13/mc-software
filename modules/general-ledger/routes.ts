@@ -1,10 +1,15 @@
 import { Hono } from 'hono'
+import type { ModuleEnv } from '@accounting/shared/server'
+import setup from './routes/setup.js'
+import periods from './routes/periods.js'
+import entries from './routes/entries.js'
+import reports from './routes/reports.js'
 
-const router = new Hono()
-
-// GET  /api/general-ledger/periods          — fiscal periods
-// POST /api/general-ledger/entries          — create journal entry
-// GET  /api/general-ledger/entries          — list entries
-// GET  /api/general-ledger/trial-balance    — trial balance report
+// Mounted at /api/general-ledger. Routers are thin; rules live in services/.
+const router = new Hono<ModuleEnv>()
+router.route('/', setup)
+router.route('/', periods)
+router.route('/', entries)
+router.route('/', reports)
 
 export default router
