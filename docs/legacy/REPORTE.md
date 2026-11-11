@@ -26,6 +26,9 @@ Documento para retomar el trabajo. Se actualiza al final de cada sesión de trab
 | Pantallas: partidas, tipos de partida, centros de costo | Hecho; partidas carga, entra a edición y graba con sesión real. Flujo de teclado sin probar | `apps/web/src/components/contabilidad/entries` |
 | Paridad con el sistema anterior | Parcial: ver **Paridad** | — |
 | Spec de Bancos y Cuentas por pagar | Hecho, sin revisar con el negocio (34 preguntas) | [bancoc/](bancoc/README.md) |
+| Spec de IVA | Hecho, sin revisar con el negocio | [iva64/](iva64/README.md) |
+| Spec de Cuentas por cobrar | Hecho, sin revisar con el negocio (36 preguntas) | [cxc64/](cxc64/README.md) |
+| Usuarios: API y pantalla (roles, bloqueo, empresas) | Hecho, 9 pruebas; pantalla sin abrir en navegador | `apps/api/src/routes/users.ts`, `apps/web/src/components/admin` |
 
 Pruebas automáticas: 81 en `apps/api` (`pnpm --filter @accounting/api test`). La web compila como
 exportación estática (`pnpm build:web`, 22 páginas).
@@ -91,6 +94,24 @@ modificar, copiar, buscar, impresión, ni la apariencia (no hubo capturas de pan
 
 Sin verificar: el spec no se ha revisado con el negocio, y 47 reportes de Bancos no se leyeron a detalle.
 
+## Hallazgos de los specs de IVA y Cuentas por cobrar
+
+- **Los datos de Contabilidad en disco están atrasados:** CxC tiene movimientos hasta 2026-10,
+  pero el libro de CONTAC termina en 2024-03. Para la paridad hace falta una copia reciente.
+- **CxC contabiliza por lotes manuales:** cinco procesos (ventas, devoluciones, notas de abono,
+  abonos, remesas) que graban UNA partida resumen por rango de fechas, sin marcar qué movimientos
+  ya se contabilizaron. Los rangos pueden traslaparse o dejar huecos.
+- **La facturación vive en Inventario**, que escribe la factura en la tabla de CxC. La emisión
+  de factura electrónica (DTE) también está en Inventario. Sube la prioridad de ese spec.
+- **IVA no toca la contabilidad:** solo libros y archivos para Hacienda. Sus libros de ventas se
+  llenan por traslado desde CxC, que borra y recrea el mes.
+- **Los saldos de documentos de CxC sí cuadran** con sus aplicaciones (0 diferencias en 56,774
+  facturas), así que se pueden calcular en vez de guardar.
+- **El libro mayor necesita un contrato para que otros módulos publiquen partidas** (`source`
+  `cxp`, `cxc`…): los módulos no se importan entre sí. Está por diseñar antes de Bancos.
+- Controles que el sistema anterior no aplica: límite de crédito, reapertura de mes sin
+  contraseña ni rastro, números de recibo repetidos.
+
 ## Supuestos que tomé
 
 | # | Supuesto | Dónde cambiarlo |
@@ -112,6 +133,7 @@ Sin verificar: el spec no se ha revisado con el negocio, y 47 reportes de Bancos
 | S15 | Cuentas de orden y contra se muestran aparte y fuera de la ecuación del balance (pregunta 3). | `services/statements.ts` |
 | S16 | Los totales de los reportes incluyen lo cargado directo a cuentas padre. | `services/balances.ts` |
 | S17 | Importador: `moneda = 2` se toma como USD; un tipo de partida vacío se guarda como `??`; las cuentas provisionales quedan activas. | `tools/legacy-import/src/contac` |
+| S19 | Un Supervisor que no es Propietario solo ve y asigna las empresas que él mismo tiene. No hay cambio de contraseña desde el sistema. | `apps/api/src/routes/empresas.ts`, `routes/users.ts` |
 | S18 | Importador: se crea un año fiscal enero–diciembre por cada año con partidas; la fila de `PERIODO` (2018) no se usa. | igual |
 
 ## Preguntas para el negocio

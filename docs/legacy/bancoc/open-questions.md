@@ -112,3 +112,9 @@ bancarias, 2,691 movimientos, 204 documentos de CxP); las respuestas deben confi
     referencia es el saldo recalculado y el saldo de la cuenta contable en el GL; las diferencias contra `saldoact` se informan.
 34. **Tablas de trabajo con datos** (`PP`, `PP2`, `KK`, `SALVE`, `DTEMP*`/`PTEMP*`): parecen copias de seguridad de datos reales.
     *Propuesta:* no migrar; confirmar que no contienen documentos que no existan en las tablas vivas.
+
+## Corrección posterior (spec de IVA64, 2026-11-11)
+
+- "Ingresar al IVA" desde Bancos escribe en la tabla `COMPRAS` de la carpeta de datos de IVA64
+  (`CAMINOIVA` / `IVA` apuntan a `iva64\DBF`), no en `LIBCOMP`, que está vacía. Donde este spec
+  mencione `LIBCOMP` como destino, vale lo descrito en [iva64](../iva64/README.md).
