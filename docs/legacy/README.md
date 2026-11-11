@@ -23,7 +23,7 @@ El despliegue (servidor + clientes en red local) está en [docs/architecture.md]
 | `IVA64` | Libros de IVA | **nuevo** `tax` (IVA) |
 | `AFIJO64` | Activo fijo | `fixed-assets` |
 | `plan64` | Planilla | `payroll` |
-| — | CxP no existe como módulo legado | `accounts-payable` (lógica quizá en Bancos/Inventario) |
+| — | CxP no existe como módulo legado | `accounts-payable` — **la lógica vive dentro de BANCOC** (menú "Cuentas por pagar"); ver [bancoc](bancoc/README.md) |
 
 ## 2. Cómo leer el sistema anterior
 
@@ -88,7 +88,7 @@ Hallazgos útiles:
 | Módulo | Spec | Schema | API/UI | Importador | Paridad |
 |---|---|---|---|---|---|
 | CONTAC | ✅ [docs/legacy/contac](contac/README.md) — 11 preguntas abiertas | ✅ core + catálogo + GL | ✅ API con 69 pruebas; pantallas hechas, captura de partidas sin probar a fondo | ✅ [import.md](contac/import.md) | ⚠️ cálculo verificado; no cuadra limpio contra `SALDOS` (ver [REPORTE](REPORTE.md)) |
-| BANCOC | — | — | — | — | — |
+| BANCOC (+ CxP) | ✅ [docs/legacy/bancoc](bancoc/README.md) — 34 preguntas abiertas | — | — | — | — |
 | cxc64 | — | — | — | — | — |
 | INV64 | — | — | — | — | — |
 | LOTE64 | — | — | — | — | — |

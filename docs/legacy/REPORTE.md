@@ -25,6 +25,7 @@ Documento para retomar el trabajo. Se actualiza al final de cada sesión de trab
 | Pantallas: cierre de mes, cierre anual, 6 reportes | Hecho; cargan en navegador con datos reales | `apps/web/src/components/contabilidad/reports` |
 | Pantallas: partidas, tipos de partida, centros de costo | Hecho; partidas carga, entra a edición y graba con sesión real. Flujo de teclado sin probar | `apps/web/src/components/contabilidad/entries` |
 | Paridad con el sistema anterior | Parcial: ver **Paridad** | — |
+| Spec de Bancos y Cuentas por pagar | Hecho, sin revisar con el negocio (34 preguntas) | [bancoc/](bancoc/README.md) |
 
 Pruebas automáticas: 81 en `apps/api` (`pnpm --filter @accounting/api test`). La web compila como
 exportación estática (`pnpm build:web`, 22 páginas).
@@ -70,6 +71,25 @@ modificar, copiar, buscar, impresión, ni la apariencia (no hubo capturas de pan
 - 71 líneas con monto negativo y 26 con cargo y abono a la vez.
 - 5 partidas con número vacío; 600 líneas sin centro de costo en cuentas que lo exigen.
 - `PRESUP`: de 682 filas solo 4 tienen montos; 462 apuntan a cuentas que no existen.
+
+## Hallazgos del spec de Bancos que afectan lo ya construido
+
+- **Las tablas de Bancos y CxP viven en `MCERP/CONTAC/dbf`**, junto a las de contabilidad; no
+  existe `MCERP/BANCOC/dbf`.
+- **Cuentas por pagar sí existe, dentro de Bancos:** proveedores, documentos (*quedan*), notas,
+  pagos aplicados, vencimientos, antigüedad y provisión contable. Se propone como módulo aparte.
+- **La marca `generado = 1` ya no se graba** en el código vivo (la línea está comentada). Unas
+  1,970 de 5,209 partidas vienen de Bancos sin la marca. El importador de CONTAC las trae como
+  `importado`; el de Bancos tendrá que enlazarlas por `MOVIBAN` y marcarlas `source = 'bancos'`.
+- **Las líneas se guardan dos veces** (`DETABANK` y `DETAPART`) y ya divergen: 1,067 de 12,724
+  líneas de `DETABANK` no tienen pareja. Propuesta: la contabilidad manda.
+- **Cuentas por pagar necesita un origen nuevo en el libro mayor** (`source = 'cxp'`); hoy solo
+  se aceptan `manual`, `bancos`, `iva`, `cierre` e `importado`.
+- La conciliación bancaria existe pero no se usa (0 de 2,691 movimientos conciliados), y las
+  transferencias entre cuentas propias no funcionan en el sistema anterior.
+- Posible error del sistema anterior: el IVA percibido usa la misma tasa que el IVA retenido.
+
+Sin verificar: el spec no se ha revisado con el negocio, y 47 reportes de Bancos no se leyeron a detalle.
 
 ## Supuestos que tomé
 
