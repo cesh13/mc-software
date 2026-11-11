@@ -3,7 +3,7 @@ import type { z } from 'zod'
 import { centsToMoney } from '../lib/cents.js'
 import type { Ctx } from '../lib/context.js'
 import { Chart, natured, toReportAccount } from './accounts.js'
-import { rolledBalances, zeroSums } from './balances.js'
+import { isTopOfType, rolledBalances, zeroSums } from './balances.js'
 import { getCostCenter } from './cost-centers.js'
 
 // Balance de Comprobación: previous balance, debits and credits of the
@@ -22,7 +22,9 @@ export function trialBalance(ctx: Ctx, q: z.output<typeof trialBalanceQuery>): T
   let credits = 0n
   for (const a of chart.accounts) {
     const s = sums.get(a.accountId) ?? zeroSums()
-    if (a.isDetail) {
+    // Totals come from the top of each tree, so postings made directly to a
+    // parent account (present in imported legacy data) are counted too.
+    if (isTopOfType(chart, a)) {
       debits += s.debit
       credits += s.credit
     }

@@ -92,15 +92,23 @@ export function balanceOf(type: GlAccountType, s: Sums | undefined): bigint {
   return natured(type, s.prevDebit + s.debit, s.prevCredit + s.credit)
 }
 
+// True for an account with no parent of its own type: the top of a tree.
+// Rolled-up sums at these accounts cover every posting below them, including
+// postings made directly to a parent account.
+export function isTopOfType(chart: Chart, a: { parentId: string | null; type: GlAccountType }): boolean {
+  const parent = a.parentId ? chart.byId.get(a.parentId) : undefined
+  return !parent || parent.type !== a.type
+}
+
 // Accounts of one type with a non-zero balance, in code order. The total is
-// the sum over detail accounts.
+// the sum over the top accounts of that type.
 export function section(chart: Chart, sums: Map<string, Sums>, type: GlAccountType): StatementSection {
   const rows: StatementRow[] = []
   let total = 0n
   for (const a of chart.accounts) {
     if (a.type !== type) continue
     const balance = balanceOf(type, sums.get(a.accountId))
-    if (a.isDetail) total += balance
+    if (isTopOfType(chart, a)) total += balance
     if (balance === 0n && !sums.has(a.accountId)) continue
     rows.push({ ...toReportAccount(a), balance: centsToMoney(balance) })
   }
@@ -110,7 +118,7 @@ export function section(chart: Chart, sums: Map<string, Sums>, type: GlAccountTy
 export function sectionTotal(chart: Chart, sums: Map<string, Sums>, type: GlAccountType): bigint {
   let total = 0n
   for (const a of chart.accounts) {
-    if (a.type === type && a.isDetail) total += balanceOf(type, sums.get(a.accountId))
+    if (a.type === type && isTopOfType(chart, a)) total += balanceOf(type, sums.get(a.accountId))
   }
   return total
 }
