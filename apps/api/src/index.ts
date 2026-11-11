@@ -46,7 +46,7 @@ async function start() {
   app.route('/api/empresas', createEmpresasRoute(deps))
 
   // Better Auth handles /api/auth/* itself
-  app.on(['GET', 'POST'], '/api/auth/**', (c) => getAuth().handler(c.req.raw))
+  app.on(['GET', 'POST'], '/api/auth/*', (c) => getAuth().handler(c.req.raw))
 
   // 5. Load enabled modules (their migrations → routes) in dependency order
   const loaded = await loadModules(app, deps)
