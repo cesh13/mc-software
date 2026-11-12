@@ -5,6 +5,9 @@ Documento para retomar el trabajo. Se actualiza al final de cada sesión de trab
 
 ## Cómo retomar
 
+**Empezar por [docs/sistema/README.md](../sistema/README.md):** la imagen completa en una página
+(sistema anterior, plataforma nueva, módulos destino, contratos y orden de construcción).
+
 1. Leer este reporte y luego [el playbook](README.md).
 2. Probar el sistema con los datos importados (sección **Cómo probarlo**).
 3. Llevar al negocio **[PREGUNTAS.md](PREGUNTAS.md)**: las 30 preguntas que más importan de los
@@ -32,6 +35,7 @@ Documento para retomar el trabajo. Se actualiza al final de cada sesión de trab
 | Spec de Lotes (producción) | Hecho, sin revisar con el negocio | [lote64/](lote64/README.md) |
 | Spec de Activo fijo | Hecho, sin revisar con el negocio | [afijo64/](afijo64/README.md) |
 | Spec de Planilla | Hecho, sin revisar con el negocio; ~50 reportes sin leer | [plan64/](plan64/README.md) |
+| Imagen unificada: mapa de integración, capa compartida, módulos destino, contratos y orden | Hecho. Los dos primeros verificados contra el código en lo principal; el diseño es propuesta sin revisar | [docs/sistema/](../sistema/README.md) |
 | Spec de la solución de factura electrónica | Hecho desde el repositorio `factura-electronica-mc`; parte del código sin leer | [dte/](dte/README.md) |
 | Spec de Inventario, facturación y DTE | Hecho, sin revisar con el negocio (55 preguntas); ~244 reportes sin leer | [inv64/](inv64/README.md) |
 | Usuarios: API y pantalla (roles, bloqueo, empresas) | Hecho, 9 pruebas; pantalla sin abrir en navegador | `apps/api/src/routes/users.ts`, `apps/web/src/components/admin` |

@@ -5,6 +5,7 @@ Resume **dónde está el sistema viejo, cómo lo leemos, qué decidimos y en qu�
 Actualizar la sección *Progreso* al terminar cada módulo.
 **Estado actual, supuestos, preguntas y bloqueos: [REPORTE.md](REPORTE.md).**
 **Preguntas consolidadas para el negocio: [PREGUNTAS.md](PREGUNTAS.md).**
+**Imagen completa del sistema, módulos destino y contratos: [docs/sistema/](../sistema/README.md).**
 El despliegue (servidor + clientes en red local) está en [docs/architecture.md](../architecture.md).
 
 ## 1. Dónde está el sistema anterior
