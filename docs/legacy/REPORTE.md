@@ -28,6 +28,8 @@ Documento para retomar el trabajo. Se actualiza al final de cada sesión de trab
 | Spec de Bancos y Cuentas por pagar | Hecho, sin revisar con el negocio (34 preguntas) | [bancoc/](bancoc/README.md) |
 | Spec de IVA | Hecho, sin revisar con el negocio | [iva64/](iva64/README.md) |
 | Spec de Cuentas por cobrar | Hecho, sin revisar con el negocio (36 preguntas) | [cxc64/](cxc64/README.md) |
+| Spec de Lotes (producción) | Hecho, sin revisar con el negocio | [lote64/](lote64/README.md) |
+| Spec de Inventario, facturación y DTE | Hecho, sin revisar con el negocio (55 preguntas); ~244 reportes sin leer | [inv64/](inv64/README.md) |
 | Usuarios: API y pantalla (roles, bloqueo, empresas) | Hecho, 9 pruebas; pantalla sin abrir en navegador | `apps/api/src/routes/users.ts`, `apps/web/src/components/admin` |
 
 Pruebas automáticas: 81 en `apps/api` (`pnpm --filter @accounting/api test`). La web compila como
@@ -112,6 +114,25 @@ Sin verificar: el spec no se ha revisado con el negocio, y 47 reportes de Bancos
 - Controles que el sistema anterior no aplica: límite de crédito, reapertura de mes sin
   contraseña ni rastro, números de recibo repetidos.
 
+## Hallazgos de los specs de Inventario y Lotes
+
+- **La factura electrónica (DTE) no la emite el sistema anterior.** Inventario solo deja el
+  documento en una tabla de espera; un **programa externo que no está en el código fuente**
+  firma, transmite y escribe de vuelta el sello y los códigos. Hay que identificar ese programa
+  antes de diseñar el módulo de DTE.
+- **La facturación está en Inventario:** tres pantallas de venta que escriben de 8 a 12 tablas
+  en un solo grabado sin transacción. Una nota de crédito grabada pero no impresa nunca llega a CxC.
+- **Costeo:** promedio móvil por producto (todas las bodegas). El cierre de mes vuelve a
+  valuar movimientos, así que el costo de una venta puede cambiar después de facturada.
+- **Existencias guardadas en cinco lugares** actualizados a mano; 21 productos no cuadran con
+  sus movimientos. Propuesta: calcular desde movimientos.
+- **Ventas se contabilizan desde dos módulos** (lotes manuales de Inventario y de CxC), sin
+  enlace documento–partida. No se pudo determinar si hoy se duplican.
+- **Lotes es producción** (órdenes, fórmulas, costo real). Escribe directo en nueve tablas de
+  Inventario y contabiliza por lotes manuales. Se propone un módulo `production`.
+- **Módulos propuestos por los specs:** `banking`, `accounts-payable`, `tax`,
+  `accounts-receivable`, `inventory`, `sales`, `dte`, `production`.
+
 ## Supuestos que tomé
 
 | # | Supuesto | Dónde cambiarlo |
@@ -173,6 +194,12 @@ Las 11 preguntas abiertas de CONTAC siguen en [open-questions.md](contac/open-qu
 - **`GET /periods`** devuelve el id del usuario que cerró el mes, no su nombre.
 
 ## Bloqueos
+
+- **`MCERP/` mezcla copias de distintos clientes y fechas.** Lotes es de un cliente (2019–2020);
+  Inventario, CxC e IVA son de otro (hasta 2026-10); Contabilidad termina en 2024-03. La paridad
+  entre módulos necesita una copia completa, de una misma fecha, de un solo cliente.
+- **Programa externo de factura electrónica:** no está en `MCERP/`. Sin él no se puede
+  especificar la firma, la transmisión ni la contingencia.
 
 - **Solo hay datos de una empresa en `MCERP/CONTAC`.** Hace falta una copia de al menos un
   cliente más, idealmente con varias empresas. Existe `dbf/DBF.rar`, que no se abrió.

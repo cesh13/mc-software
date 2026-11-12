@@ -92,3 +92,12 @@ Contexto: solo se pudo revisar **una empresa** (22,643 órdenes de producción e
     *Propuesta:* importar tal cual, reportarlas y dejar que el negocio decida cuáles corregir; las 50 pendientes pasan a un estado "vencida" para cerrarse.
 32. **Permisos y visibilidad de costos.** Hoy un permiso por pantalla (solo "abrir"); `USUARIOS.VE_COSTO` existe pero ninguna pantalla lo usa y "Ver costos" es una casilla libre; un perfil `USRTYPE = 2` solo ve despachos, mes/empresa, indirectos y entregas parciales. *Propuesta:* permisos `capture` (órdenes y fórmulas),
     `supervise` (procesar/anular, recosteo, partidas, cuentas) y `reports` con **permiso aparte para ver costos**. ¿Quién debe ver costos y quién debe poder procesar?
+
+## Corrección posterior (spec de INV64, 2026-11-11)
+
+- El costo promedio de un producto sale de `MESES.COSTOF / MESES.FIN`, sumando todas las bodegas.
+  `BODMES.COSTOF / FINAL` es el saldo en valores por bodega y solo coincide cuando el producto
+  está en una sola bodega. Donde este spec asuma `BODMES`, vale lo descrito en
+  [inv64](../inv64/business-rules.md) §13.7.
+- Las nueve tablas de inventario que escribe producción son las mismas que escribe el código de
+  entradas de INV64 (confirmado desde ese lado).

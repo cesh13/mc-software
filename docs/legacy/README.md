@@ -90,7 +90,7 @@ Hallazgos útiles:
 | CONTAC | ✅ [docs/legacy/contac](contac/README.md) — 11 preguntas abiertas | ✅ core + catálogo + GL | ✅ API con 69 pruebas; pantallas hechas, captura de partidas sin probar a fondo | ✅ [import.md](contac/import.md) | ⚠️ cálculo verificado; no cuadra limpio contra `SALDOS` (ver [REPORTE](REPORTE.md)) |
 | BANCOC (+ CxP) | ✅ [docs/legacy/bancoc](bancoc/README.md) — 34 preguntas abiertas | — | — | — | — |
 | cxc64 | ✅ [docs/legacy/cxc64](cxc64/README.md) — 36 preguntas abiertas | — | — | — | — |
-| INV64 | — | — | — | — | — |
+| INV64 | ✅ [docs/legacy/inv64](inv64/README.md) — 55 preguntas abiertas; reportes sin leer | — | — | — | — |
 | LOTE64 | ✅ [docs/legacy/lote64](lote64/README.md) | — | — | — | — |
 | IVA64 | ✅ [docs/legacy/iva64](iva64/README.md) | — | — | — | — |
 | AFIJO64 | — | — | — | — | — |
