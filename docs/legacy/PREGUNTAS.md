@@ -24,6 +24,11 @@ Fecha: 2026-11-11. Reúne las preguntas abiertas de los ocho módulos del sistem
 
 ## 3. Las 30 preguntas que más importan
 
+> **Actualización 2026-11-12:** la pregunta P3 ya está respondida en lo principal. El programa de
+> factura electrónica es la solución propia `factura-electronica-mc`, documentada en
+> [dte/](dte/README.md). De P3 solo queda confirmar desde qué fecha cada cliente está en producción.
+> También sale de la sección 2 "el programa externo de factura electrónica".
+
 | # | Pregunta | Nuestra propuesta | Qué cambia según la respuesta | Quién responde | Fuente |
 |---|---|---|---|---|---|
 | P1 | ¿Las ventas se contabilizan hoy desde Inventario, desde Cuentas por cobrar o desde ambos? ¿Alguna vez se contabilizó dos veces un mismo período o quedó un hueco? | Un solo flujo: cada venta y su costo se contabilizan una vez, sin rangos de fechas a mano. Con producción, Inventario contabiliza las existencias y Producción solo su absorción de costos. | Si ya hay duplicados, hay que depurar antes de migrar. Define qué módulo es dueño de la partida de ventas y de costo. | contador | [INV 44, 45, 48](inv64/open-questions.md); [CXC 16](cxc64/open-questions.md) |

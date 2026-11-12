@@ -132,3 +132,13 @@ Agrupadas por tema; cada una trae una **propuesta** cuando hay una. Las referenc
     reportes; el resto bajo demanda.
 55. **Etiquetas ("viñeta").** El módulo de viñetas (`CVINETA`, 0 filas; `CCPARTCO` la usa si `PREVINE>0`) parece de otro cliente
     (farma). ¿Se migra? *Propuesta:* no.
+
+## Corrección posterior (spec de la solución DTE, 2026-11-12)
+
+- El proceso externo de factura electrónica **sí está identificado**: es el repositorio
+  `factura-electronica-mc`, documentado en [dte](../dte/README.md). Las preguntas de este spec
+  sobre quién firma, transmite y escribe de vuelta quedan respondidas ahí.
+- Diferencias con lo asumido aquí: la solución ignora `FELECTRO.AMBIENTE` y las columnas fijas de
+  contingencia (el ambiente es un ajuste de cada instalación); escribe de vuelta usando
+  `NFACT_ENV` + `TIPODTE`; nunca escribe `INVALIDADA`; y solo envía un documento cuando el número
+  de filas coincide con `NLINEAS`.

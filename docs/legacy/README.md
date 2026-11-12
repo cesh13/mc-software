@@ -93,6 +93,7 @@ Hallazgos útiles:
 | cxc64 | ✅ [docs/legacy/cxc64](cxc64/README.md) — 36 preguntas abiertas | — | — | — | — |
 | INV64 | ✅ [docs/legacy/inv64](inv64/README.md) — 55 preguntas abiertas; reportes sin leer | — | — | — | — |
 | LOTE64 | ✅ [docs/legacy/lote64](lote64/README.md) | — | — | — | — |
+| DTE (solución externa `factura-electronica-mc`) | ✅ [docs/legacy/dte](dte/README.md) | — | — | — | — |
 | IVA64 | ✅ [docs/legacy/iva64](iva64/README.md) | — | — | — | — |
 | AFIJO64 | ✅ [docs/legacy/afijo64](afijo64/README.md) | — | — | — | — |
 | plan64 | ✅ [docs/legacy/plan64](plan64/README.md) | — | — | — | — |

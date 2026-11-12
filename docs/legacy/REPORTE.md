@@ -32,6 +32,7 @@ Documento para retomar el trabajo. Se actualiza al final de cada sesión de trab
 | Spec de Lotes (producción) | Hecho, sin revisar con el negocio | [lote64/](lote64/README.md) |
 | Spec de Activo fijo | Hecho, sin revisar con el negocio | [afijo64/](afijo64/README.md) |
 | Spec de Planilla | Hecho, sin revisar con el negocio; ~50 reportes sin leer | [plan64/](plan64/README.md) |
+| Spec de la solución de factura electrónica | Hecho desde el repositorio `factura-electronica-mc`; parte del código sin leer | [dte/](dte/README.md) |
 | Spec de Inventario, facturación y DTE | Hecho, sin revisar con el negocio (55 preguntas); ~244 reportes sin leer | [inv64/](inv64/README.md) |
 | Usuarios: API y pantalla (roles, bloqueo, empresas) | Hecho, 9 pruebas; pantalla sin abrir en navegador | `apps/api/src/routes/users.ts`, `apps/web/src/components/admin` |
 
@@ -156,6 +157,27 @@ Sin verificar: el spec no se ha revisado con el negocio, y 47 reportes de Bancos
 - Todo lo legal (IVA, DTE, ISSS, AFP, renta, depreciación) está descrito como *lo que hace el
   código* y marcado para verificar contra la normativa vigente.
 
+## Factura electrónica: ya existe y está resuelta fuera del ERP
+
+El "programa externo" que los specs de Inventario e IVA daban por perdido es el repositorio
+`factura-electronica-mc` (cliente de escritorio .NET, versión 1.13.3). Spec en [dte/](dte/README.md).
+
+- **Contrato con el ERP:** lee `FELECTRO` y `FANULAR` cada 60 segundos, agrupa las líneas por
+  documento, arma y firma el DTE, lo transmite y escribe de vuelta solo cinco campos
+  (`PROCESADO`, `FALLO`, `NCONTROL`, `CODGENERAC`, `SELLORE`). Deja JSON, PDF y QR nombrados
+  por código de generación y envía el correo.
+- **No calcula montos:** los copia de lo que deja el ERP. El número de control lo arma la
+  solución con el tipo, los códigos de establecimiento y punto de venta, y el número del ERP.
+- **Camino propuesto para la plataforma nueva:** no tocar a los clientes del ERP viejo; en la
+  convivencia, que `sales`/`tax` publiquen en una tabla de salida con las mismas columnas y la
+  solución .NET la lea; al final, un módulo `dte` propio.
+- **Riesgos que el spec señala en la solución actual (sin verificar por mí):** un reintento
+  tras un corte de red usa un código de generación nuevo con el mismo número de control; el
+  historial local puede no registrar un envío; el motivo de rechazo no llega al ERP; si el
+  programa no está abierto no se factura.
+- **Fecha a vigilar:** el repositorio marca el cambio a la normativa v2 para 2026-12-01, con
+  activación manual por cliente. Verificar contra la normativa vigente.
+
 ## Supuestos que tomé
 
 | # | Supuesto | Dónde cambiarlo |
@@ -221,8 +243,6 @@ Las 11 preguntas abiertas de CONTAC siguen en [open-questions.md](contac/open-qu
 - **`MCERP/` mezcla copias de distintos clientes y fechas.** Lotes es de un cliente (2019–2020);
   Inventario, CxC e IVA son de otro (hasta 2026-10); Contabilidad termina en 2024-03. La paridad
   entre módulos necesita una copia completa, de una misma fecha, de un solo cliente.
-- **Programa externo de factura electrónica:** no está en `MCERP/`. Sin él no se puede
-  especificar la firma, la transmisión ni la contingencia.
 
 - **Solo hay datos de una empresa en `MCERP/CONTAC`.** Hace falta una copia de al menos un
   cliente más, idealmente con varias empresas. Existe `dbf/DBF.rar`, que no se abrió.
