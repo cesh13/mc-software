@@ -7,7 +7,8 @@ Documento para retomar el trabajo. Se actualiza al final de cada sesión de trab
 
 1. Leer este reporte y luego [el playbook](README.md).
 2. Probar el sistema con los datos importados (sección **Cómo probarlo**).
-3. Responder las **preguntas para el negocio**; varias cambian reglas ya construidas.
+3. Llevar al negocio **[PREGUNTAS.md](PREGUNTAS.md)**: las 30 preguntas que más importan de los
+   ocho módulos, con respuesta propuesta, y la segunda ronda por módulo. Varias cambian reglas ya construidas.
 4. Revisar los **supuestos**: cada uno dice dónde cambiarlo.
 
 ## Estado

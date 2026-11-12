@@ -4,6 +4,7 @@ Punto de partida para cualquier sesión que trabaje en la migración del sistema
 Resume **dónde está el sistema viejo, cómo lo leemos, qué decidimos y en qué vamos**.
 Actualizar la sección *Progreso* al terminar cada módulo.
 **Estado actual, supuestos, preguntas y bloqueos: [REPORTE.md](REPORTE.md).**
+**Preguntas consolidadas para el negocio: [PREGUNTAS.md](PREGUNTAS.md).**
 El despliegue (servidor + clientes en red local) está en [docs/architecture.md](../architecture.md).
 
 ## 1. Dónde está el sistema anterior
