@@ -77,7 +77,14 @@ ignoran (fijos); la llave de escritura es `NFACT_ENV + TIPODTE` (no `TIPODOC`); 
 según inv64); con la «v2» es fija por tipo. 04 (remisión) existe solo en el camino v1; 07/08/09/15 tienen esquema empaquetado pero **no tienen constructor**.
 Tabla completa en [business-rules.md §3](business-rules.md).
 
-## 5. Qué significa para la migración (PROPUESTA, no decisión)
+## 5. Qué significa para la migración
+
+> **Decisión del dueño (2026-11-12):** el DTE se **integra de forma nativa** en la plataforma (módulo `dte`, el destino que la ruta
+> de abajo listaba como opción d): al facturar, la plataforma arma, firma y transmite directo. La **opción (b), el puente
+> de convivencia, queda descartada**; no se integra con esta solución ni se cambia este repositorio. Esta solución sigue
+> sirviendo a los clientes que estén en el ERP anterior y este spec pasa a ser la **referencia del módulo nativo** (reglas,
+> JSON dorados, casos de rechazo). La tabla y la ruta siguientes se conservan como registro de lo evaluado; el diseño vigente
+> está en [contratos.md §6](../../sistema/contratos.md#6-documento-tributario-electrónico-dte).
 
 Contexto: la fecha de v2 (2026-12-01 según el repo) está a semanas; **no tocar el camino de producción de los clientes con ERP viejo**.
 
@@ -90,8 +97,8 @@ Contexto: la fecha de v2 (2026-12-01 según el repo) está a semanas; **no tocar
 
 **Ruta recomendada (por etapas):**
 1. **Hoy–2027-01:** solución sin cambios para clientes con ERP viejo. En paralelo, congelar el contrato y capturar JSON dorados de cada tipo (el repo ya tiene fixtures `SampleDtes`).
-2. **Convivencia (primeros clientes en la plataforma nueva): (b)** — `sales`/`tax` publican en una tabla `dte_outbox` con **los mismos nombres de columna** que `FELECTRO`/`FANULAR`; la solución .NET gana una fuente alternativa (por instalación, con bandera) que lee y escribe resultados por API. Así ambos mundos usan el mismo firmador, PDF y monitor, sin doble implementación fiscal.
-3. **Destino: (d)** módulo `dte` propio, usando los JSON dorados y los casos de rechazo del changelog como suite de aceptación; retirar el escritorio cuando migre el último cliente.
+2. ~~**Convivencia (primeros clientes en la plataforma nueva): (b)**~~ *(descartada el 2026-11-12)* — `sales`/`tax` publican en una tabla `dte_outbox` con **los mismos nombres de columna** que `FELECTRO`/`FANULAR`; la solución .NET gana una fuente alternativa (por instalación, con bandera) que lee y escribe resultados por API. Así ambos mundos usan el mismo firmador, PDF y monitor, sin doble implementación fiscal.
+3. **Destino: (d)** *(elegida el 2026-11-12, ahora desde la fase de facturación)* módulo `dte` propio, usando los JSON dorados y los casos de rechazo del changelog como suite de aceptación; retirar el escritorio cuando migre el último cliente.
 
 **Debe permanecer estable mientras convivan ERP viejo y plataforma nueva:** nombres y semántica de columnas de `FELECTRO`/`FANULAR`; regla de número de control (y que **nunca se reutilicen** números ya aceptados por el MH);
 llave de enlace `NFACT_ENV + TIPODTE`; nombre de archivos por código de generación; el ajuste `Normativa`/ambiente por instalación; formato de códigos de establecimiento/punto de venta.

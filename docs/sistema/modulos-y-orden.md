@@ -41,11 +41,11 @@ Lo que todos usan y nadie posee se queda en el núcleo, con prefijo `core_`:
 | `general-ledger` (hecho) | `gl_` | Libro mayor: partidas, tipos, centros de costo, cierres, estados | CONTAC: partidas, cierres, presupuestos, reportes | Partidas, tipos de partida, **centros de costo**, años fiscales | `chart-of-accounts` | **contrato de contabilización**; lookup de centros de costo y saldos |
 | `parties` (nuevo) | `pty_` | Maestro único de terceros (clientes y proveedores) | `CCCLI01`, `PROVEDOR` ×2, `CONTRIBU` ×2, `CLIENTES` ×2, `NOMBRES` | Terceros con sus identificadores fiscales y roles | núcleo | lookup de terceros |
 | `banking` | `bnk_` | Cuentas bancarias, documentos bancarios, conciliación | BANCOC: Bancos | Bancos, cuentas, tipos de transacción, documentos (cheque, remesa, NC, NA, transferencia), conciliaciones | GL, `parties`; opcional `accounts-payable` | partida por documento; pagos aplicados a CxP; lookup de documentos bancarios |
-| `accounts-payable` | `ap_` | Documentos por pagar y su pago; dueño del **documento de compra** | BANCOC: menú Cuentas por pagar; INV64 "Provisionar"; sujeto excluido (P23, INV 22) | Documentos de proveedor (quedan, CCF recibido, notas), provisiones, aplicaciones de pago, condiciones de proveedor | GL, `parties`; opcional `tax`, `inventory` | partida de provisión; renglón del libro de compras; cola DTE (sujeto excluido) |
+| `accounts-payable` | `ap_` | Documentos por pagar y su pago; dueño del **documento de compra** | BANCOC: menú Cuentas por pagar; INV64 "Provisionar"; sujeto excluido (P23, INV 22) | Documentos de proveedor (quedan, CCF recibido, notas), provisiones, aplicaciones de pago, condiciones de proveedor | GL, `parties`; opcional `tax`, `inventory` | partida de provisión; renglón del libro de compras; emisión de DTE (sujeto excluido) |
 | `accounts-receivable` | `ar_` | Cartera: cargos, recibos, aplicaciones, cheques, liquidaciones | cxc64 | Recibos, aplicaciones, cheques en cartera, liquidaciones, cargos manuales, condiciones de crédito del cliente | GL, `parties`; opcional `banking` | partida de recibos y cargos propios; lookup de saldos |
 | `inventory` | `inv_` | Productos, bodegas, lotes, movimientos, costo promedio, toma física | INV64: maestro de artículos, movimientos, kárdex, cierre | **Productos**, bodegas, lotes, conceptos, movimientos, estado de costo | GL, `parties` | **contrato de existencias**; partida de movimientos que no son venta ni compra; lookup de productos |
-| `sales` (nuevo) | `sal_` | Documentos de venta (CCF, factura, exportación, NC, ND) | INV64: facturación (`inmfac01/03`, `inmexp01`, `inmdevol`…) | Documentos de venta, series fiscales, listas de precio | `inventory`, `parties`, GL; opcional `accounts-receivable`, `tax`, `dte` | **partida única de venta y costo**; cargo en CxC; libro de ventas; cola DTE |
-| `dte` (nuevo) | `dte_` | Salida hacia la solución de factura electrónica y su estado | `FELECTRO`, `FANULAR`; más tarde la solución `factura-electronica-mc` | Bandeja de salida, documentos DTE, eventos, establecimientos y puntos de venta | núcleo | contrato de bandeja DTE; estado del DTE |
+| `sales` (nuevo) | `sal_` | Documentos de venta (CCF, factura, exportación, NC, ND) | INV64: facturación (`inmfac01/03`, `inmexp01`, `inmdevol`…) | Documentos de venta, series fiscales, listas de precio | `inventory`, `parties`, GL; opcional `accounts-receivable`, `tax`; `dte` (requerido para las empresas que emiten DTE) | **partida única de venta y costo**; cargo en CxC; libro de ventas; DTE emitido en el mismo grabado |
+| `dte` (nuevo) | `dte_` | **Módulo nativo** de factura electrónica: arma, firma y transmite el DTE a Hacienda al facturar, e invalida o emite en contingencia | `FELECTRO`, `FANULAR`; absorbe la función de la solución `factura-electronica-mc` para los clientes migrados | Documentos DTE y sus intentos, numeración de control, invalidaciones, contingencia, establecimientos y puntos de venta, archivos (JSON, PDF con QR) y correo al receptor | núcleo (secretos, archivos, correlativos); opcional `tax` | contrato `dte` (emisión síncrona en la transacción del emisor + entrega asíncrona); estado del DTE |
 | `tax` | `tax_` | Libros de IVA, renta retenida, archivos para Hacienda | IVA64; "Ingresar al IVA / Renta" de CONTAC y BANCOC | Renglones de libro (con enlace a su origen), comprobantes de retención, períodos de libro, corridas de anexos | núcleo, `parties` | **contrato de libros**; cálculo de impuestos como función compartida |
 | `production` | `prod_` | Fórmulas, órdenes, costeo de producción | LOTE64 | Fórmulas, órdenes, enlaces a movimientos | `inventory`, GL | partida de producción |
 | `fixed-assets` | `fa_` | Activos y depreciación mensual | AFIJO64 | Activos, categorías, ubicaciones, custodios, corridas | GL | partida de depreciación |
@@ -59,11 +59,12 @@ Módulos que **no** quedan: `reports` (§1.4). El id del DTE es `dte` (el spec d
 | Tema | Decisión | Alternativa descartada y por qué |
 |---|---|---|
 | Bancos vs Cuentas por pagar | **Dos módulos.** `banking` paga; `accounts-payable` posee el documento de compra. El cheque aplica pagos a documentos de CxP por contrato | Un solo módulo como BANCOC: el legado ya permite trabajar sin CxP (`cfg_prove`) y CxP también lo alimentan compras de inventario y producción (maquila) |
-| Inventario vs ventas vs DTE | **Tres módulos** (como propone `inv64/data-model.md` §2.1). `inventory` no conoce clientes ni impuestos; `sales` posee el documento fiscal; `dte` solo el envío | Facturación dentro de inventario como en INV64: es la causa de los defectos más graves (grabado de 8–12 tablas, cartera reescrita al imprimir, DTE por línea) |
+| Inventario vs ventas vs DTE | **Tres módulos** (como propone `inv64/data-model.md` §2.1). `inventory` no conoce clientes ni impuestos; `sales` posee el documento fiscal; `dte` posee el DTE (armado, firma, transmisión, invalidación) | Facturación dentro de inventario como en INV64: es la causa de los defectos más graves (grabado de 8–12 tablas, cartera reescrita al imprimir, DTE por línea) |
 | Dueño del documento de compra (P23) | `accounts-payable`. `inventory` registra la recepción y referencia el documento de CxP; producción (maquila) también | Inventario dueño (INV64 hoy): deja fuera las compras de gasto y duplica proveedor |
 | Impuestos | `tax` posee **libros**, períodos de libro y anexos; **no** calcula al vuelo para otros: el cálculo es una función pura en `@accounting/shared` que usan `sales` y `accounts-payable` (§2.4) | `tax` como servicio de cálculo en tiempo de ejecución: obliga a activar `tax` para facturar y acopla el grabado de la venta a otro módulo sin necesidad |
 | Series fiscales | `sales` (`sal_series`, respaldada por `core_sequences`) | `tax_series` (spec de IVA): la serie se consume al emitir, no al registrar en el libro |
 | Establecimientos y puntos de venta | `dte` (`dte_establishments`); `sal_series` los referencia | En `sales`: son datos del emisor ante Hacienda, los usa también el sujeto excluido de CxP |
+| Factura electrónica (decisión del dueño, 2026-11-12) | **Nativa en la plataforma:** el módulo `dte` firma y transmite directo a Hacienda como parte del flujo de ventas (contratos §6). **No se integra con la solución .NET**, que queda como implementación de referencia (sus JSON dorados y casos de rechazo son la suite de aceptación) y como herramienta de los clientes que siguen en el ERP anterior | **Puente de convivencia** (opción b de `dte/README.md` §5: bandeja `dte_outbox` con las columnas de `FELECTRO`/`FANULAR` que la solución .NET leyera por API). Razón del dueño: facturar debe enviar directo, sin la integración aparte. Costo aceptado: reimplementar firma y constructores en TypeScript (§5) |
 | Clientes y proveedores | **`parties` (nuevo), siempre activo.** Un tercero puede ser cliente y proveedor; los atributos operativos van en el módulo que los usa (`ar_customer_terms`: límite, vendedor, plazo; `ap_supplier_terms`: plazo, cuenta) | `ar_customers` en CxC y `ap_suppliers` en CxP (specs): obligaría a activar CxC para facturar y CxP para registrar una compra en el libro, y repite el NRC en dos tablas (el legado ya tiene `CONTRIBU`/`CLIENTES`/`PROVEDOR` divergentes, integracion-legado §6). `tax_taxpayers` desaparece |
 | Productos | `inventory` (`inv_items`, con `is_service` y `tracks_stock`) | En `sales`: producción, compras y ajustes también los usan |
 | Centros de costo | `general-ledger` (`gl_cost_centers`, ya construido). Planilla y activo fijo usan esos; las "áreas" de activo fijo quedan como `fa_locations` (no son centros contables) | Catálogo propio por módulo (legado: 4 mecanismos) |
@@ -95,7 +96,7 @@ flowchart TB
   INV["inventory<br/>contrato de existencias"]
   SAL["sales"]
   TAX["tax<br/>contrato de libros"]
-  DTE["dte<br/>bandeja de salida"]
+  DTE["dte<br/>firma y transmisión"]
   PROD["production"]
   FA["fixed-assets"]
   PAY["payroll"]
@@ -202,17 +203,16 @@ omisión: `view_costs` y `view_salaries`. Ajuste por usuario y empresa en `core_
 | **1. Bancos y CxP** | `banking`, `accounts-payable` | Es el único flujo **inmediato** hacia el GL (A1): prueba el contrato con anular, modificar y meses cerrados. Primer pilotable | P6, P8, P22, P23, P28; BANCOC 9, 12, 18, 27 | `MOVIBAN`, `QUEDAN`, `NCREDEB`, `MOVQUE`, `PROVISIO`, cuentas, tipos; re-atribución de ~1,970 partidas `importado` → `bancos`/`cxp` | `bancoc/data-model.md` §4: saldo por cuenta = cuenta contable, CxP por proveedor, antigüedad, enlace documento↔partida |
 | **2. Activo fijo** | `fixed-assets` | Pequeño, sin dependencias nuevas; prueba el posteo por **corrida** y la re-atribución por llave (`MOVDEPRE`) | P13, P14, P24, P25, P26 | `ACTIVO`, `MOVDEPRE`, catálogos; partidas → `activo_fijo` (menos 2023-01/02, P14) | `afijo64/data-model.md` §4.4 |
 | **3. IVA** | `tax` (libros, renta, anexos, CSV) | Lo alimentan CxP (ya hecho) y captura manual; las ventas llegan por importación hasta la fase 4 | P4, P5, P21, P29 (formatos), P30; IVA 2, 4, 25 | `COMPRAS`, `IVAFIS`, `ivafac`, `RENTAT`, configuración | `iva64/data-model.md` §3.4 contra libros impresos |
-| **4. Facturación** | `inventory`, `sales`, `accounts-receivable`, `dte` (bandeja compatible con la solución .NET) | Bloque que en el legado se escribe **junto** (INV64 escribe `CCMOV01` y `FELECTRO` en el mismo grabado): no se puede separar en producción | P1, P3 (fecha de producción), P10, P11, P12, P21, P27; INV 3–6, 24, 25; CXC 5, 11 | `ARTICULO`, `MOVIMIEN`/`DATAMOV`, `CORFACT`/`FACT`, `CORDEV`/`DEVOL`, `CCMOV01`, `CCCLI01`, `FELECTRO`/`FANULAR` | `inv64` §3.3 y `cxc64` §4 (paridad), ventas por mes = libro de ventas |
+| **4. Facturación** | `inventory`, `sales`, `accounts-receivable`, `dte` **nativo** (se construye junto con `sales`: firma, transmisión, invalidación, contingencia, PDF/QR, correo) | Bloque que en el legado se escribe **junto** (INV64 escribe `CCMOV01` y `FELECTRO` en el mismo grabado): no se puede separar en producción. El DTE se emite en el mismo grabado de la venta, así que `dte` no puede ir después | P1, P3 (fecha de producción), P10, P11, P12, P21, P27; INV 3–6, 24, 25; CXC 5, 11; certificado, credenciales y enlace a Internet de cada cliente (`dte/open-questions.md` 33–35) | `ARTICULO`, `MOVIMIEN`/`DATAMOV`, `CORFACT`/`FACT`, `CORDEV`/`DEVOL`, `CCMOV01`, `CCCLI01`, `FELECTRO`/`FANULAR`/`EnviosDTE`, archivos de `PDFPath`, último número de control por serie | `inv64` §3.3 y `cxc64` §4 (paridad), ventas por mes = libro de ventas; el módulo `dte` **aceptado en el ambiente de pruebas de Hacienda** y su JSON igual a los JSON dorados de la solución .NET por tipo |
 | **5. Producción** | `production` | Depende de existencias; uso confirmado solo en un cliente con datos hasta 2020 (LOTE 1, 3) | LOTE 1, 3, 17; P10, P11 | `LOTE`, `DETALOTE`, `FORMULA`, `DETAFORM`; enlace a movimientos `PR`/`EP` | `lote64/data-model.md` §5.5 |
 | **6. Planilla** | `payroll` | Mayor carga normativa y menor integración (no usa Bancos ni contabiliza hoy) | P16–P20, P29; PLAN 1.1–1.4 | `MAESTRO`, 48 quincenas de `PLANILLA`, catálogos, `CONFIG.MEM` como versión inicial | `plan64/data-model.md` §5.4 (±0.01 por empleado, reportado) |
-| **7. DTE propio** | firma, transmisión, contingencia e invalidación dentro de `dte` | Solo cuando la bandeja compatible esté estable; la solución actual funciona | P3; INV 3, 4, 7 | — | Mismo JSON y mismo estado que la solución actual en paralelo |
 
 ### 3.2 Primer piloto
 
 **Recomendación: un cliente con perfil "contabilidad + bancos (+CxP) + activo fijo", sin facturación en INV64**, al final
 de la fase 2 (fase 3 si lleva IVA64 y sus compras salen de CxP). Razones: ese perfil existe en los datos (CONTAC +
 BANCOC + AFIJO64 son de la misma familia de carpetas), usa los dos estilos de contabilización (inmediata y por corrida) y
-no toca DTE ni cartera. Un cliente que factura necesita la fase 4 completa y depende del DTE: es el **segundo** piloto.
+no toca DTE ni cartera. Un cliente que factura necesita la fase 4 completa, incluido el módulo `dte` nativo, y es el **segundo** piloto. **Prerrequisito de salida a producción:** el módulo `dte` certificado/aceptado en el ambiente de pruebas de Hacienda para los tipos que ese cliente emite, con su certificado y credenciales cargados en el almacén de secretos.
 Decide el negocio qué cliente concreto calza (M2) y entrega una copia completa de ese cliente de una misma fecha
 (PREGUNTAS §2, sin la cual no hay paridad entre módulos).
 
@@ -227,7 +227,7 @@ Anillos que deben pasar juntos (porque el legado los une con escrituras inmediat
 |---|---|---|
 | A. Contabilidad | `general-ledger`, `chart-of-accounts` | Destino de todo |
 | B. Pagos | `banking` + `accounts-payable` | `MOVIBAN`/`QUEDAN`/`PROVISIO` se escriben juntos (A1, A2, C2) |
-| C. Facturación | `inventory` + `sales` + `accounts-receivable` + `dte` | `inmfac*` escribe `CCMOV01` y `FELECTRO` en un grabado (B1, F1); cxc64 edita `FACT` (B3) |
+| C. Facturación | `inventory` + `sales` + `accounts-receivable` + `dte` | `inmfac*` escribe `CCMOV01` y `FELECTRO` en un grabado (B1, F1); cxc64 edita `FACT` (B3). La emisión de DTE se mueve **con** la facturación |
 | D. Opcionales | `fixed-assets`, `production` (con C), `payroll` | Se pueden mover solos |
 | E. IVA | `tax` | Lee de B y C por traslado (lote): puede ir antes o después con un puente |
 
@@ -241,6 +241,8 @@ Puentes posibles (todos re-ejecutables, de solo lectura sobre el legado):
 3. **Anillo B nuevo, C en el legado:** INV64 deja de poder provisionar a `QUEDAN` (C1): las compras de inventario se
    registran en CxP nuevo a mano, o el cliente espera la fase 4. Es el puente más débil: preferir clientes sin `cfg_prove`.
 4. **Nunca** del nuevo hacia el legado.
+
+**Facturación y DTE (regla de corte):** la facturación de una empresa pasa a la plataforma **toda a la vez junto con su emisión de DTE**. La solución .NET y el módulo nativo **nunca emiten los dos para la misma empresa y serie**: en el corte la solución .NET deja de emitir (se apaga su ciclo para esa empresa) y se entrega a la plataforma el **último número de control por serie** como piso de su correlativo (contratos §6.5, §6.12); el módulo nativo no emite hasta cargarlo. Los clientes que siguen en el ERP anterior siguen con la solución .NET sin cambios.
 
 **Recomendación:** convivencia **por anillos con corte a inicio de mes**, no corte total; el anillo C se mueve completo.
 Corte total (todo a la vez) solo para el cliente que factura si los puentes 1–2 no pasan la paridad.
@@ -294,16 +296,21 @@ Lista concreta, verificada contra el código actual (el detalle del GL está en
    explícitos, nunca rangos libres.
 7. **Costo de venta con movimientos con fecha anterior** (P10): el costo se fija en el orden de grabado, no en el de la
    fecha; un movimiento atrasado no re-valúa ventas emitidas. Aceptado a cambio de documentos inmutables.
-8. **La solución DTE .NET lee DBF** (`dte/README.md` §5): la bandeja compatible (contratos §6) exige agregarle una fuente
-   alternativa por API, en un repositorio que a la vez cambia de normativa. Si eso no es posible a tiempo para el piloto 2,
-   el plan B es la opción (a) — escribir el DBF de staging desde la plataforma —, descartada como destino.
-9. **Fecha a vigilar del DTE** (2026-12-01 según el repositorio de la solución): no depende de este diseño, pero
-   compite por el mismo equipo.
+8. **Reimplementar en TypeScript la firma y todos los constructores de DTE** (decisión del 2026-11-12, contratos §6): es la
+   opción más grande del spec (`dte/README.md` §5, opción d) y hay que replicar reglas finas aprendidas en producción. Se
+   mitiga con los JSON dorados por tipo, los esquemas oficiales y los casos de rechazo del changelog como suite de aceptación.
+9. **Normativa v2 del DTE** (2026-12-01 según el repositorio de la solución; **por verificar** contra la norma vigente):
+   el módulo nativo debe nacer con la normativa vigente en su momento, y la solución .NET sigue cambiando; compite por el
+   mismo equipo.
 10. **Archivos de 200 líneas y transacciones síncronas:** los proveedores de contratos deben ser síncronos; cualquier
-    trabajo asíncrono (envío de DTE, correo) va a una bandeja leída fuera de la transacción.
-11. **M4** — ¿Se acepta que la solución .NET corra como cliente de la API con una cuenta de servicio? Propuesta: sí, con un
-    permiso único `dte.outbox.process`.
-12. **Re-atribución inferida del historial:** las partidas de CxC, ventas, producción y planilla solo se reconocen por el
+    trabajo asíncrono (envío de DTE, correo) queda como registro pendiente (p. ej. DTE `pendiente`) que procesa un trabajador fuera de la transacción.
+11. **Dos bases de código fiscales:** mientras queden clientes en el ERP anterior, los cambios de normativa del DTE hay que
+    seguirlos en la solución .NET y en el módulo nativo. Mitigación: el módulo nativo toma los esquemas y los JSON dorados de
+    la solución como referencia y se corre una prueba de paridad en cada cambio de normativa.
+12. **Piloto 2 depende de la certificación del módulo `dte`:** sin aceptación en el ambiente de pruebas de Hacienda para los
+    tipos del cliente no hay salida a producción, y un retraso de `dte` retrasa el piloto 2. Pendiente: quién certifica por
+    cliente y de dónde salen los certificados (`dte/open-questions.md` 33–34).
+13. **Re-atribución inferida del historial:** las partidas de CxC, ventas, producción y planilla solo se reconocen por el
     texto del concepto; un concepto editado a mano queda como `importado`. Se acepta y se reporta.
 
 ---
@@ -318,6 +325,7 @@ Lista concreta, verificada contra el código actual (el detalle del GL está en
 | `inv64` (`inv_period_locks`), `cxc64` (`ar_periods`), `iva64` (`tax_periods`), GL (`gl_periods`) | Cierre por módulo | `core_periods` por área (§2.1) |
 | `inv64/data-model.md` §2.5 | Orígenes `ventas` **y** `costo` | Solo `ventas`: una partida por documento con el costo (§2.2) |
 | `inv64/data-model.md` §2.1 | Módulo `electronic-invoicing` con id `dte` | Id y nombre `dte` |
+| `dte/README.md` §5 | Convivencia con bandeja `dte_outbox` leída por la solución .NET; módulo propio al final | Decidido el 2026-11-12: módulo `dte` nativo desde la fase 4, sin integración con la solución .NET (§1.3) |
 | `dte/data-model.md` §4 | "Dinero en enteros" | Decimal exacto en texto, regla de la plataforma |
 | `bancoc/data-model.md` (`bnk_settings.entry_number_width`) | Ancho del correlativo en Bancos | Lo fija `gl_entry_types.number_width`; el GL numera |
 | `docs/legacy/README.md` §1 y §3 | `reports` implícito; "sistema de usuarios compartido"; LOTE64 "nuevo (lotes/producción)" | Sin módulo `reports` (§1.4); ocho copias (plataforma-compartida); módulo `production` |

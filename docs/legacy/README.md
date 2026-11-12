@@ -84,6 +84,7 @@ Hallazgos útiles:
 | Saldos | Se calculan desde las líneas de partida (no se guardan tablas de saldos); caché solo si el volumen lo exige. |
 | Borrado | Anulación (soft delete), nunca borrado físico. |
 | Integraciones | Los módulos (Bancos, IVA…) publican partidas al GL; el GL marca su origen (`source`). |
+| Factura electrónica | Integrada en la plataforma: al facturar se firma y se transmite directo; no se integra con la solución .NET, que queda como referencia y para clientes en el ERP anterior. (2026-11-12) |
 
 ## 5. Progreso
 

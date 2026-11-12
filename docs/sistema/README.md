@@ -7,7 +7,7 @@ corresponden, en qué orden se construye y dónde leer cada cosa.
 > escritos por **análisis automatizado** del código fuente y de la estructura de los datos. **No se han verificado línea
 > por línea ni revisado con el negocio.** El diseño de esta carpeta (`modulos-y-orden.md`, `contratos.md`) es una
 > **propuesta** hecha sin el dueño presente; lo que debe decidir el negocio está en [PREGUNTAS.md](../legacy/PREGUNTAS.md)
-> (P1–P30) y en las preguntas M1–M4 de [modulos-y-orden.md](modulos-y-orden.md#5-riesgos-y-decisiones-abiertas).
+> (P1–P30) y en las preguntas M1–M3 de [modulos-y-orden.md](modulos-y-orden.md#5-riesgos-y-decisiones-abiertas).
 > Nada legal (IVA, DTE, ISSS, AFP, renta, depreciación) se afirma como norma.
 
 ## 1. El sistema anterior (MCERP)
@@ -54,7 +54,7 @@ Diagrama de flujos entre módulos legados: [integracion-legado.md §1.3](integra
 3. **Módulos** en `modules/` con su schema (Drizzle, prefijo propio), rutas y manifiesto; **no se importan entre sí** ni
    importan `apps/api`; solo `@accounting/shared`.
 4. **Contratos**: servicios que la plataforma pone en el contexto del módulo (`ledger`, `periods`, `stock`,
-   `receivables`, `payables`, `taxBooks`, `dteOutbox`, lookups, `settings`, `sequences`) con una transacción compartida.
+   `receivables`, `payables`, `taxBooks`, `dte`, lookups, `settings`, `sequences`) con una transacción compartida.
 5. **Web** en español, con el flujo familiar del sistema anterior (barra de íconos, encabezado + líneas, totales).
 
 Detalle: [architecture.md](../architecture.md), [module-guide.md](../module-guide.md), [web-guide.md](../web-guide.md),
@@ -70,7 +70,7 @@ Detalle: [architecture.md](../architecture.md), [module-guide.md](../module-guid
 | cxc64 | `accounts-receivable` |
 | INV64 — artículos, movimientos, kárdex | `inventory` |
 | INV64 — facturación | `sales` |
-| INV64 `FELECTRO`/`FANULAR` + solución .NET | `dte` (primero bandeja compatible, después propio) |
+| INV64 `FELECTRO`/`FANULAR` + solución .NET | `dte` **nativo**: firma y transmite al facturar, sin integrarse con la solución .NET (decisión del 2026-11-12); la solución .NET queda como referencia y para clientes aún en el ERP anterior |
 | IVA64; "Ingresar al IVA / Renta" | `tax` |
 | LOTE64 | `production` |
 | AFIJO64 | `fixed-assets` |
@@ -111,13 +111,13 @@ origen; saldos y existencias calculados desde movimientos.
 | 1 | `banking` + `accounts-payable` | primer flujo inmediato al GL |
 | 2 | `fixed-assets` | **piloto 1**: cliente de contabilidad + bancos + activo fijo |
 | 3 | `tax` | piloto 1 con IVA de compras |
-| 4 | `inventory` + `sales` + `accounts-receivable` + `dte` (bandeja compatible) | **piloto 2**: cliente que factura |
+| 4 | `inventory` + `sales` + `accounts-receivable` + `dte` nativo (se construye junto con `sales`) | **piloto 2**: cliente que factura, una vez el `dte` esté aceptado en el ambiente de pruebas de Hacienda |
 | 5 | `production` | clientes que fabrican |
 | 6 | `payroll` | clientes con planilla |
-| 7 | DTE propio | retirar la solución .NET |
 
-Convivencia: por **anillos** que se mueven completos (pagos; facturación), con puentes de una sola vía del legado al
-nuevo por mes cerrado. Detalle en [modulos-y-orden.md §3](modulos-y-orden.md#3-orden-de-construcción).
+Convivencia: por **anillos** que se mueven completos (pagos; facturación **junto con su emisión de DTE**: la solución .NET y
+el módulo nativo nunca emiten para la misma empresa y serie), con puentes de una sola vía del legado al nuevo por mes
+cerrado. Detalle en [modulos-y-orden.md §3](modulos-y-orden.md#3-orden-de-construcción).
 
 ## 5. Estado actual (de [REPORTE.md](../legacy/REPORTE.md), 2026-11-10)
 
@@ -138,7 +138,7 @@ nuevo por mes cerrado. Detalle en [modulos-y-orden.md §3](modulos-y-orden.md#3-
 | [docs/sistema/integracion-legado.md](integracion-legado.md) | Cómo se tocan los módulos legados: tablas, flujos, `CGADIPAR`, cierres, maestros duplicados |
 | [docs/sistema/plataforma-compartida.md](plataforma-compartida.md) | Usuarios, permisos, empresas, bitácora y `.MEM` del legado, y qué falta en la plataforma |
 | [docs/sistema/modulos-y-orden.md](modulos-y-orden.md) | Qué módulos habrá, quién posee qué, reglas transversales, orden de construcción, convivencia, cambios a lo hecho |
-| [docs/sistema/contratos.md](contratos.md) | Cómo se hablan los módulos: contabilización, períodos, existencias, CxC/CxP, libros, DTE, maestros, configuración |
+| [docs/sistema/contratos.md](contratos.md) | Cómo se hablan los módulos: contabilización, períodos, existencias, CxC/CxP, libros, DTE nativo, maestros, configuración |
 | [docs/architecture.md](../architecture.md) | Despliegue servidor/clientes en red local |
 | [docs/module-guide.md](../module-guide.md) | Cómo se construye un módulo (reglas, contexto, pruebas) |
 | [docs/web-guide.md](../web-guide.md) | Cómo se construyen las pantallas |

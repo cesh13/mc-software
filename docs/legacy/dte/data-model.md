@@ -89,7 +89,7 @@ Prefijo `dte_`, `empresa_id` en todas las tablas, dinero en enteros, soft-delete
 | `dte_lines` | Líneas | `dte_document_id`, `num_item`, `producto_id`, montos |
 | `dte_attempts` (= `EnviosDTE`) | Intentos y eventos | `dte_document_id`, `codigo_generacion`, `kind` (`emision`/`invalidacion`/`contingencia`), `request_json`, `response_json`, `ok`, `error`, `created_at` |
 | `dte_invalidations` | Solicitudes (= `FANULAR`) | `dte_document_id`, `tipo_anulacion`, `motivo`, `responsable`, `solicitante`, `codigo_generacion_evento`, `sello_evento`, `estado`, `documento_reemplazo_id` |
-| `dte_outbox` | Cola de convivencia con la solución .NET (opción b) | **mismos nombres de columna que `FELECTRO`/`FANULAR`** más `row_id`, `claimed_by`, `claimed_at`, `leased_until`; la solución .NET reclama por arrendamiento en vez de leer DBF y reporta por API los cinco campos de §1.1 |
+| ~~`dte_outbox`~~ | **Descartada (2026-11-12):** era la cola de convivencia con la solución .NET. Se decidió integrar la factura electrónica en la plataforma; el contrato vigente está en [docs/sistema/contratos.md](../../sistema/contratos.md) §6. | — |
 | `dte_files` | PDF/JSON/QR | `dte_document_id`, `kind`, `path`, nombre `<codigo_generacion>.<ext>` |
 
 **Mapeo desde el staging heredado:**

@@ -172,9 +172,11 @@ El "programa externo" que los specs de Inventario e IVA daban por perdido es el 
   por código de generación y envía el correo.
 - **No calcula montos:** los copia de lo que deja el ERP. El número de control lo arma la
   solución con el tipo, los códigos de establecimiento y punto de venta, y el número del ERP.
-- **Camino propuesto para la plataforma nueva:** no tocar a los clientes del ERP viejo; en la
-  convivencia, que `sales`/`tax` publiquen en una tabla de salida con las mismas columnas y la
-  solución .NET la lea; al final, un módulo `dte` propio.
+- **Decisión para la plataforma nueva (dueño, 2026-11-12):** la factura electrónica se integra en la
+  plataforma: el módulo `dte` firma y transmite directo al facturar y **no se integra con la solución
+  .NET**, que queda como referencia (JSON dorados, casos de rechazo) y para los clientes que sigan en
+  el ERP anterior, sin tocarlos. Se descartó el puente de convivencia. Detalle en
+  [contratos §6](../sistema/contratos.md#6-documento-tributario-electrónico-dte).
 - **Riesgos que el spec señala en la solución actual (sin verificar por mí):** un reintento
   tras un corte de red usa un código de generación nuevo con el mismo número de control; el
   historial local puede no registrar un envío; el motivo de rechazo no llega al ERP; si el

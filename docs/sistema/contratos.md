@@ -47,8 +47,8 @@ const doc = inTx(ctx, (tx) => {                      // mismo patrón que genera
 - Todos los métodos de contrato que escriben reciben `tx` como **primer parámetro**, son **síncronos** y no abren otra
   transacción (si se llaman fuera de una, el proveedor lanza `ContractError('SIN_TRANSACCION')`).
 - Un error en cualquier punto lanza y revierte **todo**: documento, partida, movimiento de inventario y renglón de libro.
-- Trabajo asíncrono (transmitir un DTE, enviar correo, generar PDF) nunca va dentro: se deja en una bandeja y lo procesa
-  un trabajador fuera de la transacción.
+- Trabajo asíncrono (transmitir un DTE, enviar correo, generar PDF) nunca va dentro: se deja en un registro con estado
+  pendiente (p. ej. el DTE, §6) y lo procesa un trabajador fuera de la transacción.
 
 ### 0.3 Identidad e idempotencia
 
@@ -381,7 +381,7 @@ export interface Payables {
 **Propósito:** que cada documento registre su renglón de libro **con enlace real** a su origen, en lugar del
 traslado "borrar el mes y reinsertar el rango" (integracion-legado E1–E3). **Provee:** `tax`. **Consumen:**
 `accounts-payable` (compras, sujeto excluido, retenciones), `sales` (contribuyentes y consumidor final), `banking`
-y `general-ledger` ("Ingresar al IVA / Renta").
+y `general-ledger` ("Ingresar al IVA / Renta"); `dte` (solo `updateDte`, al aceptarse el documento).
 
 ```ts
 export type TaxBook = 'compras' | 'ventas_contribuyente' | 'ventas_consumidor' | 'renta_retenida';
@@ -392,14 +392,14 @@ export interface TaxEntryRequest {
   documentDate: string; documentTypeCode: string; number: string;
   partyId: string | null; partySnapshot: { name: string; nrc?: string; nit?: string; dui?: string };
   amounts: Record<string, string>;     // columnas del libro según `book` (esquema Zod por libro)
-  dte?: { generationCode: string; controlNo: string; seal?: string } | null;
+  dte?: { generationCode: string; controlNo: string; seal?: string } | null;   // los dos primeros existen al emitir (§6); el sello llega al aceptarse
   glEntryId?: string | null;
 }
 
 export interface TaxBooks {
   register(tx: Tx, req: TaxEntryRequest): { taxEntryId: string };   // upsert por (sourceModule, sourceRef, book)
   void(tx: Tx, ref: { sourceModule: string; sourceRef: string; book: TaxBook }, reason: string): void;
-  updateDte(tx: Tx, ref: { sourceModule: string; sourceRef: string }, dte: TaxEntryRequest['dte']): void;
+  updateDte(tx: Tx, ref: { sourceModule: string; sourceRef: string }, dte: TaxEntryRequest['dte']): void;  // lo llama el módulo `dte` al aceptar
 }
 ```
 
@@ -416,73 +416,274 @@ export interface TaxBooks {
 
 ---
 
-## 6. Bandeja de salida del DTE (`dteOutbox`)
+## 6. Documento tributario electrónico (`dte`)
 
-**Propósito:** que `sales` (y `accounts-payable` para sujeto excluido, tipo 14) dejen el documento listo para la
-solución `factura-electronica-mc` y reciban su estado, sin escribir DBF. Sigue la ruta (b) de `dte/README.md` §5: la
-plataforma publica una tabla con **los mismos nombres de columna** que `FELECTRO`/`FANULAR`, y la solución .NET gana una
-fuente alternativa que la lee y escribe el resultado **por API**. **Provee:** `dte`. **Consumen:** `sales`,
-`accounts-payable`. Lector externo: la solución .NET (cliente autenticado de la API, no un módulo).
+**Decisión del dueño (2026-11-12):** la facturación electrónica se **construye dentro de la plataforma**. Al emitir un
+documento fiscal, la plataforma arma, firma y transmite el DTE a Hacienda directamente, como parte del flujo de ventas.
+**No hay integración con la solución .NET** (`factura-electronica-mc`): ni bandeja espejo de `FELECTRO`/`FANULAR`, ni
+cliente .NET que lea de la plataforma, ni cambios en ese repositorio. La solución .NET queda como (a) **implementación de
+referencia** cuyo comportamiento y salidas el módulo nativo debe reproducir y (b) la herramienta que sigue sirviendo a los
+clientes que aún están en el ERP anterior. *Alternativa descartada:* la bandeja de convivencia (opción b de
+`dte/README.md` §5): el dueño prefiere que facturar envíe directo, sin la integración aparte.
+
+**Propósito:** que `sales` (y cualquier otro módulo emisor) deje su documento fiscal listo en la **misma transacción** que
+lo graba y que el módulo `dte` lo firme, lo transmita, guarde el resultado y lo exponga, sin que el emisor conozca el
+formato del DTE ni a Hacienda. **Provee:** `dte`. **Consumen:** `sales` (01, 03, 05, 06, 11), `accounts-payable` (14,
+sujeto excluido). Si se adopta el comprobante de retención electrónico (hay esquema empaquetado pero la solución de
+referencia no tiene constructor, `dte/open-questions.md` 7), `tax` sería un tercer emisor. `dte` consume `taxBooks`
+(opcional), `settings` y `sequences`, y el almacén de secretos y de archivos del núcleo.
+
+### 6.1 Forma
 
 ```ts
-export interface DteEnqueueRequest {
-  source: 'ventas' | 'cxp'; sourceRef: string;
-  dteType: '01' | '03' | '05' | '06' | '11' | '14';  // los implementados en la solución
-  legacyDocKind: 'F' | 'C' | 'N' | 'D' | 'E' | 'S';  // TIPODOC del legado
-  number: string;                                      // NFACT_ENV
-  issueDate: string; issueTime: string;
-  header: DteHeaderColumns;     // emisor (de core_empresa_profile + dte_establishments), receptor (instantánea de parties),
-                                // resumen, exportación, referencia (05/06), apéndices — nombres = columnas de FELECTRO
-  lines: DteLineColumns[];      // NUMITEM, CODIGO, CANTIDAD, PRECIOUNI, VENTAGRAVA, IVALIN…; importes ya calculados
+export type DteType = '01' | '03' | '05' | '06' | '11' | '14';   // los que implementa la solución de referencia
+export type DteState =
+  | 'pendiente'                 // grabado en la transacción local; sin firmar
+  | 'firmado'                   // JSON firmado, aún sin transmitir
+  | 'enviado'                   // transmitido, respuesta no recibida (tiempo de espera): se reconsulta, no se reenvía a ciegas
+  | 'aceptado'                  // Hacienda lo recibió y devolvió sello
+  | 'rechazado'                 // Hacienda lo rechazó: se guarda el motivo
+  | 'contingencia'              // emitido en contingencia, pendiente de reportar
+  | 'invalidacion_pendiente'    // evento de invalidación solicitado, sin respuesta
+  | 'invalidado'                // invalidación aceptada
+  | 'descartado';               // nunca transmitido ni aceptado; su número queda consumido
+
+export interface DteIssueRequest {
+  source: 'ventas' | 'cxp'; sourceRef: string;       // sal_documents.id / ap_documents.id
+  dteType: DteType;
+  establishmentId: string; posId: string;            // dte_establishments / punto de venta
+  issueDate: string; issueTime: string;              // fijos desde aquí: no cambian en los reintentos
+  receptor: DteReceptor;                             // instantánea (nombre, identificadores, dirección, correo), no referencia viva
+  lines: DteLine[];                                  // importes en decimal exacto (texto); ya calculados por el emisor
+  summary: DteSummary;                               // totales, descuentos, retenciones, forma de pago, condición
+  reference?: { dteDocumentId: string };             // 05/06: DTE que se corrige o se debita
+  export?: DteExportData;                            // 11
+  notes?: string[];                                  // apéndices; los campos solo de presentación no viajan a Hacienda
 }
 
-export type DteState = 'pendiente' | 'reclamado' | 'aceptado' | 'fallido' | 'invalidacion_pendiente' | 'invalidado';
 export interface DteStatus {
-  state: DteState; controlNo: string | null; generationCode: string | null; seal: string | null;
-  failure: string | null; files: { kind: 'pdf' | 'json' | 'qr'; fileId: string }[];
+  state: DteState; controlNo: string; generationCode: string; seal: string | null;
+  rejection: { code: string | null; message: string } | null;      // último rechazo de Hacienda, visible al usuario
+  issuedAt: string; acceptedAt: string | null; attempts: number; nextAttemptAt: string | null;
+  files: { kind: 'pdf' | 'json' | 'qr'; fileId: string }[];
+  mode: 'normal' | 'contingencia';
 }
 
-export interface DteOutbox {
-  enqueue(tx: Tx, req: DteEnqueueRequest): { dteDocumentId: string };
-  replace(tx: Tx, req: DteEnqueueRequest): { dteDocumentId: string };  // solo si state = 'pendiente' o 'fallido'
-  requestInvalidation(tx: Tx, ref: { source: string; sourceRef: string },
-                      req: { kind: string; reason: string; responsible: UserRef; replacementSourceRef?: string }): void;
-  status(db: Db | Tx, ref: { source: string; sourceRef: string }): DteStatus | null;
+type DteRef = { source: 'ventas' | 'cxp'; sourceRef: string };
+
+/** Parte síncrona: se llama DENTRO de la transacción del emisor. */
+export interface Dte {
+  issue(tx: Tx, req: DteIssueRequest): { dteDocumentId: string; controlNo: string; generationCode: string };
+  replace(tx: Tx, req: DteIssueRequest): { dteDocumentId: string };   // solo en 'pendiente', 'firmado' o 'rechazado'
+  discard(tx: Tx, ref: DteRef, reason: string): void;                 // documento nunca aceptado que se anula
+  requestInvalidation(tx: Tx, ref: DteRef,
+    req: { kind: string; reason: string; responsible: UserRef; replacementSourceRef?: string }): void;
+  enterContingency(tx: Tx, req: { establishmentId: string; reason: string }): void;   // supervise
+  leaveContingency(tx: Tx, req: { establishmentId: string }): void;
+  status(db: Db | Tx, ref: DteRef): DteStatus | null;
+}
+
+/** Parte asíncrona: la llaman la ruta del emisor DESPUÉS de confirmar y el trabajador; nunca dentro de una transacción. */
+export interface DteDelivery {
+  transmit(ref: DteRef, opts: { waitMs: number }): Promise<DteStatus>;   // firma, envía y espera hasta waitMs
+  reconcile(ref: DteRef): Promise<DteStatus>;                            // consulta a Hacienda; no reenvía
+  runPending(): Promise<{ processed: number }>;                          // un ciclo del trabajador
 }
 ```
 
-**Tablas** (todas con `empresa_id`): `dte_documents` (un registro por documento, estado, identificadores),
-`dte_outbox` (una fila por **línea**, columnas = `FELECTRO` §1.2 de `dte/data-model.md`, más `row_id`, `dte_document_id`,
-`claimed_by`, `claimed_at`, `leased_until`), `dte_invalidation_outbox` (columnas = `FANULAR`), `dte_attempts`,
-`dte_establishments`, `dte_settings` (referencias a secretos, nunca el secreto), `dte_files` (→ `core_files`).
+**Tablas** (todas con `empresa_id`; dinero en decimal exacto, no en enteros): `dte_documents` (estado, `control_no`
+único por empresa + ambiente, `generation_code`, sello, fechas, totales, JSON armado, JSON firmado, respuesta de Hacienda),
+`dte_lines`, `dte_attempts` (cada transmisión, consulta o evento: solicitud, respuesta, resultado), `dte_invalidations`,
+`dte_contingency_events`, `dte_establishments` (códigos de establecimiento y punto de venta ante Hacienda),
+`dte_settings` (ambiente y normativa por empresa, referencias a secretos: nunca el secreto), `dte_files` (→ `core_files`).
+No existe una tabla espejo de `FELECTRO`/`FANULAR`: la tabla de documentos es la cola.
 
-**Ciclo:**
-1. `sales` emite el documento y, en la **misma transacción**, llama `enqueue`: se escriben el documento y sus N filas con
-   `NLINEAS = N`, estado `pendiente` (`PROCESADO = 0`, `FALLO = 0`). Si la transacción falla no queda nada en la bandeja.
-2. La solución .NET llama `POST /api/dte/outbox/claim` (arrendamiento por documento, no `select *` de toda la tabla),
-   recibe filas con los nombres de columna que ya sabe leer, firma y transmite.
-3. Devuelve por `POST /api/dte/outbox/:id/result` exactamente lo que hoy escribe en el DBF — `PROCESADO`, `FALLO`,
-   `NCONTROL`, `CODGENERAC`, `SELLORE` — **más** el motivo del rechazo y los archivos (`<CODGENERAC>.pdf|json|png`), que
-   hoy se pierden. La API actualiza `dte_documents`, guarda los archivos y llama `taxBooks.updateDte` para el renglón de
-   libro (el legado lo leía en el traslado, F3).
-4. Arrendamiento vencido sin resultado ⇒ vuelve a `pendiente` **sin** generar código nuevo por parte de la plataforma; la
-   regla "reconsultar a Hacienda antes de reenviar" es de la solución (riesgo 2 de `dte/README.md` §6).
+### 6.2 Emitir como parte de grabar el documento
 
-**Modificar y anular:** un documento `aceptado` no se modifica (INV 6); la venta se corrige con nota de crédito o con
-invalidación. `replace` solo antes de aceptado. Anular una venta aceptada exige `requestInvalidation` en la misma
-transacción que anula el documento de venta; la invalidación tiene su propio estado. **Número de control:** lo sigue
-calculando la solución con su configuración de establecimiento y los últimos 8 caracteres de `NFACT_ENV`; la
-plataforma garantiza que `NFACT_ENV` no se repite por serie (`core_sequences`) y que su piso inicial es el último número
-usado por el ERP viejo (`dte/data-model.md` §4).
+**Dentro de la transacción local** (síncrona, sin red; `issue` lo llama `sales` en la misma `inTx` que graba la venta,
+su partida, su salida de existencias y su cargo en CxC, contratos §0.2):
 
-**Permisos:** emitir = permiso de `sales`; invalidar = `sales.document.void` + motivo; la solución .NET usa una cuenta de
-servicio con un permiso único `dte.outbox.process` (sin acceso a otras rutas). **Bitácora:** cada cambio de estado.
-**Pruebas:** con los JSON dorados del repositorio de la solución (`SampleDtes`): la fila de bandeja debe producir el mismo
-JSON que hoy produce `FELECTRO`. **Importación:** grupos `(NFACT_ENV, TIPODOC)` de `FELECTRO` → `dte_documents`
-(estado según la tabla §1.4 de `dte/data-model.md`); `FANULAR` → invalidaciones; `EnviosDTE` → `dte_attempts`; archivos de
-`PDFPath` → `core_files`. La bandeja de una empresa migrada empieza vacía.
+1. Valida y arma el JSON del DTE con el constructor del tipo (función pura sobre la solicitud) y lo **valida contra el
+   esquema oficial empaquetado** y contra la consistencia de totales (§6.6). Si falla, lanza y **no se graba nada**: el
+   usuario corrige en la misma pantalla, antes de que exista un documento a medias.
+2. Asigna el **número de control** con `sequences.next` (§6.5) y el **código de generación (UUID) una sola vez**; ambos
+   quedan en `dte_documents` y **no cambian en ningún reintento**. La fecha y la hora de emisión también quedan fijas.
+3. Escribe `dte_documents` en estado `pendiente`, sus líneas y la bitácora. Si algo posterior falla, la transacción
+   revierte y el número no se consume.
 
-**Destino (fase 7):** el módulo `dte` firma y transmite él mismo; el contrato `DteOutbox` no cambia para `sales`.
+**Fuera de la transacción** (asíncrono; better-sqlite3 es síncrono y la red no puede ir dentro de una transacción):
+
+4. Al confirmar, la ruta de ventas llama `DteDelivery.transmit(ref, { waitMs })`: recupera el certificado del almacén
+   de secretos, **firma** (`pendiente → firmado`), autentica, **transmite** (`firmado → enviado`) y espera la respuesta.
+5. Respuesta de Hacienda: aceptado ⇒ sello y estado `aceptado`; rechazado ⇒ `rechazado` con código y mensaje. En ambos
+   casos, en una transacción corta nueva, se guardan el estado, el intento y los archivos (§6.8), y se llama
+   `taxBooks.updateDte` (§5) con el sello.
+
+**Qué ve el usuario:** la pantalla de factura **espera la respuesta** hasta un tiempo máximo (`waitMs`, configurable por
+empresa; propuesta inicial 20 s, a ajustar con pruebas reales) y muestra **«Aceptado»** con el sello o **«Rechazado»**
+con el motivo. Si se agota el tiempo o no hay conexión, el documento **queda `pendiente`/`firmado`/`enviado`**, la pantalla
+dice «pendiente de Hacienda; se reintentará solo» y el usuario puede seguir trabajando.
+
+**Trabajador en el proceso de la API:** cada pocos segundos toma los DTE `pendiente`, `firmado`, `enviado` y
+`contingencia` con `nextAttemptAt` vencido y los procesa uno a la vez por empresa (un solo escritor: no hace falta
+arrendamiento). Reintentos con espera creciente; al arrancar la API retoma lo que haya quedado `enviado` **reconsultando**
+(§6.3). Lo que lleva más de un umbral configurable sin resolverse se muestra en una pantalla de pendientes y alerta al
+supervisor.
+
+**¿Se puede imprimir o entregar antes de la aceptación?** **No como documento fiscal.** Mientras no sea `aceptado` el
+sistema solo permite una vista previa marcada «sin validez fiscal». Excepción: un documento en `contingencia`
+(§6.7) puede entregarse con la leyenda que corresponda a ese modo. Qué debe llevar esa leyenda y qué plazos tiene el
+reporte posterior **debe confirmarse con la normativa vigente**; aquí no se afirma.
+
+### 6.3 Reintentos: reconsultar antes de reenviar
+
+El spec de la solución de referencia identificó que un reintento tras un tiempo de espera con código de generación nuevo y
+el mismo número de control provoca el rechazo por número de control duplicado (`dte/open-questions.md` 19, riesgo 2 de
+`dte/README.md` §6). Regla del módulo nativo:
+
+- El código de generación y el número de control **nunca se regeneran** para el mismo DTE.
+- Un DTE en `enviado` (o cuyo envío terminó en tiempo de espera o error de red) **no se vuelve a enviar**: primero
+  `reconcile` consulta a Hacienda por su código de generación (y número de control). Si Hacienda ya lo tiene, se toma su
+  sello y pasa a `aceptado` (o a `rechazado` si así consta); si no lo tiene, se reenvía **el mismo documento firmado**.
+- Un rechazo por número duplicado nunca se muestra como error de datos: se reconcilia. (La existencia y la forma de la
+  consulta a Hacienda deben verificarse contra la documentación técnica vigente.)
+
+### 6.4 Estados y quién los mueve
+
+| Transición | Quién |
+|---|---|
+| (nada) → `pendiente` | `Dte.issue`, llamado por el módulo emisor en su transacción |
+| `pendiente` → `firmado` | `DteDelivery` (firmador del módulo `dte`) |
+| `firmado` → `enviado` | `DteDelivery` al transmitir |
+| `enviado` → `aceptado` / `rechazado` | `DteDelivery`, por la respuesta (o por `reconcile`) |
+| `rechazado` / `pendiente` / `firmado` → `pendiente` | `Dte.replace`, al corregir el documento de origen |
+| `pendiente` / `firmado` / `rechazado` → `descartado` | `Dte.discard`, cuando el emisor anula un documento que nunca fue aceptado |
+| `pendiente` / `firmado` → `contingencia` | `DteDelivery` si el establecimiento está en contingencia (§6.7) |
+| `contingencia` → `aceptado` / `rechazado` | `DteDelivery`, al reportar |
+| `aceptado` → `invalidacion_pendiente` | `Dte.requestInvalidation`, en la transacción que anula el documento de origen |
+| `invalidacion_pendiente` → `invalidado` | `DteDelivery`, por la respuesta; si Hacienda la rechaza vuelve a `aceptado` con el motivo guardado |
+
+No se anula ni se modifica un DTE `enviado` hasta resolver su estado (`DTE_EN_CURSO`). Un `aceptado` no se modifica: se
+corrige con nota de crédito (05) o con invalidación.
+
+### 6.5 Numeración
+
+- El **número de control** sale de `sequences.next` con `scope = 'dte'` y una llave por **empresa + ambiente +
+  establecimiento + punto de venta + tipo de documento**; se consume en la misma transacción que el documento (si éste
+  falla, el número no se gasta). Pruebas y producción llevan correlativos separados. El formato del número de control es
+  el de la normativa y de `dte/business-rules.md` §5; la plataforma lo arma desde esa llave y su correlativo propio (ya no
+  se derivan los últimos 8 caracteres del número del ERP).
+- **Piso inicial:** el último número que la solución .NET ya usó para esa serie (§6.12). `next` no devuelve nunca un número
+  menor ni igual, y un número **aceptado jamás se reutiliza**. Los números de DTE `descartado` o `rechazado` quedan
+  consumidos; un reporte de **huecos** los lista. Si la normativa permite reutilizar el número de un documento rechazado
+  es una pregunta abierta (§6.10); por omisión no se reutiliza.
+- El número interno del documento de venta (`sal_series`) es independiente del número de control.
+
+### 6.6 Validación antes de firmar
+
+Dentro de `issue` (§6.2 paso 1), para que el error salga antes de grabar y antes de transmitir:
+(a) el JSON armado cumple el **esquema oficial** del tipo y de la normativa de la empresa (esquemas empaquetados en el
+módulo, versionados); (b) consistencia de totales: Σ líneas = resumen, descuentos, IVA y total a pagar con aritmética
+decimal exacta y el redondeo que fija la normativa (la solución de referencia **copia** los importes sin recalcular y por
+eso las diferencias de centavos llegaban a Hacienda; aquí se **verifica** y se rechaza la diferencia); (c) catálogos
+(forma de pago, unidad, actividad, ubicación) contra las tablas `core_ref_*`; (d) receptor completo según el tipo (p. ej.
+el CCF exige NRC); (e) 05/06 con referencia a un DTE `aceptado` del mismo receptor. Los errores son `RuleError` en español
+con el campo y la regla.
+
+### 6.7 Rechazo, invalidación y contingencia
+
+**Rechazo.** El motivo (código y mensaje) se guarda en `dte_documents`/`dte_attempts` y se muestra en la pantalla del
+documento de venta y en la de pendientes (la solución de referencia no lo hace: solo marca `FALLO`). El documento de
+venta **no se pierde**: ya está grabado y contabilizado (decisión abierta, §6.10), con su estado fiscal «rechazado». El
+usuario lo corrige: `sales` modifica el documento, que llama `Dte.replace` (mismo registro, estado `pendiente`, mismo
+número y código mientras el motivo sea de contenido; si Hacienda exige uno nuevo, se descarta y se emite otro DTE con
+número nuevo), o lo anula (`discard`). Un fallo por conexión o por duplicado no es rechazo de contenido (§6.3).
+
+**Invalidación (anulación).** `requestInvalidation` se llama en la **misma transacción** que anula el documento de venta
+(contratos §1.4, §4) y registra el evento en `dte_invalidations`; la transmisión es asíncrona como la emisión. Tipo y motivo
+son obligatorios y elegibles (la solución de referencia usa un tipo fijo y nunca envía el documento de reemplazo). La
+solución de referencia **no valida plazos de invalidación**; el módulo nativo **debe** hacerlo: calcula el plazo por tipo
+de documento y bloquea o exige `supervise` según corresponda. **Los plazos y las condiciones por tipo deben confirmarse
+con la normativa vigente**; hasta entonces el módulo los toma de una tabla en `dte_settings`, sin valores escritos en el
+código.
+
+**Contingencia.** La solución de referencia **no tiene flujo productivo de contingencia** (solo una herramienta para las
+pruebas de Hacienda). El módulo nativo lo define como operaciones del contrato: `enterContingency` (por establecimiento,
+con motivo y permiso `dte.contingency.enter`; propuesta: manual cuando el trabajador detecta que no hay conexión, con
+opción automática por empresa), emisión de documentos con la marca de contingencia, `leaveContingency` y el **reporte
+posterior** del evento y de los documentos a Hacienda, tras el cual cada uno pasa a `aceptado` o `rechazado`. Tipos de
+contingencia, contenido del evento, plazos y qué sigue cuando falla el reporte **deben confirmarse con la normativa
+vigente**; el spec de la solución de referencia solo documenta el constructor del evento (esquema v4, uso de pruebas).
+
+### 6.8 Salidas, archivos y correo
+
+Por cada DTE aceptado (o en contingencia): **JSON** (el DTE sin firma y el firmado), **PDF con código QR** y **PNG del QR**,
+nombrados `<código de generación>.json|.pdf|.png` (y `…-INVALIDACION.json|.pdf` para eventos), como la solución de
+referencia, para que el historial importado y el nuevo se vean igual. Se guardan en el servidor, en `core_files`, bajo el
+directorio de datos de la plataforma por empresa y año, con su suma de verificación; el cliente web los descarga por
+la API (no hay ruta compartida de red). La generación del PDF y del correo ocurre **fuera de la transacción**, tras la
+aceptación. **Correo al receptor:** con PDF y JSON adjuntos; un error de correo no cambia el estado del DTE, se reintenta
+con espera (propuesta: hasta 24 h, `dte/open-questions.md` 9) y queda visible. La URL y el contenido del QR siguen la
+documentación técnica vigente (el spec de referencia registra un defecto de salto de línea que no se copia).
+
+**Libros de IVA:** `sales`/`accounts-payable` registran su renglón en la misma transacción pasando el número de control y
+el código de generación (ya existen al emitir); el sello llega después por `taxBooks.updateDte`, que llama `dte` al
+aceptar (§5). Los libros leen siempre los identificadores del DTE por este contrato, nunca de tablas de `dte`.
+
+### 6.9 Secretos, ambiente y conectividad
+
+- **Secretos.** El certificado de firma, su contraseña y las credenciales de Hacienda son **por empresa** y viven en el
+  almacén de secretos de la plataforma (Administrador de credenciales del SO, el mecanismo de
+  [architecture.md](../architecture.md)), **nunca en la base en claro ni en archivos de configuración**. `dte_settings` guarda
+  solo referencias. Si el almacén del SO no admite el tamaño del certificado, éste se guarda cifrado con una llave que sí
+  vive en el almacén. Cargar, reemplazar y leer secretos se audita sin registrar su valor; los carga el operador, no la
+  importación. Hay un caché de token por (empresa, ambiente) en memoria.
+- **Ambiente** (pruebas/producción) y **normativa** son ajustes por empresa en `dte_settings`; cambiarlos exige
+  `supervise` y deja bitácora. Las secuencias de §6.5 distinguen ambiente.
+- **Conectividad.** La plataforma es de red local y no depende de Internet, **salvo la emisión del DTE**, que necesita
+  Internet en la **máquina servidor** (el firmado es local; la transmisión, la consulta y el correo salen de ahí). Sin
+  Internet: los documentos se graban y quedan en cola (`pendiente`); el resto del sistema sigue; el trabajador reintenta al
+  volver la conexión y el supervisor puede pasar el establecimiento a contingencia (§6.7). La pantalla muestra el estado
+  de conexión con Hacienda. Cada cliente debe tener un enlace confiable en el servidor (pregunta abierta, `dte/open-questions.md` 35).
+
+### 6.10 Permisos, bitácora y decisiones abiertas
+
+**Permisos.** Emitir = permiso de `sales` (o de `accounts-payable`); anular un DTE = `sales.document.void` más motivo y,
+fuera de plazo, `supervise`; reintento manual y reconsulta = `dte.document.retry`; contingencia = `dte.contingency.enter`;
+establecimientos, ambiente, normativa y secretos = `dte.settings.manage` (paquete `supervise`). No hay cuenta de servicio
+externa: el trabajador corre dentro de la API con el contexto de la empresa. **Bitácora:** cada cambio de estado y cada
+intento (`dte_attempts`) en la misma transacción que lo registra; `via: 'dte'`.
+
+**Abiertas para el negocio o la norma:** (1) ¿el documento de venta se contabiliza al grabar (propuesto) o solo al
+aceptarse el DTE? Contabilizar al grabar exige reverso si el DTE se descarta; (2) ¿se reutiliza el número de control de un
+documento rechazado?; (3) plazos de invalidación, tipos y reporte de contingencia; (4) valor de `waitMs`; (5) si los
+libros de IVA declaran solo DTE aceptados o en contingencia.
+
+### 6.11 Pruebas y referencia
+
+- **Referencia:** cada constructor se prueba contra los **JSON dorados** que produce la solución .NET para cada tipo de
+  documento (fixtures `SampleDtes` y capturas nuevas por tipo) y contra los **esquemas oficiales**; los casos de rechazo
+  del changelog de la solución son la suite de aceptación. Se compara el JSON sin firma (la firma no es reproducible).
+- Contrato (§0.5): proveedor con emisor falso; `sales` con el proveedor real; **reversión** (forzar error después de
+  `issue` y comprobar que no queda DTE ni número consumido); **idempotencia** (`issue` dos veces con el mismo origen);
+  `replace`/`discard`/invalidación según estado.
+- Trabajador y red: Hacienda **simulada** (aceptación, rechazo, tiempo de espera con aceptación del lado remoto, caída),
+  verificando que el reintento reconsulta y conserva código de generación y número; recuperación al reiniciar la API.
+- Numeración: piso, concurrencia, no reutilización, reporte de huecos. Secretos: nada en base ni en registros.
+- **Certificación:** aceptación del módulo en el ambiente de pruebas de Hacienda, por tipo de documento, antes de
+  producción (modulos-y-orden §3.2).
+
+### 6.12 Importación del historial y corte
+
+Del legado (`dte/data-model.md` §5): los **documentos emitidos** con sello, número de control y código de generación
+(grupos `(NFACT_ENV, TIPODOC)` de `FELECTRO` con el intento `Resultado = 1` de `EnviosDTE`) → `dte_documents`/`dte_lines`
+en estado `aceptado`, `invalidado` o `rechazado`/`descartado` según la tabla de `dte/data-model.md` §1.4; el **JSON enviado
+y la respuesta** de Hacienda se guardan tal cual (no se reconstruyen); las **invalidaciones** de `FANULAR` con su sello →
+`dte_invalidations`; los intentos de `EnviosDTE` → `dte_attempts`; los **PDF, JSON y PNG** de `PDFPath` → `core_files` (se
+copian, no se regeneran); y el **último número de control usado por serie** → piso de `core_sequences` (obligatorio).
+Certificado y credenciales no se migran como datos. **Corte:** la facturación de una empresa pasa a la plataforma
+**completa y con su emisión de DTE**; desde el corte, la solución .NET deja de emitir para esa empresa y serie, y el
+módulo nativo no emite mientras el último número entregado no esté cargado (§6.5).
 
 ---
 
@@ -545,7 +746,7 @@ export interface Sequences {
 
 P = provee · C = consume · c = consume opcional · — = no
 
-| Módulo | ledger | periods | stock | receivables | payables | taxBooks | dteOutbox | lookup | settings / sequences |
+| Módulo | ledger | periods | stock | receivables | payables | taxBooks | dte | lookup | settings / sequences |
 |---|---|---|---|---|---|---|---|---|---|
 | núcleo | — | P | — | — | — | — | — | — | P |
 | chart-of-accounts | — | — | — | — | — | — | — | P (accounts) | C |
@@ -556,7 +757,7 @@ P = provee · C = consume · c = consume opcional · — = no
 | accounts-receivable | C | C | — | P | — | — | — | C | C |
 | inventory | C | C | P | — | c | — | — | P (items) · C | C |
 | sales | C | C | C | c | — | c | c | C | C |
-| dte | — | — | — | — | — | — | P | C | C |
+| dte | — | — | — | — | — | c | P | — | C |
 | tax | c | C | — | — | — | P | — | C | C |
 | production | C | C | C | — | c | — | — | C | C |
 | fixed-assets | C | C | — | — | — | — | — | C | C |
