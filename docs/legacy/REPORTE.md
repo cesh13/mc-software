@@ -29,6 +29,8 @@ Documento para retomar el trabajo. Se actualiza al final de cada sesión de trab
 | Spec de IVA | Hecho, sin revisar con el negocio | [iva64/](iva64/README.md) |
 | Spec de Cuentas por cobrar | Hecho, sin revisar con el negocio (36 preguntas) | [cxc64/](cxc64/README.md) |
 | Spec de Lotes (producción) | Hecho, sin revisar con el negocio | [lote64/](lote64/README.md) |
+| Spec de Activo fijo | Hecho, sin revisar con el negocio | [afijo64/](afijo64/README.md) |
+| Spec de Planilla | Hecho, sin revisar con el negocio; ~50 reportes sin leer | [plan64/](plan64/README.md) |
 | Spec de Inventario, facturación y DTE | Hecho, sin revisar con el negocio (55 preguntas); ~244 reportes sin leer | [inv64/](inv64/README.md) |
 | Usuarios: API y pantalla (roles, bloqueo, empresas) | Hecho, 9 pruebas; pantalla sin abrir en navegador | `apps/api/src/routes/users.ts`, `apps/web/src/components/admin` |
 
@@ -132,6 +134,26 @@ Sin verificar: el spec no se ha revisado con el negocio, y 47 reportes de Bancos
   Inventario y contabiliza por lotes manuales. Se propone un módulo `production`.
 - **Módulos propuestos por los specs:** `banking`, `accounts-payable`, `tax`,
   `accounts-receivable`, `inventory`, `sales`, `dte`, `production`.
+
+## Hallazgos de los specs de Activo fijo y Planilla, y patrón común
+
+- **Patrón común a todos los módulos:** cada uno escribe sus partidas directo en las tablas de
+  Contabilidad con la rutina compartida `CGADIPAR`, casi siempre por lotes manuales, sin marca
+  de origen y sin enlace documento–partida. El primer trabajo de diseño antes de cualquier
+  módulo nuevo es **el contrato para publicar partidas en el libro mayor** (`source`,
+  `source_ref`, reemplazo y reverso controlados).
+- **Activo fijo:** solo línea recta. La depreciación acumulada guardada en cada activo está mal
+  en 141 de 143 activos (la actualización escribe sobre el registro equivocado); la paridad debe
+  hacerse contra las cuotas. Deprecia activos marcados como no depreciables. No existen bajas,
+  ventas ni revaluaciones.
+- **Planilla:** quincenal sobre sueldo mensual. Tasas, topes y tabla de renta viven en un
+  archivo de configuración sin fechas de vigencia ni historial; varios porcentajes están fijos
+  en el código. El cierre de planilla no se puede reabrir. La partida contable omite varios
+  conceptos y puede salir descuadrada. No usa Bancos: el pago sale a un Excel genérico. Hay una
+  versión del cálculo de 2025 fuera del proyecto que difiere de la vigente; no se sabe con cuál
+  paga el cliente.
+- Todo lo legal (IVA, DTE, ISSS, AFP, renta, depreciación) está descrito como *lo que hace el
+  código* y marcado para verificar contra la normativa vigente.
 
 ## Supuestos que tomé
 

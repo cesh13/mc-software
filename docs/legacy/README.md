@@ -94,7 +94,7 @@ Hallazgos útiles:
 | LOTE64 | ✅ [docs/legacy/lote64](lote64/README.md) | — | — | — | — |
 | IVA64 | ✅ [docs/legacy/iva64](iva64/README.md) | — | — | — | — |
 | AFIJO64 | ✅ [docs/legacy/afijo64](afijo64/README.md) | — | — | — | — |
-| plan64 | — | — | — | — | — |
+| plan64 | ✅ [docs/legacy/plan64](plan64/README.md) | — | — | — | — |
 
 Pendientes generales:
 - Responder las 11 [open-questions de CONTAC](contac/open-questions.md) restantes con el negocio
