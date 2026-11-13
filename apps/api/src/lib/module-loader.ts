@@ -89,12 +89,12 @@ export function migrateModule(db: Db, modulesDir: string, moduleId: string): voi
 export async function loadModules(
   app: Hono,
   deps: PlatformDeps,
-  opts: { modulesDir?: string; only?: string[] } = {},
+  opts: { modulesDir?: string; only?: string[]; manifests?: ModuleManifest[] } = {},
 ): Promise<string[]> {
   const db = deps.db()
   const modulesDir = opts.modulesDir ?? getModulesDir()
 
-  const manifests = await discoverManifests(modulesDir)
+  const manifests = opts.manifests ?? (await discoverManifests(modulesDir))
   syncModulesTable(db, manifests)
 
   const enabledIds = new Set(

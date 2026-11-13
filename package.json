@@ -7,6 +7,8 @@
     "dev:tray": "pnpm --filter @accounting/tray dev",
     "build:api": "pnpm --filter @accounting/api build",
     "build:web": "pnpm --filter @accounting/web build",
+    "build:release": "pnpm build:api:server && pnpm build:web && pnpm dist:win",
+    "build:api:server": "pnpm --filter @accounting/api build:server",
     "build:tray": "pnpm --filter @accounting/tray build",
     "build:shared": "pnpm --filter @accounting/shared build",
     "db:generate": "pnpm --filter @accounting/api db:generate",

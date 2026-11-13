@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc && tsc-alias",
+    "build:server": "node build/build.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "test": "tsx --test \"tests/**/*.test.ts\"",
@@ -30,6 +31,7 @@
     "@types/better-sqlite3": "^7.6.0",
     "@types/node": "^22.0.0",
     "drizzle-kit": "^0.31.4",
+    "esbuild": "^0.25.12",
     "tsc-alias": "^1.8.10",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"

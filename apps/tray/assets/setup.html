@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+<title>MC Software - Configuración</title>
+<style>
+  body { font-family: Segoe UI, sans-serif; margin: 0; padding: 28px; background: #f4f6fa; color: #1c2430; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p.sub { margin: 0 0 20px; color: #5a6676; font-size: 14px; }
+  label.opt { display: block; background: #fff; border: 2px solid #d5dbe5; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; cursor: pointer; }
+  label.opt:has(input:checked) { border-color: #2f6fed; }
+  label.opt b { display: block; }
+  label.opt span { font-size: 13px; color: #5a6676; }
+  #client { margin: 0 0 14px 4px; display: none; }
+  #client.on { display: block; }
+  .row { display: flex; gap: 10px; margin-bottom: 10px; }
+  input[type=text], input[type=number] { padding: 8px; border: 1px solid #b8c1cf; border-radius: 6px; font-size: 14px; }
+  #host { flex: 1; } #port { width: 90px; }
+  button { padding: 9px 16px; border: 0; border-radius: 6px; font-size: 14px; cursor: pointer; background: #e3e8f1; }
+  button.primary { background: #2f6fed; color: #fff; }
+  #msg { min-height: 20px; font-size: 13px; margin: 6px 0 14px; }
+  .ok { color: #1a7f37; } .bad { color: #b42318; }
+  .actions { display: flex; gap: 10px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+  <h1>Bienvenido a MC Software</h1>
+  <p class="sub">Elija cómo se usará el programa en esta computadora.</p>
+
+  <label class="opt"><input type="radio" name="mode" value="server" checked>
+    <b>Esta computadora es el servidor</b>
+    <span>Guarda los datos de la empresa. Debe quedar encendida para que otras computadoras se conecten.</span></label>
+  <label class="opt"><input type="radio" name="mode" value="client">
+    <b>Conectarse a un servidor</b>
+    <span>Usa los datos que están en otra computadora de la oficina.</span></label>
+
+  <div id="client">
+    <div class="row">
+      <input type="text" id="host" placeholder="Dirección del servidor (nombre o IP)">
+      <input type="number" id="port" value="3001" min="1" max="65535">
+    </div>
+    <button id="test" type="button">Probar conexión</button>
+  </div>
+  <div id="msg"></div>
+
+  <div class="actions">
+    <button id="cancel" type="button">Cancelar</button>
+    <button id="save" class="primary" type="button">Guardar y continuar</button>
+  </div>
+
+<script>
+  const $ = (id) => document.getElementById(id)
+  const mode = () => document.querySelector('input[name=mode]:checked').value
+  const say = (t, ok) => { $('msg').textContent = t; $('msg').className = ok ? 'ok' : 'bad' }
+
+  document.querySelectorAll('input[name=mode]').forEach((r) =>
+    r.addEventListener('change', () => { $('client').classList.toggle('on', mode() === 'client'); say('', true) }))
+
+  $('test').onclick = async () => {
+    say('Probando…', true)
+    const r = await window.mc.testConnection($('host').value.trim(), Number($('port').value))
+    say(r.message, r.ok)
+  }
+  $('save').onclick = async () => {
+    try {
+      if (mode() === 'server') return await window.mc.saveServer()
+      const host = $('host').value.trim()
+      if (!host) return say('Escriba la dirección del servidor.', false)
+      await window.mc.saveClient(host, Number($('port').value))
+    } catch (e) { say('Dirección o puerto no válidos.', false) }
+  }
+  $('cancel').onclick = () => window.mc.cancel()
+
+  window.mc.info().then((i) => {
+    if (i.mode === 'client') {
+      document.querySelector('input[value=client]').checked = true
+      $('client').classList.add('on')
+      $('host').value = i.host; $('port').value = i.port
+    }
+  })
+</script>
+</body>
+</html>

@@ -12,3 +12,6 @@ release/
 MCERP/
 !.env.example
 *.tsbuildinfo
+
+# Update feed URL (per owner, see apps/tray/update.config.example.json)
+apps/tray/update.config.json

@@ -1,8 +1,9 @@
 import keytar from 'keytar'
 import { randomBytes } from 'crypto'
 
-const SERVICE = 'accounting-platform'
-const ACCOUNT = 'db-cipher-key'
+// Overridable so tests of the packaged app never touch the real key.
+const SERVICE = process.env.ACCOUNTING_KEYCHAIN_SERVICE ?? 'accounting-platform'
+const ACCOUNT = process.env.ACCOUNTING_KEYCHAIN_ACCOUNT ?? 'db-cipher-key'
 
 export async function getCipherKey(): Promise<string> {
   const existing = await keytar.getPassword(SERVICE, ACCOUNT)

@@ -1,15 +1,15 @@
 {
   "name": "@accounting/tray",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
   "main": "dist/main.js",
   "scripts": {
     "dev": "electron .",
-    "build": "tsc",
-    "dist:win": "electron-builder --win",
-    "dist:mac": "electron-builder --mac"
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && node scripts/make-icon.mjs && tsc",
+    "dist:win": "pnpm build && electron-builder --win --publish never --config electron-builder.config.cjs"
   },
   "dependencies": {
+    "better-sqlite3-multiple-ciphers": "^12.10.0",
     "electron-updater": "^6.3.0",
     "keytar": "^7.9.0"
   },
@@ -19,35 +19,6 @@
     "electron-builder": "^25.1.0",
     "typescript": "^5.6.0"
   },
-  "build": {
-    "appId": "com.accounting.platform",
-    "productName": "Accounting Platform",
-    "directories": { "output": "release" },
-    "files": ["dist/**/*", "assets/**/*"],
-    "extraResources": [
-      { "from": "../api/dist", "to": "api" },
-      { "from": "../web/out", "to": "ui" },
-      { "from": "../../modules", "to": "modules", "filter": ["**/*", "!**/node_modules", "!**/*.ts"] }
-    ],
-    "win": {
-      "target": "nsis",
-      "icon": "assets/icon.ico",
-      "requestedExecutionLevel": "requireAdministrator"
-    },
-    "mac": {
-      "target": "dmg",
-      "icon": "assets/icon.icns",
-      "category": "public.app-category.finance"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": false,
-      "runAfterFinish": true
-    },
-    "publish": {
-      "provider": "github",
-      "releaseType": "release"
-    }
-  }
+  "description": "MC Software - escritorio (servidor y cliente)",
+  "author": "MC Software"
 }

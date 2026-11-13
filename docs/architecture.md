@@ -36,13 +36,14 @@ Estado del código al 2026-11-10. Ninguno bloquea el trabajo de CONTAC.
 
 | # | Pendiente | Dónde | Fase |
 |---|---|---|---|
-| 1 | La URL de la API en la web apunta a `localhost:3001`; debe ser el mismo origen cuando la API sirve la UI | `apps/web/src/lib/auth-client.ts` | Ahora (afecta pruebas en red) |
-| 2 | La API es hija de la bandeja y arranca al iniciar sesión; debe ser servicio de Windows | `apps/tray/src/main.ts`, `server-manager.ts` | Bandeja |
-| 3 | Carpeta de datos por usuario (`userData`); debe ser `ProgramData` | `apps/tray/src/server-manager.ts` | Bandeja |
-| 4 | El empaquetado ejecuta `node` del sistema; debe incluir su propio runtime | `apps/tray/src/server-manager.ts` | Instalador |
-| 5 | Modo cliente: `BrowserWindow`, pantalla de primer arranque, pantalla de "sin conexión" | `apps/tray` (nuevo) | Bandeja |
-| 6 | Selección de modo servidor/cliente en el instalador | electron-builder / NSIS | Instalador |
-| 7 | Regla de firewall para el puerto en modo servidor | NSIS | Instalador |
+| 1 | ~~La URL de la API en la web apunta a `localhost:3001`~~ **Hecho:** en producción la UI llama al origen de la propia página (`apps/web/src/lib/api-base.ts`) | `apps/web` | Hecho |
+| 2 | La API es hija de la bandeja y arranca al iniciar sesión; debe ser servicio de Windows. **Sigue igual en la prueba interna** (se reinicia sola si cae, pero solo corre con la sesión abierta) | `apps/tray/src/server-manager.ts` | Bandeja |
+| 3 | Carpeta de datos por usuario (`%APPDATA%\MC Software\data`); debe ser `ProgramData`. **Sigue igual en la prueba interna**; no se toca al actualizar ni al desinstalar | `apps/tray/src/config.ts` | Bandeja |
+| 4 | ~~El empaquetado ejecuta `node` del sistema~~ **Hecho:** la API es un solo archivo (esbuild) que corre con el runtime de Electron (`ELECTRON_RUN_AS_NODE`); los módulos nativos se empaquetan para Electron 33 | `apps/api/build`, `apps/tray` | Hecho |
+| 5 | ~~Modo cliente: ventana, primer arranque, "sin conexión"~~ **Hecho** (también ventana en modo servidor, bandeja en español) | `apps/tray` | Hecho |
+| 6 | ~~Selección de modo en el instalador~~ **Cambió:** el instalador es único y de un clic; el modo se elige en el primer arranque y se cambia desde el menú | `apps/tray` | Hecho (distinto) |
+| 7 | Regla de firewall para el puerto en modo servidor. **Pendiente:** el instalador es por usuario (sin administrador), así que Windows pregunta la primera vez que el servidor escucha; se acepta en la prueba | NSIS | Instalador |
+| 7b | ~~Actualizaciones automáticas~~ **Hecho:** `electron-updater` con feed estático genérico (`scripts/publish-update.ps1`). **Pendiente:** firma de código y feed por HTTPS | `apps/tray`, `scripts` | Hecho (sin firma) |
 | 8 | Respaldo diario automático de la BD (copia cifrada) | `apps/api` | Después de CONTAC |
 
 ## Decisión abierta: la llave de cifrado bajo un servicio
