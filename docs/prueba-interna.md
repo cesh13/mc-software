@@ -191,3 +191,24 @@ los datos**: para eliminarlos por completo, borrar `%APPDATA%\MC Software` y la 
   manifiesto, pero el manifiesto no va firmado ni cifrado; usar HTTPS y firma de código antes de producción.
 - El cortafuegos de Windows se configura a mano la primera vez (ver arriba).
 - Compilación sin asar (la API necesita cargar módulos nativos): instalación de unos 300 MB y muchos archivos.
+
+## Feed de actualizaciones configurado (2026-11-13)
+
+- **Dirección del feed:** `http://mcsoftware-updates.5-78-178-54.traefik.me/`
+- **Instalador para máquinas nuevas:** `http://mcsoftware-updates.5-78-178-54.traefik.me/MC-Software-Setup-<versión>.exe`
+  (la versión vigente se ve en `latest.yml` del mismo feed).
+- **En el VPS:** contenedor `mcsoftware-updates` (nginx:alpine, red `dokploy-network`, detrás de
+  Traefik) que sirve la carpeta `/var/www/updates/mcsoftware` en solo lectura. Es una copia del
+  contenedor `facturamc-updates`. Si el VPS cambia de IP pública, el nombre `*.traefik.me` cambia:
+  hay que recrear el contenedor y volver a compilar con la dirección nueva.
+- **Publicar una versión** (la dirección del feed ya está en `apps/tray/update.config.json`,
+  que no se sube a git):
+
+  ```powershell
+  .\scripts\publish-update.ps1 -Version 0.1.1 -Remote "hetzner-root:/var/www/updates/mcsoftware"
+  ```
+
+- Usar el cliente SSH de Windows (el de PowerShell). El de Git Bash no puede leer la llave del VPS.
+- Publicada la versión 0.1.0. El VPS tiene poco espacio libre (unos 7 GB): cada versión ocupa
+  cerca de 83 MB, así que conviene borrar instaladores viejos de la carpeta cada cierto tiempo
+  (nunca `latest.yml` ni el instalador que este nombra).
