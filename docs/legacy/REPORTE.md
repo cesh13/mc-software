@@ -1,7 +1,7 @@
 # Reporte de avance — migración MCERP
 
 Documento para retomar el trabajo. Se actualiza al final de cada sesión de trabajo.
-Última actualización: 2026-11-10 (sesión sin supervisión).
+Última actualización: 2026-11-13.
 
 ## Cómo retomar
 
@@ -14,11 +14,42 @@ Documento para retomar el trabajo. Se actualiza al final de cada sesión de trab
    ocho módulos, con respuesta propuesta, y la segunda ronda por módulo. Varias cambian reglas ya construidas.
 4. Revisar los **supuestos**: cada uno dice dónde cambiarlo.
 
+## Siguientes pasos (al 2026-11-13)
+
+Hay una versión instalable (0.1.1) publicada en el feed de actualizaciones y una instalación de
+prueba en la computadora de Cesar. Detalle en [prueba-interna.md](../prueba-interna.md).
+
+En orden:
+
+1. **Cerrar la prueba de instalación.** Confirmar en la máquina instalada: que la 0.1.0 detectó
+   e instaló la 0.1.1, el primer arranque (modo servidor), crear el usuario inicial, y que otra
+   PC entra como cliente. Nada de esto se ha visto funcionar en una máquina real.
+2. **Cargar datos y probar con una persona.** Importar una copia reciente de Contabilidad
+   ([import.md](contac/import.md)) y probar la captura de partidas con teclado y la impresión.
+   Es donde se esperan más ajustes.
+3. **Verificar el spec de Contabilidad contra el código fuente** (con un modelo distinto al que
+   lo escribió) y aplicar las correcciones listadas en
+   [integracion-legado.md](../sistema/integracion-legado.md) §7.
+4. **Lo que falta para instalar en un cliente:** servicio de Windows, llave de recuperación,
+   respaldo automático, cambio de contraseña, firma del instalador y feed por HTTPS
+   ([architecture.md](../architecture.md)).
+5. **Fase 0 del plan** ([modulos-y-orden.md](../sistema/modulos-y-orden.md)): núcleo de la
+   plataforma, contrato de partidas y módulo de terceros. Desbloquea Bancos.
+
+Decisiones pendientes de Cesar:
+
+- ¿La venta se contabiliza al grabar la factura o cuando Hacienda la acepta? (propuesta: al grabar)
+- ¿Cómo lee el servicio de Windows la llave de cifrado? (propuesta: cuenta de servicio dedicada
+  más llave de recuperación)
+- ¿Los supervisores ven todas las empresas o solo las suyas?
+
+Para publicar una versión: skill `ship-mc-update` (`.claude/skills/ship-mc-update/SKILL.md`).
+
 ## Estado
 
 | Pieza | Estado | Dónde |
 |---|---|---|
-| Arquitectura servidor/cliente | Decidida, no construida | [architecture.md](../architecture.md) |
+| Arquitectura servidor/cliente | Instalador con modo servidor y cliente y actualización automática: hecho y publicado (0.1.1). Falta servicio de Windows, llave de recuperación, respaldo y firma | [architecture.md](../architecture.md) |
 | Schema CONTAC (core, catálogo, libro mayor) | Hecho, con migraciones | `apps/api/src/db/schema-core.ts`, `modules/*/schema*` |
 | Base para módulos (empresa activa, permisos, bitácora, pruebas) | Hecho | [module-guide.md](../module-guide.md) |
 | Importador DBF → SQLite de CONTAC | Hecho; probado con los datos reales | [import.md](contac/import.md), `tools/legacy-import` |
