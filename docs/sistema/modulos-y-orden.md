@@ -190,6 +190,7 @@ cerrar, reabrir, contabilizar manualmente, cambiar configuración. Se agregan do
 omisión: `view_costs` y `view_salaries`. Ajuste por usuario y empresa en `core_user_permissions` (conceder / negar).
 `requirePermission` acepta el permiso fino o su paquete. *Alternativa descartada:* portar las 630 claves de pantalla de
 `PERFIL` (duplicadas, con huecos y sin empresa: plataforma-compartida §2). Decide el negocio (P9, N2).
+Granularidad, `view` por recurso, orden de resolución de los ajustes e importación de `PERFIL`: [fase-0.md F1](fase-0.md#f1-permisos-por-acción-con-la-granularidad-del-permiso-por-pantalla).
 
 ---
 

@@ -144,6 +144,7 @@ cerrado. Detalle en [modulos-y-orden.md §3](modulos-y-orden.md#3-orden-de-const
 | [docs/sistema/plataforma-compartida.md](plataforma-compartida.md) | Usuarios, permisos, empresas, bitácora y `.MEM` del legado, y qué falta en la plataforma |
 | [docs/sistema/modulos-y-orden.md](modulos-y-orden.md) | Qué módulos habrá, quién posee qué, reglas transversales, orden de construcción, convivencia, cambios a lo hecho |
 | [docs/sistema/contratos.md](contratos.md) | Cómo se hablan los módulos: contabilización, períodos, existencias, CxC/CxP, libros, DTE nativo, maestros, configuración |
+| [docs/sistema/fase-0.md](fase-0.md) | Fase 0: decisiones que faltaban (permisos, activación, ajustes al contrato), qué cambia la verificación en lo construido y los pasos de construcción |
 | [docs/architecture.md](../architecture.md) | Despliegue servidor/clientes en red local |
 | [docs/module-guide.md](../module-guide.md) | Cómo se construye un módulo (reglas, contexto, pruebas) |
 | [docs/web-guide.md](../web-guide.md) | Cómo se construyen las pantallas |

@@ -33,8 +33,10 @@ En orden:
 4. **Lo que falta para instalar en un cliente:** servicio de Windows, llave de recuperación,
    respaldo automático, cambio de contraseña, firma del instalador y feed por HTTPS
    ([architecture.md](../architecture.md)).
-5. **Fase 0 del plan** ([modulos-y-orden.md](../sistema/modulos-y-orden.md)): núcleo de la
-   plataforma, contrato de partidas y módulo de terceros. Desbloquea Bancos.
+5. **Fase 0: diseño cerrado el 2026-11-13** en [fase-0.md](../sistema/fase-0.md): decisiones de
+   permisos, activación por empresa, contrato de partidas y períodos; clasificación de los
+   hallazgos de la verificación; y **nueve pasos de construcción** con su criterio de terminado.
+   Siguiente: construir el paso 1 (permisos por acción) con Opus. Desbloquea Bancos.
 
 6. **Por cada módulo siguiente, el mismo ciclo:** verificar su spec contra el código con un
    modelo distinto al que lo escribió → revisarlo con el negocio → schema, API y pruebas →
@@ -46,12 +48,14 @@ Decisiones pendientes de Cesar:
 - ¿La venta se contabiliza al grabar la factura o cuando Hacienda la acepta? (propuesta: al grabar)
 - ¿Cómo lee el servicio de Windows la llave de cifrado? (propuesta: cuenta de servicio dedicada
   más llave de recuperación)
-- ¿Los supervisores ven todas las empresas o solo las suyas?
-- ¿Se conserva el permiso por pantalla del sistema anterior, o bastan los tres permisos por
-  rol (S1, S2)? La verificación mostró que el permiso por pantalla es el control real hoy.
-  Conviene decidirlo en la Fase 0, antes de construir más pantallas.
-- ¿Algo de la verificación del spec obliga a cambiar los módulos ya construidos? No se tocó
-  código; ver **Verificación del spec de Contabilidad**.
+- Permisos: **propuesto en [fase-0.md](../sistema/fase-0.md) F1**: permisos por acción
+  (`gl.entry.void`…) con los tres actuales como paquetes, más ajustes por usuario (conceder o
+  negar, global o por empresa) que reproducen `PERFIL`. Falta que Cesar lo confirme; si el
+  negocio dice que bastan tres permisos por rol, el modelo queda igual y no se crean ajustes.
+- Lo que la verificación cambia en lo construido: **resuelto en [fase-0.md](../sistema/fase-0.md) §3**.
+  Nada obliga a rehacer módulos; hay tres ajustes pequeños (estado de mes en el importador,
+  opción de incluir la partida de cierre en reportes, reporte de paridad) en el paso 8.
+- ¿Los supervisores ven todas las empresas? Se avanza con "no" (F2); cambiarlo es agregar un permiso.
 
 ### Qué modelo usar para qué
 
