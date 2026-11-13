@@ -5,21 +5,22 @@
 | Tabla | Contenido | Campos clave |
 |---|---|---|
 | `CATALOGO` | Catálogo de cuentas | cuenta C14, nombrecta C45, tipocta N1, anterior C14, es_detalle L, nivel N1, union C14, pcosto L, codigoa C3 |
-| `TIPOPAR` | Tipos de partida | tipopar C2, nombre C25, bancos L, numero N7 |
+| `TIPOPAR` | Tipos de partida | tipopar C2, nombre C25, bancos L (sin uso en CONTAC), numero N7 (contador vestigial) |
 | `CCOSTO` | Centros de costo | codigo C3, descrip C50 |
 | `PARTIDAS` | Encabezado de partida | tipopar C2, numero C7, concepto C120, fecha D, salfec C6, cerrado L, generado N2 |
 | `DETAPART` | Líneas de partida | salfec, tipopar, numero, cuenta C14, detalle C200, cargo N12.2, abono N12.2, tipomov N1, fecha, ccosto C3, fcobro D |
 | `SALDOS` | Saldos por mes y cuenta | salfec, cuenta, saldoant, cargos, abonos, saldo, saldomes |
 | `SALDOCC` | Saldos por mes, cuenta y C. costo | (igual) + ccosto |
-| `PERIODO` | Período fiscal | periodo C10, nombre, inicio/anio, fin/anio2, largo, cata, ccosto |
-| `PRESUP` | Presupuesto | cuenta, pmes1..pmes12, periodo, ccosto, codigoa, totalp |
+| `PERIODO` | Período de **presupuesto** (el legado no tiene año fiscal) | periodo C10, nombre, inicio/anio, fin/anio2, largo (meses), cata, ccosto |
+| `PRESUP` | Presupuesto | cuenta, pmes1..pmes12, periodo, ccosto, codigoa, totalp, generado C1, detalle L |
 | `AGRUPA` | Agrupaciones de presupuesto | codigoa C3, descripa C50 |
-| `ESTADO01/02/03` | Estados de resultados definidos | id, nombre, rubros (orden, operación, cálculo), cuentas por rubro (operación, %) |
-| `CIERRE1/2` | Borrador de partida de cierre | igual a PARTIDAS / DETAPART |
-| `EMPRESAS` | Empresas | empresa, siglas, camino, moneda, consolida, conso, grande, … |
-| `USUARIOS` | Usuarios | usuario, nombre, usrlvl, fechac, fecham (+ clave) |
+| `ESTADO01/02/03` | Estados de resultados definidos | id, nombre, rubros (orden, operación, cálculo), cuentas por rubro (operación, %); `ESTADO01` tiene además `factor` |
+| `ESTADO04` | Cuentas del estado comercial/industrial | una fila con los códigos de cuenta |
+| `CIERRE1/2` | Borrador de partida de cierre (uno por empresa) | como PARTIDAS / DETAPART, pero `CIERRE2.detalle` es C45 y no tiene `fcobro` |
+| `EMPRESAS` | Empresas (el archivo está en `fuente/`, no en `dbf/`) | empresa, siglas, empre2 C60, camino, caminoiva C30, moneda, consolida, conso (inertes), grande, convalor C90, niv N1, digito N1, numempre N4, ventana C30, filtro L |
+| `USUARIOS` | Usuarios | usuario, nombre, usrlvl, fechac, fecham, referencia N12.3 (verificador de clave), sp L, sg C8 (última empresa) |
 | `USREMP` | Usuario ↔ empresa | usuarioe, siglase, permiso |
-| `PERFIL` | Permiso por pantalla | usuario, programa, permiso |
+| `PERFIL` | Permiso por pantalla (**sin empresa**: es global por usuario) | usuario, descrip C60, programa C15, permiso L |
 | `BITACORA` | Auditoría | usuario, fecha, hora, programa, concepto |
 
 Clave natural de una partida: `salfec + tipopar + numero`. Las líneas no tienen id propio.
@@ -101,10 +102,14 @@ crear ni alterar la tabla ajena. Migraciones de un módulo: `pnpm db:generate` e
 ## Migración de datos (DBF → SQLite)
 
 - Codificación: tablas marcadas `0x03` (Windows-1252); las no marcadas (`0x00`) se detectan
-  por heurística (cp1252 vs cp850). Todo se convierte a UTF-8.
+  por heurística (cp1252 vs cp850). Todo se convierte a UTF-8. En las tablas vivas aparecen
+  también las marcas `0x01`, `0x02`, `0xC8` y `0xC9` *(impacto en el importador sin verificar)*.
 - Montos `N12.2` → string decimal exacto (sin pasar por float).
 - `salfec` `AAAAMM` → `AAAA-MM`; fechas `D8` → ISO.
-- Partidas con `cerrado = .T.` → el período queda `closed`.
-- Partidas anuladas: los registros marcados como borrados en el DBF no se importan (confirmar).
+- Partidas con `cerrado = .T.` → el período queda `closed`. El legado decide el estado del
+  mes por la **primera partida** del mes (orden `salfec + tipopar + numero`); en disco
+  `cerrado` vale blanco o falso, y blanco significa abierto.
+- Partidas anuladas: los registros marcados como borrados en el DBF no se importan. Confirmado
+  en el código: eliminar una partida solo la marca; no hay borrado físico salvo al empacar.
 - Validación de paridad: el Balance de Comprobación de cada mes importado debe coincidir al
   centavo con `SALDOS` del legado.

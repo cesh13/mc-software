@@ -70,7 +70,7 @@ Claves naturales: `ARTICULO.MODELO`; `MOVIMIEN` = (`TIPOFAC`,`TIPO_MOV`,`CONCEPT
 | `CCCLI01`, `CCVEND`, `CCDEP01`, `CCMUN01`, `PAISES`, `ACT_ECO` | cxc64 / catálogos | Cliente (precio, crédito, exención, gran contribuyente, datos DTE), vendedor, geografía y actividad económica |
 | `PARTIDAS`, `DETAPART`, `SALDOS`, `SALDOCC`, `CATALOGO`, `TIPOPAR` | CONTAC | **Se escriben** por `CGADIPAR` desde los tres procesos de contabilización |
 | `QUEDAN`, `PROVEDOR` | CONTAC (CxP de Bancos) | `QUEDAN` se escribe al "Provisionar" una compra |
-| `COMPRAS`, `DEXCLU`, `IVAFIS`, `IVAFAC`, `CONTRIBU`, `CLIENTES` | IVA64 | Existen **copias** en `INV64/DBF` (IVA64 las reconoce como suyas); sujeto excluido escribe `COMPRAS`/`DEXCLU` |
+| `COMPRAS`, `DEXCLU`, `IVAFIS`, `IVAFAC`, `CONTRIBU`, `CLIENTES` | IVA64 | Existen **copias con menos columnas** en `INV64/DBF` (también de `RENTAT`), y **INV64 usa esas copias en lugar de las de IVA64** por el orden del `SET PATH`; sujeto excluido escribe la `COMPRAS`/`DEXCLU` de INV64, que el libro de IVA64 no ve. `PROVEDOR` de INV64 tiene 80 filas contra 73 de la de CONTAC |
 | `DPEDI.RECIBIDO`, `ARTICULO`, `MOVIMIEN`, `DATAMOV`, `BODMES`, `MESES`, `SALDOLO`, `VENCE2` | lote64 | Producción escribe en estas (ver lote64 data-model §2) |
 
 ### 1.6 Tablas vacías o de uso nulo (no se migran)
@@ -189,7 +189,7 @@ una importación completa debe correr en minutos.
 - **DTE:** colapsar las filas de `FELECTRO` vigentes por (`NFACT_ENV`,`TIPODOC`) a un `dte_documents`; descartar las filas borradas (intentos de preparación); el estado final = `ACEPTADO` si hay `NCONTROL`+`CODGENERAC`+`SELLORE`; `FANULAR` con `PROCESADO` → `invalidado`; los 13 sin número de control quedan `preparado/fallido` para revisar. No se reconstruye el JSON: se guardan las cifras y los identificadores.
 - **CxC:** el cargo `C0` ya existe en cxc64. El importador de ventas debe enlazar `sal_documents` con `CCMOV01` por (`ftmov='C0'`, `fref`, `fticom`) y **no crear un segundo cargo**; reportar las `C0` sin documento y los documentos sin `C0` (el módulo viejo lo hacía con `INCUADRE`).
 - **Contabilidad:** no se reimportan las partidas (están en CONTAC). Los vínculos documento→partida no existen: dejar `sal_document_postings` vacía hasta contabilizar con el nuevo flujo desde una fecha de corte.
-- **Sujeto excluido:** viene de `COMPRAS`/`DEXCLU` (IVA64), no de inventario.
+- **Sujeto excluido:** viene de `COMPRAS`/`DEXCLU` (la copia de `INV64\DBF`, no la de IVA64), no de inventario.
 - **Marcadores de código y claves repetidas:** `CONCEPTO` con duplicados; `DATAMOV` con 1,442 llaves repetidas; usar id estable y guardar la llave legada.
 
 ### 3.3 Chequeos de paridad

@@ -119,7 +119,12 @@ Convivencia: por **anillos** que se mueven completos (pagos; facturación **junt
 el módulo nativo nunca emiten para la misma empresa y serie), con puentes de una sola vía del legado al nuevo por mes
 cerrado. Detalle en [modulos-y-orden.md §3](modulos-y-orden.md#3-orden-de-construcción).
 
-## 5. Estado actual (de [REPORTE.md](../legacy/REPORTE.md), 2026-11-10)
+## 5. Estado actual (de [REPORTE.md](../legacy/REPORTE.md), 2026-11-13)
+
+- **Instalable:** versión 0.1.1 publicada en el feed de actualizaciones; falta confirmar la instalación en una máquina
+  real y lo necesario para instalar en un cliente (servicio de Windows, llave de recuperación, respaldo, firma).
+- **Spec de Contabilidad verificado contra el código fuente (2026-11-12)** y corregido; los demás specs siguen sin
+  esa verificación.
 
 - **Hecho:** núcleo (empresas, usuarios y roles, bitácora, base de módulos); `chart-of-accounts` (34 pruebas) y
   `general-ledger` (35 pruebas: partidas, cierres, 6 reportes, cierre anual); importador de CONTAC probado con datos reales

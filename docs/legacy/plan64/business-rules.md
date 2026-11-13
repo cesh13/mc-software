@@ -362,7 +362,7 @@ que sí se contabilizan (§11) [V]. Pregunta 5.5.
 
 Opción "Generar Partida Contable" (`ccpartab`) [V]:
 
-- Escribe **directo** en las tablas del libro mayor de CONTAC (`PARTIDAS`, `DETAPART`, `SALDOS`) mediante la rutina compartida `CGADIPAR.PRG` (modo 1 = adición). No pasa por contrato: copia estructuras temporales (`pprov<usuario>`, `dprov<usuario>`) y las anexa.
+- Escribe **directo** en las tablas del libro mayor de CONTAC (`PARTIDAS`, `DETAPART`, `SALDOS`) mediante la rutina compartida `CGADIPAR.PRG` (modo 1 = adición). No pasa por contrato: copia estructuras temporales (`pprov<usuario>`, `dprov<usuario>`) y las anexa. Antes de llamar a `CGADIPAR` fija `mesact` a 7 caracteres, y **no revisa si el mes está cerrado** en contabilidad; esta variante tampoco actualiza `SALDOCC` (integracion-legado.md §7).
 - Parámetros que digita el usuario: quincena, mes y año, **cuenta de pago neto** (`ctag`), cuentas de ISSS y AFP (se piden pero las líneas usan las del maestro), **tipo y número de partida**. El número lo escribe el usuario; si ya existe: "Partida ya existe; Desea Eliminarla" y la **borra físicamente** con todas sus líneas.
   Fecha de la partida: último día del mes. Concepto: "PLANILLA DE SUELDOS CORRESPONDIENTE AL MES DE <mes> <año>" (no menciona la quincena). Líneas por empleado (cuentas del **maestro**) y por tipo de ingreso/descuento (cuenta del tipo o del movimiento):
 

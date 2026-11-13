@@ -15,12 +15,21 @@ Decisiones que necesitamos del negocio antes o durante la construcción.
    - Se mantiene la consulta "Partidas descuadradas" (borradores pendientes e importadas con diferencia).
    - Pendiente de preguntar: ¿por qué quedan grabadas descuadradas (trabajo a medias, o
      vienen así de "Subir Partida Contable" / Bancos)?
+   - **Lo que dice el código (2026-11-12):** con `cfg_cuadre` activo la captura no deja grabar
+     descuadradas. Las vías sin control de cuadre son "Subir Partida Contable", copiar partida,
+     aplicar el cierre anual y los otros módulos. La única descuadrada en disco viene de Bancos.
 2. ✅ **Catálogo por período fiscal — decidido 2026-11-10.** Un solo catálogo por empresa;
    `periodo.cata` no se migra como concepto. Las cuentas se desactivan, nunca se borran, y
    los cambios quedan en bitácora. Los reportes de años anteriores muestran los nombres actuales.
    - Sin verificar en los datos: el importador debe avisar si una empresa tiene catálogo
      alterno en `PERIODO`, o si un mismo código nombra cuentas distintas entre años.
+   - **Lo que dice el código (2026-11-12):** `PERIODO` es el período de presupuesto, no un año
+     fiscal, y ninguna pantalla permite capturar el catálogo alterno; en los datos está vacío.
 3. **Tipo de cuenta "Contra" (7) y "Orden" (6).** Confirmar cómo deben presentarse en Balance General.
+   - **Lo que hace el legado (2026-11-12):** salen como dos líneas al pie, con el nombre y el
+     saldo de la **primera** cuenta de cada tipo, fuera del cuadre. El Balance General solo
+     imprime los tipos 1, 2 y 3 más una línea de utilidad o pérdida calculada como activo
+     menos pasivo y capital.
 4. ✅ **Cierre anual — decidido 2026-11-10.** Año fiscal configurable (`gl_fiscal_years` con
    mes de inicio y fin), enero–diciembre por defecto. Sin partida de apertura: los saldos se
    calculan desde las líneas y las cuentas de balance se arrastran solas. El cierre anual
@@ -28,11 +37,15 @@ Decisiones que necesitamos del negocio antes o durante la construcción.
    Resultados del último mes la excluya.
    - Migración: se importa todo el historial; donde no exista, una sola partida de apertura
      (`source = importado`) con el `saldoant` más antiguo de `SALDOS`.
-   - Sin verificar en los datos: si algún cliente cierra en un mes distinto a diciembre (`PERIODO`).
+   - Sin verificar en los datos: si algún cliente cierra en un mes distinto a diciembre.
+     **Corrección (2026-11-12):** `PERIODO` no interviene; el cierre corre en el mes de trabajo,
+     sea cual sea. Los cierres que hay en disco están en diciembre.
 5. ✅ **Numeración — decidido 2026-11-10.** Mensual por tipo de partida, igual que hoy
    (único: empresa + período + tipo + número). La migración no renumera. Una partida anulada
    conserva su número; no se reutiliza.
 6. **Fecha de cobro** (`fcobro`) en las líneas: ¿para qué se usa?
+   - **Lo que dice el código (2026-11-12):** ningún programa vivo la lee ni la escribe, y está
+     vacía en todas las líneas. Propuesta: no migrarla.
 
 ## Pantallas y reportes
 
@@ -42,15 +55,25 @@ Decisiones que necesitamos del negocio antes o durante la construcción.
    Propuesta: un solo motor con plantillas (comercial / industrial / personalizadas).
 9. ¿Se imprimen libros legales foliados (Diario, Mayor)? ¿Formato exigido por Hacienda?
 10. ¿Qué formato tiene el archivo de "Subir Partida Contable" e "Importar Catálogo"?
+    - **Respondida por el código (2026-11-12):** ambos son CSV de columnas fijas (el catálogo,
+      separado por `;`). Detalle en el [mapa de menú](README.md).
 
 ## Empresas y usuarios
 
 11. ¿Algún cliente consolida empresas hoy ("Generar Partida Consolidada")?
+    - **La premisa era falsa (2026-11-12):** esa opción es el reporte "Movimientos Resumidos"
+      de una sola empresa. Nada consolida empresas en el código vivo; hubo un intento
+      (`CONSOLID.PRG`) que quedó fuera del proyecto. La pregunta pasa a ser si se quiere
+      consolidación como función nueva.
 12. ¿Se necesita mantener permiso **por pantalla** además de los 4 niveles, o basta con roles?
+    - **Lo que dice el código (2026-11-12):** el permiso por pantalla es el control real (57
+      programas distintos en `PERFIL`); el nivel solo gobierna tres cosas. Pasar a solo roles
+      pierde una granularidad que hoy sí se usa. Afecta el supuesto S2.
 13. ✅ **Moneda — decidido 2026-11-10.** Una moneda por empresa (`core_empresas.moneda`,
     desde `EMPRESAS.moneda`), sin multimoneda: no hay tipos de cambio ni moneda por línea.
     Montos con dos decimales. La UI y los reportes toman el símbolo de la empresa.
-    - Sin verificar en los datos: qué valores tiene `EMPRESAS.moneda`.
+    - Verificado (2026-11-12): la pantalla de empresas ofrece 1 = Colones, 2 = Dólares; en
+      disco vale 2. Confirma el supuesto S17.
 
 ## Integraciones (definir al hacer cada módulo)
 

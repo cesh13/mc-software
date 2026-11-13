@@ -99,5 +99,5 @@ Contexto: solo se pudo revisar **una empresa** (22,643 órdenes de producción e
   `BODMES.COSTOF / FINAL` es el saldo en valores por bodega y solo coincide cuando el producto
   está en una sola bodega. Donde este spec asuma `BODMES`, vale lo descrito en
   [inv64](../inv64/business-rules.md) §13.7.
-- Las nueve tablas de inventario que escribe producción son las mismas que escribe el código de
+- Las ocho tablas de inventario que escribe producción son las mismas que escribe el código de
   entradas de INV64 (confirmado desde ese lado).

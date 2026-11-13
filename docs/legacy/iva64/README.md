@@ -62,6 +62,9 @@ tablas están en la carpeta de CONTAC), **IVA64 sí tiene su propio `dbf/`**. Ad
   de Bancos/CONTAC terminan escribiendo en `COMPRAS` y `RENTAT` de esta carpeta.
   **Corrección al spec de BANCOC:** allí se dijo que "Ingresar al IVA" escribe en `LIBCOMP`. `CONTAC/dbf/LIBCOMP` existe pero tiene
   **0 registros** (estructura de una versión anterior; `OFCOMPRA.PRG` es lo único que la usa). Ver [open-questions.md](open-questions.md) #3.
+- **INV64 mantiene sus propias copias** de las tablas de libros (`COMPRAS`, `IVAFIS`, `IVAFAC`, `CONTRIBU`, `CLIENTES`,
+  `RENTAT`) en `INV64\DBF`, con menos columnas, y las usa en lugar de estas; **IVA64 no las ve** (por ejemplo, las
+  compras a sujetos excluidos que graba INV64). Ver integracion-legado.md §7, fila 5.
 - Las tablas de otros módulos que IVA64 **lee**: `CCMOV01`, `CCCLI01` (cxc64/DBF), `FELECTRO` y `DATAMOV` (INV64/DBF),
   `QUEDAN`, `NCREDEB`, `PROVEDOR` (CONTAC/dbf). Detalle en [data-model.md](data-model.md).
 

@@ -14,7 +14,12 @@ Documentos:
 
 ## Mapa de menú → funcionalidad
 
-Cada opción del menú verifica permiso en `PERFIL` (usuario + programa) antes de abrir.
+Cada opción del menú verifica permiso en `PERFIL` (usuario + programa) antes de abrir,
+**salvo**: Estado de Resultado Definido (normal y comparativo), Seleccionar Mes de Trabajo,
+Seleccionar Empresa y Usuarios (nivel 1 abre el mantenimiento; los demás, el cambio de su
+propia clave). "Copiar Archivo" sí consulta `PERFIL` pero no tiene ninguna fila, así que
+nunca abre *(inferido)*.
+Las 71 opciones se verificaron contra el menú (2026-11-12): todas llaman a la pantalla indicada.
 Columna **Destino**: ✅ migrar · 🔁 migrar rediseñado · ❌ no migrar (técnico/obsoleto).
 
 ### Mantenimiento de Archivos
@@ -25,7 +30,7 @@ Columna **Destino**: ✅ migrar · 🔁 migrar rediseñado · ❌ no migrar (té
 | Tipos de Comprobante | `cgmtip01` | ✅ general-ledger (tipos de partida) |
 | Crear Centros de Costos | `cgmcosto` | ✅ general-ledger |
 | Crear Agrupaciones para Presupuestos | `cgmagrup` | ✅ presupuestos |
-| Importar Catálogo | `catimp` | 🔁 importador genérico (CSV/Excel) |
+| Importar Catálogo | `catimp` | 🔁 importador genérico. Hoy: CSV con `;` (cuenta, nombre, tipo, padre, es_detalle, nivel, pcosto); solo carga sobre catálogo vacío; la opción de borrar elimina todo sin revisar movimientos; no valida jerarquía |
 
 ### Edición de Comprobantes
 
@@ -33,9 +38,9 @@ Columna **Destino**: ✅ migrar · 🔁 migrar rediseñado · ❌ no migrar (té
 |---|---|---|
 | Elaboración de Partidas | `cgmpar01` | ✅ pantalla principal del GL |
 | Imprimir Partidas | `cgipar01` | ✅ PDF por rango de partidas |
-| Generar Partida Consolidada | `ctconcen` | ✅ consolidación entre empresas |
+| Generar Partida Consolidada | `ctconcen` | ✅ reporte **"Movimientos Resumidos"**: líneas agrupadas por cuenta a N niveles en un rango de fechas, de una sola empresa. **No consolida empresas** |
 | Definir Estado de Resultado (Comercial / Industrial) | `cgmest01`, `cgmst01` | ✅ diseñador de estados |
-| Subir Partida Contable | `cosubpar` | 🔁 importar partidas desde Excel |
+| Subir Partida Contable | `cosubpar` | 🔁 importar partidas. Hoy: CSV de columnas fijas (tipo, fecha, número, cuenta, detalle, cargo, abono, centro de costo, concepto, mes, tipomov); todo o nada; valida que la partida no exista y que las cuentas existan y sean de detalle; **no valida cuadre, mes cerrado ni centro de costo, y no actualiza saldos** |
 
 ### Reportes
 
@@ -52,7 +57,7 @@ Columna **Destino**: ✅ migrar · 🔁 migrar rediseñado · ❌ no migrar (té
 | Estado de Resultados (comercial, industrial, mensual, definido, comparativos) | `cgrest01-03`, `cgrst01`, `cgrst01c`, `cnrestco` | ✅ unificar en 1 motor + layouts |
 | Saldos por Cuentas (detallado, consolidado, por rubro mensual/anual) | `cgrmov02-05` | ✅ |
 | Listado de Partidas Emitidas | `cgrpar01` | ✅ |
-| B. Comprobación 2 | `cgrbalc2` | ❓ confirmar diferencia con el normal |
+| B. Comprobación 2 | `cgrbalc2` | ❓ balance de comprobación con opción acumulado/mensual y por cuenta/reporte; usa el mes elegido en pantalla. Confirmar si se usa |
 | Estado de Cambio | `cgrcamb` | ✅ |
 | Saldos por C. de Costo (acumulado / mensual) | `cgrmovcp`, `cgrmovc2` | ✅ |
 | Consultar Montos | `cgbuscav` | ✅ búsqueda de partidas por monto |
@@ -68,21 +73,21 @@ Columna **Destino**: ✅ migrar · 🔁 migrar rediseñado · ❌ no migrar (té
 | Revisión del Catálogo | `cgrevcat` | ❌ las reglas se validan al guardar |
 | Partidas Descuadradas | `cgrevcua` | 🔁 reporte de control (solo si se permite grabar descuadradas) |
 | Cambiar número a un comprobante | `cgchgnum` | ✅ con bitácora |
-| Borrar partidas sin número | `cgborra` | ❌ no pueden existir |
-| Numerar Páginas | `numera` | 🔁 foliado de libros legales (confirmar) |
+| Borrar partidas sin número | `cgborra` | ❌ no pueden existir. También borra cuentas del catálogo sin nombre |
+| Numerar Páginas | `numera` | 🔁 foliado de libros legales (confirmar). Hoy solo imprime hojas con números de página consecutivos, sin contenido |
 | Cierre Mensual / Abrir Mes Cerrado | `cgcmes01`, `cgames01` | ✅ |
 | Configurar Cuentas | `config2` | ✅ configuración por empresa |
 | Cierre Anual | `cgcierre` | ✅ |
-| Copiar Archivo | `copycat` | ❓ confirmar uso |
-| Cambiar Número a Una Cuenta | `cgchcta` | ✅ con bitácora |
-| Mantenimiento de Empresas | `cgmemp01` | ✅ plataforma (empresas) |
+| Copiar Archivo | `copycat` | ❌ utilidad genérica: copia un DBF cualquiera a otra carpeta |
+| Cambiar Número a Una Cuenta | `cgchcta` | ✅ con bitácora (hoy **no** la escribe). Renombra el código en catálogo, líneas, saldos mensuales, presupuesto, estados definidos y tablas de Bancos; no toca `SALDOCC` ni revisa mes cerrado |
+| Mantenimiento de Empresas | `cgmemp01` | ✅ plataforma (empresas). Las columnas de consolidación están inertes |
 | Usuarios | `acceso` / `acceso2` | ✅ plataforma (Better Auth + roles) |
 
 ### Presupuestos
 
 | Opción | Pantalla | Destino |
 |---|---|---|
-| Período | `periodo` | ✅ años fiscales |
+| Período | `periodo` | ✅ período de **presupuesto** (no es un año fiscal; no interviene en el cierre anual) |
 | Mantenimiento | `presup.prg` | ✅ presupuesto mensual por cuenta / C. de costo |
 | Imprimir Presupuesto (general / por C. de Costo) | `cgipre01`, `cgiprecc` | ✅ presupuesto vs real |
 

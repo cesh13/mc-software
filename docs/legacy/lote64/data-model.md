@@ -111,7 +111,7 @@ con **CxP/Bancos** (la orden de compra de maquila `ORDENC` apunta al módulo de 
 **Módulo propio `production`** (prefijo `prod_`), dependiente de `inventory` y del libro mayor. Razones:
 1. **Solo lo usan algunos clientes** (los que fabrican o empacan; en disco el otro cliente de inventario no tiene un solo movimiento de producción): debe poder activarse por cliente (`alwaysOn: false`).
 2. Entidades propias (fórmulas, órdenes, costos de proceso, tarifas) que no pertenecen al kárdex.
-3. La regla de oro de `docs/module-guide.md`: los módulos no se importan entre sí ni escriben en tablas ajenas. Hoy la producción escribe nueve tablas de inventario; en la plataforma nueva debe pedírselo a `inventory` por un **contrato**.
+3. La regla de oro de `docs/module-guide.md`: los módulos no se importan entre sí ni escriben en tablas ajenas. Hoy la producción escribe ocho tablas de inventario (`ARTICULO, BODMES, DATAMOV, DPEDI, MESES, MOVIMIEN, SALDOLO, VENCE2`), y el proceso `cambia` de INV64 toca a su vez tablas de LOTE64; en la plataforma nueva debe pedírselo a `inventory` por un **contrato**.
 4. Mantiene el spec y la construcción de INV64 (el módulo más grande) desacoplados.
 
 **Contratos que hay que crear en `@accounting/shared`** (a diseñar con el spec de INV64):

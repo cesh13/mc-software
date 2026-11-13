@@ -65,7 +65,9 @@ Herramientas: [`tools/legacy-extract/`](../../tools/legacy-extract/README.md) (P
    → **paridad**: los reportes nuevos deben cuadrar al centavo con los del sistema viejo.
 
 Hallazgos útiles:
-- Sistema de usuarios compartido: `USUARIOS` (nivel), `PERFIL` (permiso por pantalla),
+- **No hay un sistema de usuarios compartido:** hay ocho copias independientes de las tablas
+  de sistema, una por módulo, con estructuras y datos que no coinciden (ver
+  [plataforma-compartida.md](../sistema/plataforma-compartida.md)). En cada una: `USUARIOS` (nivel), `PERFIL` (permiso por pantalla),
   `USREMP` (usuario ↔ empresa), `BITACORA` (auditoría), `EMPRESAS` (una carpeta por empresa).
 - Configuración por empresa en archivos `.MEM` (ej. `BANCOCFG.MEM`: cuentas de IVA, tasas, `cfg_cuadre`).
 
@@ -78,7 +80,7 @@ Hallazgos útiles:
 | Módulos nuevos | Bancos, IVA, Lotes y CxP tienen módulo propio. |
 | Idioma | UI **en español** primero (es lo que usan los clientes). |
 | Estilo de UI | Familiar al sistema anterior, con shadcn: barra de íconos (Agregar, Buscar, Eliminar, Modificar, Anterior, Siguiente, Grabar, Cancelar, Imprimir…) en el mismo orden; encabezado + grid de líneas; barra TOTALES/Diferencia; selector de mes (ENERO…DICIEMBRE). Más limpio, mismo flujo. |
-| Multi-empresa | Una instalación = una BD cifrada por cliente; **`empresa_id` en toda tabla de negocio**; el usuario elige empresa al entrar; la consolidación es una consulta entre empresas. |
+| Multi-empresa | Una instalación = una BD cifrada por cliente; **`empresa_id` en toda tabla de negocio**; el usuario elige empresa al entrar; la consolidación es una consulta entre empresas (función nueva: el legado **no tiene** consolidación implementada). |
 | Roles | Niveles legados Supervisor / Digitador y Consulta / Digitador / Consulta → roles de Better Auth. |
 | Codificación | El importador detecta cp1252 (mayoría, marca `0x03`) vs cp850 (tablas sin marca `0x00` o `0x02`) y convierte a UTF-8. Está en alcance. |
 | Saldos | Se calculan desde las líneas de partida (no se guardan tablas de saldos); caché solo si el volumen lo exige. |
@@ -90,7 +92,7 @@ Hallazgos útiles:
 
 | Módulo | Spec | Schema | API/UI | Importador | Paridad |
 |---|---|---|---|---|---|
-| CONTAC | ✅ [docs/legacy/contac](contac/README.md) — 11 preguntas abiertas | ✅ core + catálogo + GL | ✅ API con 69 pruebas; pantallas hechas, captura de partidas sin probar a fondo | ✅ [import.md](contac/import.md) | ⚠️ cálculo verificado; no cuadra limpio contra `SALDOS` (ver [REPORTE](REPORTE.md)) |
+| CONTAC | ✅ [docs/legacy/contac](contac/README.md) — 11 preguntas abiertas; **verificado contra el código fuente el 2026-11-12** (ver [REPORTE](REPORTE.md)) | ✅ core + catálogo + GL | ✅ API con 69 pruebas; pantallas hechas, captura de partidas sin probar a fondo | ✅ [import.md](contac/import.md) | ⚠️ cálculo verificado; no cuadra limpio contra `SALDOS` (ver [REPORTE](REPORTE.md)) |
 | BANCOC (+ CxP) | ✅ [docs/legacy/bancoc](bancoc/README.md) — 34 preguntas abiertas | — | — | — | — |
 | cxc64 | ✅ [docs/legacy/cxc64](cxc64/README.md) — 36 preguntas abiertas | — | — | — | — |
 | INV64 | ✅ [docs/legacy/inv64](inv64/README.md) — 55 preguntas abiertas; reportes sin leer | — | — | — | — |

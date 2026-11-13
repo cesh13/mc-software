@@ -46,6 +46,8 @@ Lo que **no existe** en este módulo (se busca explícitamente en el código y e
   Compras entre 2021 y 2023-10 (dos activos de 2023-10 aún sin depreciar). Última corrida ejecutada el 2023-03-01.
 - Solo hay **una empresa** (`EMPRESAS` tiene 1 fila) con rutas de producción (`AFIJO64`), inventario (`INV64`) y contabilidad (`CONTAC`);
   el módulo lee proveedores, catálogo de cuentas, tipos de partida y centros de costo de **CONTAC**, y escribe partidas y saldos en CONTAC.
+  **Excepción:** `PROVEDOR` se resuelve primero a la copia de INV64 (80 filas), porque el `SET PATH` pone INV64 antes
+  que CONTAC. Su variante de `CGADIPAR` no actualiza `SALDOCC` (integracion-legado.md §7, filas 6 y 10).
 - Época de los datos: **cliente de 2022–2023**, el mismo de la copia de CONTAC (libro 2020-03 a 2024-03).
 - Hallazgo principal: **la depreciación acumulada guardada en la ficha del activo es incorrecta** (141 de 143 no cuadran con la suma de
   las líneas de depreciación). Los reportes sí la recalculan desde las líneas. Detalle en [business-rules.md](business-rules.md) §6.

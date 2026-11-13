@@ -28,7 +28,10 @@ Convenciones: **[V]** verificado en el código; **[D]** verificado en los datos;
 
 ## 2. Configuración por empresa (`BANCOCFG.MEM`, pantalla `config2`)
 
-Se guarda en un archivo `.MEM` por empresa en el folder de datos. Variables [V] (los valores son
+Se guarda en un archivo `.MEM` **por carpeta de datos**, que CONTAC y BANCOC comparten (no es un archivo por
+empresa de Bancos). BANCOC restaura después `IVACFG.MEM` desde la carpeta de IVA64, y esos valores ganan sobre
+los de igual nombre. AFIJO64 y LOTE64 cargan una plantilla `BANCOCFG.MEM` de su carpeta de programa
+([integracion-legado.md §7](../../sistema/integracion-legado.md#7-inconsistencias-entre-specs-y-correcciones-propuestas)). Variables [V] (los valores son
 configuración del cliente y no se copian):
 
 | Variable | Qué es |
@@ -254,7 +257,10 @@ guarda el movimiento, dentro de la pantalla del usuario (sin proceso por lotes).
 `fecha`, `salfec`, `cerrado`, `generado`). El vínculo con el movimiento bancario es solo por
 `MOVIBAN.TIPOPAR + NUMERO + SALFEC` (no existe un id).
 `CGADIPAR.PRG` además actualiza `SALDOS` y `SALDOCC` sumando hacia arriba por la cadena `anterior`, con la
-naturaleza por tipo de cuenta (deudora: 1, 4, 6; acreedora: 2, 3, 5, 7), idéntico a CONTAC.
+naturaleza por tipo de cuenta (deudora: 1, 4, 6; acreedora: 2, 3, 5, 7). **No es la misma rutina que la de CONTAC:**
+hay cinco versiones de `CGADIPAR.PRG` con comportamiento distinto; la de BANCOC tiene modos 1 a 3, usa `PARD`, borra
+antes de grabar y tiene comentada la línea que marca `GENERADO`. Detalle en
+[integracion-legado.md §4](../../sistema/integracion-legado.md#4-la-rutina-compartida-de-contabilización-cgadiparprg).
 
 ### 5.2 Número de partida
 

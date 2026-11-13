@@ -453,6 +453,11 @@ la fecha del documento, y no el "mes de trabajo" de quien captura, decida el per
 
 Lo que el código dice donde los specs discrepan o se equivocan. **No edité ningún spec**; las correcciones son para quien los mantenga.
 
+> **Aplicadas el 2026-11-12.** Las correcciones de §7.2 ya están en los specs de `docs/legacy/`. Las que tocan CONTAC
+> (filas 2 y 13 y la de `contac/data-model.md`) se confirmaron además contra el código en una segunda verificación, con
+> dos matices: `grande` ya estaba en el spec de `EMPRESAS`, y la pantalla de empresas de CONTAC no edita
+> `CONSOLIDA`/`CONSO`. Las de los demás módulos se aplicaron tal como están aquí, sin volver a verificarlas.
+
 ### 7.1 Contradicciones y errores
 
 | # | Dónde se dice | Qué dice | Qué dice el código [V] |

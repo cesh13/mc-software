@@ -27,14 +27,19 @@ En orden:
 2. **Cargar datos y probar con una persona.** Importar una copia reciente de Contabilidad
    ([import.md](contac/import.md)) y probar la captura de partidas con teclado y la impresión.
    Es donde se esperan más ajustes.
-3. **Verificar el spec de Contabilidad contra el código fuente** (con un modelo distinto al que
-   lo escribió) y aplicar las correcciones listadas en
-   [integracion-legado.md](../sistema/integracion-legado.md) §7.
+3. ~~Verificar el spec de Contabilidad contra el código fuente~~ **Hecho el 2026-11-12** (ver
+   **Verificación del spec de Contabilidad**). Queda decidir qué hacer con lo que la
+   verificación encontró y que toca lo ya construido.
 4. **Lo que falta para instalar en un cliente:** servicio de Windows, llave de recuperación,
    respaldo automático, cambio de contraseña, firma del instalador y feed por HTTPS
    ([architecture.md](../architecture.md)).
 5. **Fase 0 del plan** ([modulos-y-orden.md](../sistema/modulos-y-orden.md)): núcleo de la
    plataforma, contrato de partidas y módulo de terceros. Desbloquea Bancos.
+
+6. **Por cada módulo siguiente, el mismo ciclo:** verificar su spec contra el código con un
+   modelo distinto al que lo escribió → revisarlo con el negocio → schema, API y pruebas →
+   pantallas → importador → paridad → prueba con una persona → publicar. Orden de módulos en
+   [docs/sistema/README.md §4](../sistema/README.md#4-hoja-de-ruta).
 
 Decisiones pendientes de Cesar:
 
@@ -42,8 +47,72 @@ Decisiones pendientes de Cesar:
 - ¿Cómo lee el servicio de Windows la llave de cifrado? (propuesta: cuenta de servicio dedicada
   más llave de recuperación)
 - ¿Los supervisores ven todas las empresas o solo las suyas?
+- ¿Se conserva el permiso por pantalla del sistema anterior, o bastan los tres permisos por
+  rol (S1, S2)? La verificación mostró que el permiso por pantalla es el control real hoy.
+  Conviene decidirlo en la Fase 0, antes de construir más pantallas.
+- ¿Algo de la verificación del spec obliga a cambiar los módulos ya construidos? No se tocó
+  código; ver **Verificación del spec de Contabilidad**.
+
+### Qué modelo usar para qué
+
+El uso de Fable es limitado. Recomendación acordada el 2026-11-13:
+
+| Modelo | Para qué |
+|---|---|
+| Fable | Sesiones cortas de diseño donde equivocarse sale caro: el contrato de partidas (Fase 0), el diseño del módulo de DTE, el servicio de Windows y la llave de cifrado, decidir qué cambia en lo construido, la revisión final antes de instalar en un cliente |
+| Opus | El trabajo diario: construir cada módulo desde su spec, importadores, paridad, depuración, coordinar subagentes |
+| Sonnet | Trabajo acotado y verificación independiente: verificar cada spec contra el código, pantallas que siguen los patrones existentes, pruebas, documentación |
+| Haiku | Extracción mecánica: volcar pantallas, estructuras de tablas, conteos, resumir los reportes `.frx` sin leer |
+
+Reglas: una sesión nueva por tarea, arrancando desde este reporte; Fable planifica y deja el
+diseño escrito en los docs, Opus lo ejecuta; quien escribe un spec o un módulo no es quien lo verifica.
 
 Para publicar una versión: skill `ship-mc-update` (`.claude/skills/ship-mc-update/SKILL.md`).
+
+## Verificación del spec de Contabilidad (2026-11-12)
+
+El spec lo escribió Opus 5.5; lo verificó contra `MCERP/CONTAC/fuente` un subagente con
+Sonnet 5.5, y Fable 5.2 comprobó en el código los hallazgos principales antes de aplicarlos.
+Resultado: las 71 opciones del menú llaman a la pantalla que dice el spec; de unas 65 reglas,
+unas 14 estaban mal o incompletas; 6 tablas del modelo de datos tenían columnas faltantes.
+Todo está corregido en [contac/](contac/README.md). También se aplicaron las correcciones de
+[integracion-legado.md](../sistema/integracion-legado.md) §7 a los specs de los otros módulos
+(esas no se volvieron a verificar).
+
+**Comprobado dos veces** (subagente y revisión propia en el código): numeración y choque con
+Bancos, eliminación de cuentas, línea con cargo y abono, borrado por marca, saldos solo en el
+mes de trabajo, las cuatro rutinas que contabilizan, mes cerrado que solo respeta la captura,
+cambio de código de cuenta sin bitácora, captura sin bitácora y los detalles del cierre anual.
+**Una sola pasada** (solo el subagente): lo demás, incluidos los formatos CSV, la
+configuración, los niveles de usuario y las columnas del modelo de datos.
+
+Lo que cambia la lectura de lo ya construido:
+
+- **La paridad contra `SALDOS` no puede cuadrar limpio, por diseño del legado.** Cada grabación
+  solo actualiza el mes de trabajo y no propaga; hay cuatro rutinas que contabilizan distinto
+  (copiar partida trata las cuentas de orden como acreedoras; subir partida y cambiar código
+  de cuenta no tocan saldos). Esto da una causa a las diferencias de la sección **Paridad**
+  que no dependía de "datos viejos". La referencia correcta siguen siendo los reportes
+  impresos, pero **esos reportes leen `SALDOS`**, así que pueden traer el mismo desfase.
+- **El legado no excluye la partida de cierre de sus reportes**; la plataforma nueva sí
+  (decisión 4). El Estado de Resultados de diciembre no va a coincidir con el impreso del
+  sistema anterior en los años con cierre. Es esperado, pero hay que avisarlo en la paridad.
+- **El control de acceso real es el permiso por pantalla** (`PERFIL`), no el nivel. Los
+  supuestos S1 y S2 (tres permisos, sin permiso por pantalla) pierden una granularidad que
+  hoy se usa. Sube la prioridad de la pregunta 12.
+- **El legado no tiene año fiscal:** `PERIODO` es el período de presupuesto. El supuesto S18
+  (año enero–diciembre por cada año con partidas) sigue siendo razonable y ya no depende de
+  esa tabla.
+- **No hay consolidación de empresas en el legado.** "Generar Partida Consolidada" es un
+  reporte de movimientos resumidos. La consolidación sale de la lista de paridad y pasa a
+  ser función nueva, si se quiere.
+- **`fcobro` no se usa** en ningún programa y está vacío: no hace falta mostrarla ni migrarla.
+- Confirmado sin cambios: S14 (cierre anual con saldos acumulados), S17 (`moneda = 2` es
+  dólares) y que el importador hace bien en descartar los registros marcados como borrados.
+
+No verificado en esa pasada: los diseñadores de estados de resultados, la mayoría de los
+reportes y sus formatos `.frx`, las pantallas de usuarios, y si copiar partida duplica saldos.
+No se ejecutó código del sistema anterior: todo sale de leerlo.
 
 ## Estado
 
@@ -261,7 +330,8 @@ Las 11 preguntas abiertas de CONTAC siguen en [open-questions.md](contac/open-qu
 - **Probar con una persona la captura de partidas** con teclado (agregar líneas, modificar,
   borrador, copiar, buscar) y la impresión de cada reporte. Es lo que más probablemente
   necesite ajustes.
-- La pantalla de partidas no muestra la fecha de cobro (`fcobro`, pregunta 6) y, al modificar
+- La pantalla de partidas no muestra la fecha de cobro (`fcobro`, pregunta 6; **el sistema
+  anterior no la usa, así que no hace falta**) y, al modificar
   una partida importada que sigue descuadrada, solo ofrece guardarla como borrador.
 - **Partida de apertura** en el importador para clientes sin historial completo (no hizo falta aquí).
 - **Tablas y pantallas no construidas:** diseñador de estados de resultados (pregunta 8),
