@@ -1,4 +1,5 @@
 import type { ModuleManifest } from '@accounting/shared'
+import { COA_PERMISSIONS } from './permissions.js'
 
 export const manifest: ModuleManifest = {
   id: 'chart-of-accounts',
@@ -9,11 +10,7 @@ export const manifest: ModuleManifest = {
   alwaysOn: true,
   dependsOn: [],
   navItems: [{ label: 'Chart of Accounts', path: '/chart-of-accounts', icon: 'BookOpen' }],
-  permissions: {
-    owner: ['read', 'write', 'delete'],
-    admin: ['read', 'write'],
-    member: ['read'],
-  },
+  permissions: COA_PERMISSIONS,
   schema: async () => (await import('./schema.js')).default,
   router: async () => (await import('./routes.js')).default,
   // Screens live in apps/web (static export cannot load module pages at runtime).

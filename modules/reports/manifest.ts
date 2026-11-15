@@ -9,11 +9,7 @@ export const manifest: ModuleManifest = {
   alwaysOn: false,
   dependsOn: ['general-ledger'],
   navItems: [{ label: 'Reports', path: '/reports', icon: 'BarChart3' }],
-  permissions: {
-    owner: ['read', 'write', 'delete'],
-    admin: ['read', 'write'],
-    member: ['read'],
-  },
+  permissions: [],
   schema: async () => (await import('./schema.js')).default,
   router: async () => (await import('./routes.js')).default,
   pages: async () => ({ index: (await import('./pages/index.js')).default }),

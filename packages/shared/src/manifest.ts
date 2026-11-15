@@ -1,13 +1,9 @@
+import type { PermissionDef } from './roles.js'
+
 export type NavItem = {
   label: string
   path: string
   icon: string
-}
-
-export type ModulePermissions = {
-  owner: string[]
-  admin: string[]
-  member: string[]
 }
 
 export type ModuleManifest = {
@@ -19,7 +15,8 @@ export type ModuleManifest = {
   alwaysOn: boolean
   dependsOn: string[]
   navItems: NavItem[]
-  permissions: ModulePermissions
+  // Fine permissions this module checks (`<prefix>.<resource>.<action>`).
+  permissions: PermissionDef[]
   schema: () => Promise<Record<string, unknown>>
   router: () => Promise<unknown>
   pages: () => Promise<Record<string, unknown>>

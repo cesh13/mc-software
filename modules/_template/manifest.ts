@@ -9,11 +9,7 @@ export const manifest: ModuleManifest = {
   alwaysOn: false,
   dependsOn: [],
   navItems: [{ label: 'Template', path: '/template', icon: 'Package' }],
-  permissions: {
-    owner: ['read', 'write', 'delete'],
-    admin: ['read', 'write'],
-    member: ['read'],
-  },
+  permissions: [],
   schema: async () => (await import('./schema.js')).default,
   router: async () => (await import('./routes.js')).default,
   pages: async () => ({ index: (await import('./pages/index.js')).default }),

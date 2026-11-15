@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm'
 import path from 'path'
 import { existsSync, readdirSync } from 'fs'
 import { pathToFileURL } from 'url'
-import type { ModuleManifest } from '@accounting/shared'
+import { registerPermissions, type ModuleManifest } from '@accounting/shared'
 import { nowIso, type Db } from '@accounting/shared/server'
 import { modules } from '../db/schema.js'
 import { moduleContext, type PlatformDeps } from '../middleware/module-context.js'
@@ -111,6 +111,7 @@ export async function loadModules(
 
   const loaded: string[] = []
   for (const manifest of topoSort(wanted)) {
+    registerPermissions(manifest.permissions)
     migrateModule(db, modulesDir, manifest.id)
     const router = (await manifest.router()) as Hono
     app.use(`/api/${manifest.id}/*`, moduleContext(deps))

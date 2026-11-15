@@ -53,6 +53,7 @@ export function moduleContext(deps: PlatformDeps) {
     c.set('db', db)
     c.set('user', user)
     c.set('empresaId', empresaId)
+    c.set('permissionOverrides', [])
     c.set('audit', (entry, tx) => writeAudit(tx ?? db, { userId: user.id, empresaId }, entry))
     await next()
   })

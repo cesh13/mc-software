@@ -1,4 +1,4 @@
-export type { ModuleManifest, ModulePermissions, NavItem } from './manifest.js'
+export type { ModuleManifest, NavItem } from './manifest.js'
 export * from './roles.js'
 export * from './money.js'
 export * from './period.js'
