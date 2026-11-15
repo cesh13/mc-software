@@ -1,4 +1,6 @@
-import { sqliteTable, text, integer, index, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { sql } from 'drizzle-orm'
+import { sqliteTable, text, integer, index, uniqueIndex, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core'
+import { GL_ENTRY_SOURCES } from '@accounting/shared'
 import { coreEmpresasRef, coaAccountsRef } from '../refs.js'
 import { glEntryTypes, glCostCenters } from './setup.js'
 
@@ -8,8 +10,9 @@ export const ENTRY_STATUSES = ['borrador', 'aplicada'] as const
 export type EntryStatus = (typeof ENTRY_STATUSES)[number]
 
 // Who produced the entry. 'cierre' = annual closing entry, which the income
-// statement excludes. 'importado' = brought in from the legacy system.
-export const ENTRY_SOURCES = ['manual', 'bancos', 'iva', 'cierre', 'importado'] as const
+// statement excludes. 'importado' = brought in from the legacy system. The
+// rest post through the ledger contract (contratos.md §1).
+export const ENTRY_SOURCES = GL_ENTRY_SOURCES
 export type EntrySource = (typeof ENTRY_SOURCES)[number]
 
 // Journal entry header (legacy PARTIDAS).
@@ -38,6 +41,12 @@ export const glJournalEntries = sqliteTable(
     source: text('source', { enum: ENTRY_SOURCES }).notNull().default('manual'),
     // Id of the originating document in the source module, if any.
     sourceRef: text('source_ref'),
+    // Reversal entry of a generated entry voided in a closed month.
+    reversesEntryId: text('reverses_entry_id').references((): AnySQLiteColumn => glJournalEntries.id),
+    // Legacy key SALFEC|TIPOPAR|NUMERO of an imported entry.
+    legacyRef: text('legacy_ref'),
+    // How an imported entry's origin was deduced: 'exacta' (by link) or 'inferida' (by concept).
+    originConfidence: text('origin_confidence', { enum: ['exacta', 'inferida'] }),
     // false = anulada (voided). Never physically deleted.
     isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
     createdBy: text('created_by').notNull(),
@@ -53,6 +62,11 @@ export const glJournalEntries = sqliteTable(
     ),
     index('gl_journal_entries_period_idx').on(t.empresaId, t.period, t.status),
     index('gl_journal_entries_source_idx').on(t.source, t.sourceRef),
+    // One live entry per document of a generated origin.
+    uniqueIndex('gl_journal_entries_generated_uq')
+      .on(t.empresaId, t.source, t.sourceRef)
+      .where(sql`is_active = 1 AND source_ref IS NOT NULL AND source NOT IN ('manual', 'cierre', 'importado')`),
+    index('gl_journal_entries_legacy_idx').on(t.empresaId, t.legacyRef),
   ],
 )
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import type { Entry, EntrySaveResult } from '@accounting/shared'
+import { GL_SOURCE_LABELS, isGeneratedSource, type Entry, type EntrySaveResult } from '@accounting/shared'
 import { ApiError, errorMessage } from '@/lib/api'
 import { usePermissions } from '@/lib/permissions'
 import { useAccounts } from '../coa/use-coa'
@@ -17,10 +17,11 @@ import { useUnsavedGuard } from './use-unsaved-guard'
 
 export type Notice = { kind: 'success' | 'info' | 'error'; text: string }
 
-const SOURCE_LOCKS: Record<string, string> = {
-  bancos: 'Partida generada por Bancos: modifíquela desde el módulo de Bancos.',
-  iva: 'Partida generada por IVA: modifíquela desde el módulo de IVA.',
-  cierre: 'Partida de cierre anual: anúlela y genere el cierre de nuevo.',
+function sourceLock(source: string): string | undefined {
+  if (source === 'cierre') return 'Partida de cierre anual: anúlela y genere el cierre de nuevo.'
+  if (!isGeneratedSource(source)) return undefined
+  const name = GL_SOURCE_LABELS[source]
+  return `Partida generada por ${name}: modifíquela o anúlela desde el módulo de ${name}.`
 }
 
 // Why Modificar is unavailable for this entry, if it is.
@@ -28,7 +29,7 @@ export function lockReason(entry: Entry | null): string | null {
   if (!entry || entry.editable) return null
   if (!entry.isActive) return 'Partida anulada: solo consulta e impresión.'
   if (entry.periodStatus === 'closed') return 'Mes cerrado: solo consulta e impresión.'
-  return SOURCE_LOCKS[entry.source] ?? 'La partida no se puede modificar aquí.'
+  return sourceLock(entry.source) ?? 'La partida no se puede modificar aquí.'
 }
 
 export function useEntryScreen() {

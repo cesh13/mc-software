@@ -1,5 +1,6 @@
 import type { PeriodArea, PeriodStateRow, PeriodStatus } from '../periods.js'
 import type { SequenceDef, SequenceNumber, SettingValue } from '../settings.js'
+import type { EntryRef, PostEntryRequest, PostPreview, SourceRefKey, VoidResult } from '../ledger.js'
 import type { ServiceContext } from './services.js'
 
 // Contract `periods`, provided by the platform core (contratos.md §2).
@@ -34,4 +35,20 @@ export interface SequencesService {
   next(scope: string, key: string): SequenceNumber
   peek(scope: string, key: string): SequenceNumber | null
   define(def: SequenceDef): void
+}
+
+// Contract `ledger`, provided by general-ledger (contratos.md §1). The only way a
+// module creates, replaces or voids the entry of its document. Bind the service
+// to a context on the caller's transaction: the provider never opens its own.
+export interface LedgerPosting {
+  // Idempotent: the same source+sourceRef with the same content returns the
+  // existing entry; different content throws 'already_posted' (use replace).
+  post(req: PostEntryRequest): EntryRef
+  // Open month, same period and type: lines replaced in place (same id and
+  // number). Otherwise the old one is voided and a new one created.
+  replace(req: PostEntryRequest): EntryRef
+  // Open month: anulada. Closed month: reversal entry dated `date` (open month).
+  void(ref: SourceRefKey, opts: { date: string; reason: string }): VoidResult
+  find(ref: SourceRefKey): EntryRef | null
+  preview(req: PostEntryRequest): PostPreview
 }

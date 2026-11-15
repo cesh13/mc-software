@@ -1,5 +1,5 @@
 import { RuleError } from '@accounting/shared/server'
-import { MONTH_NAMES, type EntryType } from '@accounting/shared'
+import { GL_SOURCE_LABELS, MONTH_NAMES, isGeneratedSource, type EntryType } from '@accounting/shared'
 import { DetailedRuleError } from '../lib/errors.js'
 import type { EntryRow } from './entry-detail.js'
 import { EDITABLE_SOURCES } from './entry-detail.js'
@@ -37,20 +37,19 @@ export function unbalancedError(totals: { debit: string; credit: string; differe
   )
 }
 
-const SOURCE_MESSAGES: Record<string, string> = {
-  bancos: 'Partida generada por Bancos: modifíquela desde el módulo de Bancos.',
-  iva: 'Partida generada por IVA: modifíquela desde el módulo de IVA.',
-  cierre: 'Partida de cierre anual: anúlela y genere el cierre de nuevo.',
+export function sourceMessage(source: string): string {
+  if (source === 'cierre') return 'Partida de cierre anual: anúlela y genere el cierre de nuevo.'
+  if (isGeneratedSource(source)) {
+    const name = GL_SOURCE_LABELS[source]
+    return `Partida generada por ${name}: modifíquela o anúlela desde el módulo de ${name}.`
+  }
+  return 'La partida no se puede modificar aquí.'
 }
 
 // Only active, manual or imported entries are edited here.
 export function assertEditable(row: EntryRow): void {
   if (!row.isActive) throw new RuleError('La partida está anulada.', 409, 'entry_voided')
   if (!(EDITABLE_SOURCES as readonly string[]).includes(row.source)) {
-    throw new RuleError(
-      SOURCE_MESSAGES[row.source] ?? 'La partida no se puede modificar aquí.',
-      409,
-      'entry_not_editable',
-    )
+    throw new RuleError(sourceMessage(row.source), 409, 'entry_not_editable')
   }
 }

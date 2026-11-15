@@ -33,14 +33,16 @@ export class ServiceDirectory {
       const p = this.providers.get(name)
       return p && (p.moduleId === CORE_PROVIDER || activeModuleIds.has(p.moduleId)) ? p : undefined
     }
-    return {
+    const registry: ServiceRegistry = {
       has: (name) => !!usable(name),
-      get: <T>(name: string, ctx: ServiceContext) => (usable(name)?.factory(ctx) as T | undefined) ?? null,
+      get: <T>(name: string, ctx: ServiceContext) =>
+        (usable(name)?.factory({ ...ctx, services: registry }) as T | undefined) ?? null,
       require: <T>(name: string, ctx: ServiceContext) => {
         const p = usable(name)
         if (!p) throw serviceUnavailable(name)
-        return p.factory(ctx) as T
+        return p.factory({ ...ctx, services: registry }) as T
       },
     }
+    return registry
   }
 }

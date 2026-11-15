@@ -13,8 +13,24 @@ const id = z.string().trim().min(1)
 
 export const GL_ENTRY_STATUSES = ['borrador', 'aplicada'] as const
 export type GlEntryStatus = (typeof GL_ENTRY_STATUSES)[number]
-export const GL_ENTRY_SOURCES = ['manual', 'bancos', 'iva', 'cierre', 'importado'] as const
+export const GL_ENTRY_SOURCES = [
+  'manual', 'cierre', 'importado',
+  'bancos', 'cxp', 'cxc', 'ventas', 'inventario', 'produccion', 'activo_fijo', 'nomina', 'iva',
+] as const
 export type GlEntrySource = (typeof GL_ENTRY_SOURCES)[number]
+// Origins that post through the ledger contract (contratos.md §1); read-only in the GL screens.
+export const GL_GENERATED_SOURCES = [
+  'bancos', 'cxp', 'cxc', 'ventas', 'inventario', 'produccion', 'activo_fijo', 'nomina', 'iva',
+] as const
+export type GlGeneratedSource = (typeof GL_GENERATED_SOURCES)[number]
+export const GL_SOURCE_LABELS: Record<GlEntrySource, string> = {
+  manual: 'Manual', cierre: 'Cierre', importado: 'Importada', bancos: 'Bancos', cxp: 'Cuentas por pagar',
+  cxc: 'Cuentas por cobrar', ventas: 'Ventas', inventario: 'Inventario', produccion: 'Producción',
+  activo_fijo: 'Activo fijo', nomina: 'Planilla', iva: 'IVA',
+}
+export function isGeneratedSource(source: string): source is GlGeneratedSource {
+  return (GL_GENERATED_SOURCES as readonly string[]).includes(source)
+}
 export type GlAccountType = AccountType
 
 // ── Setup data ──────────────────────────────────────────────────────────

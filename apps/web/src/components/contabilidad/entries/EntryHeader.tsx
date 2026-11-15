@@ -1,7 +1,7 @@
 'use client'
 
 import { forwardRef, type KeyboardEvent, type ReactNode } from 'react'
-import { lastDayOfPeriod, type Entry, type EntryType, type Period } from '@accounting/shared'
+import { GL_SOURCE_LABELS, lastDayOfPeriod, type Entry, type EntryType, type Period } from '@accounting/shared'
 import { cx } from '@/components/ui/button'
 import { Field, Input, Select } from '@/components/ui/form'
 import { FIELD_IDS } from './grid-focus'
@@ -101,7 +101,8 @@ export const EntryHeader = forwardRef<HTMLSelectElement, Props>(function EntryHe
   )
 })
 
-const SOURCE_LABELS: Record<string, string> = { importado: 'Importada', bancos: 'Bancos', iva: 'IVA', cierre: 'Cierre' }
+// Every origin but manual gets a badge.
+const SOURCE_LABELS: Record<string, string> = { ...GL_SOURCE_LABELS, manual: '' }
 
 function Badge({ tone, children }: { tone: 'green' | 'amber' | 'red' | 'gray' | 'blue'; children: ReactNode }) {
   const styles = {

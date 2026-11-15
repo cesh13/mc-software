@@ -9,6 +9,8 @@ export type ServiceContext = {
   userId: string
   role: string
   audit: (entry: AuditEntry, tx?: Db) => void
+  // Set by the registry when it builds a provider, so providers can call other contracts.
+  services?: ServiceRegistry
 }
 
 export type ServiceFactory<T = unknown> = (ctx: ServiceContext) => T

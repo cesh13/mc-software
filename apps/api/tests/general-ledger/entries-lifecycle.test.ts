@@ -95,7 +95,7 @@ test('void: soft delete, by source; other sources are not editable here', async 
   rawEntry(t, pd, { id: 'close', source: 'cierre' })
   const bank = await post(t, '/entries/bank/void')
   assert.equal(bank.json.code, 'entry_from_other_module')
-  assert.match(bank.json.error, /Elimine desde el módulo de Bancos/)
+  assert.match(bank.json.error, /desde el módulo de Bancos/)
   assert.equal((await post(t, '/entries/iva/void')).json.code, 'entry_from_other_module')
   for (const id of ['bank', 'iva', 'close']) {
     assert.equal((await put(t, `/entries/${id}`, entryBody(pd, '2026-01', bal()))).json.code, 'entry_not_editable', id)

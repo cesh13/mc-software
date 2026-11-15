@@ -1,5 +1,5 @@
 import { asc, eq } from 'drizzle-orm'
-import { can } from '@accounting/shared'
+import { can, isGeneratedSource } from '@accounting/shared'
 import { RuleError, newId, nowIso } from '@accounting/shared/server'
 import type { Entry, EntrySaveResult, copyEntryInput } from '@accounting/shared'
 import type { z } from 'zod'
@@ -8,7 +8,7 @@ import { totalsOf } from '../lib/cents.js'
 import { auditIn, inTx, type Ctx } from '../lib/context.js'
 import { getEntry, loadEntry } from './entry-detail.js'
 import { validateLines } from './entry-lines.js'
-import { activeEntryType, assertDateInPeriod, assertEditable, unbalancedError } from './entry-rules.js'
+import { activeEntryType, assertDateInPeriod, assertEditable, sourceMessage, unbalancedError } from './entry-rules.js'
 import { insertLines } from './entries-write.js'
 import { assertPeriodOpen } from './periods.js'
 import { assignNumber } from './numbering.js'
@@ -55,18 +55,13 @@ export function unapplyEntry(ctx: Ctx, id: string): Entry {
   return getEntry(ctx, id)
 }
 
-const VOID_BLOCKED: Record<string, string> = {
-  bancos: 'Elimine desde el módulo de Bancos.',
-  iva: 'Elimine desde el módulo de IVA.',
-}
-
 // Anulación: is_active = 0, the number stays taken. Never a physical delete.
 export function voidEntry(ctx: Ctx, id: string): Entry {
   inTx(ctx, (tx) => {
     const row = loadEntry(tx, id)
     if (!row.isActive) throw new RuleError('La partida ya está anulada.', 409, 'entry_voided')
-    const blocked = VOID_BLOCKED[row.source]
-    if (blocked) throw new RuleError(blocked, 409, 'entry_from_other_module')
+    // Generated entries are voided from their owning document (ledger contract).
+    if (isGeneratedSource(row.source)) throw new RuleError(sourceMessage(row.source), 409, 'entry_from_other_module')
     if (row.source === 'cierre' && !can(ctx.role, 'supervise')) {
       throw new RuleError('Solo un supervisor puede anular el cierre anual.', 403, 'permission_denied')
     }

@@ -62,8 +62,8 @@ export function importEntries(ctx: Ctx): Map<string, MonthStat> {
   const stats = new Map<string, MonthStat>()
   const insertEntry = ctx.db.prepare(
     `INSERT INTO gl_journal_entries (id, empresa_id, period, entry_type_id, number, date, concept, status,
-       imported_unbalanced, source, source_ref, is_active, created_by, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'aplicada', ?, 'importado', ?, 1, ?, ?, ?)`,
+       imported_unbalanced, source, source_ref, legacy_ref, is_active, created_by, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'aplicada', ?, 'importado', ?, ?, 1, ?, ?, ?)`,
   )
   const insertLine = ctx.db.prepare(
     `INSERT INTO gl_journal_lines (id, entry_id, line_no, account_id, cost_center_id, detail, debit, credit, collect_date)
@@ -116,7 +116,7 @@ export function importEntries(ctx: Ctx): Map<string, MonthStat> {
     if (!diff.isZero()) report.unbalancedEntries.push({ key: p.key, difference: diff.toFixed(2) })
     insertEntry.run(
       entryId, ctx.empresaId, period, typeId, number, date, header ? str(header['concepto']) : ORPHAN_CONCEPT,
-      diff.isZero() ? 0 : 1, p.key, ctx.userId, ctx.now, ctx.now,
+      diff.isZero() ? 0 : 1, p.key, p.key, ctx.userId, ctx.now, ctx.now,
     )
     bump(report, 'gl_journal_entries')
     for (const row of lineRows) insertLine.run(...row)
