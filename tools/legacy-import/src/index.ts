@@ -8,3 +8,5 @@ export type { ParityReport, ParityTable, Mismatch, MismatchCause, ParityOptions 
 export type { ImportOptions, ImportReport, SqlHandle, SqlStatement } from './contac/types.js'
 export { importParties } from './parties/import.js'
 export type { PartiesImportOptions, PartiesImportReport, LegacyRef, ConflictKind } from './parties/types.js'
+export { reattributeEntries } from './common/reattribute.js'
+export type { Reattribution, ReattributeReport } from './common/reattribute.js'

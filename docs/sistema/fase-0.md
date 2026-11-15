@@ -23,7 +23,7 @@ coordinó; Sonnet hizo los pasos 2 y 7 y las correcciones del importador; Opus h
 | 5. Configuración y correlativos | Hecho: contratos `settings` (con vigencia) y `sequences`; `/api/empresa-settings`. Falta la pantalla de configuración y el modo advertir/exigir al cerrar (no hay subledgers aún) |
 | 6. Contrato de contabilización | Hecho: servicio `ledger` (post, replace, void con reverso, find, preview) con las pruebas de reversión e idempotencia |
 | 7. Ficha de empresa y bitácora | Hecho: `core_empresa_profile`, `/api/empresa-profile`, `/api/audit` (+ CSV), pantallas. Bitácora vista en navegador |
-| 8. Importador y paridad | Parcial: estado de mes por la primera partida, `includeClosing`, paridad por causa, `legacy_ref`. **Falta:** importar `USUARIOS`/`USREMP`/`PERFIL` con su tabla de correspondencia, y la función común `reattributeEntries` |
+| 8. Importador y paridad | Casi: estado de mes por la primera partida, `includeClosing`, paridad por causa, `legacy_ref`, `reattributeEntries` (en `tools/legacy-import/src/common`). **Falta:** importar `USUARIOS`/`USREMP`/`PERFIL`; necesita decidir cómo reciben su clave los usuarios importados (no hay restablecimiento por correo) |
 | 9. `parties` | Hecho: módulo, lookup como servicio, importador desde siete tablas (5,103 filas → 3,054 terceros) |
 
 Diferencias con lo escrito arriba, decididas al construir:

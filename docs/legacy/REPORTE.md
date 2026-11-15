@@ -37,8 +37,8 @@ En orden:
    [fase-0.md](../sistema/fase-0.md#estado-de-la-construcción-2026-11-15)). Permisos por acción,
    activación por empresa, registro de servicios, períodos compartidos, configuración y
    correlativos, contrato de partidas (`ledger`), ficha fiscal, bitácora y el módulo `parties`.
-   **Falta de la fase 0:** importar usuarios y `PERFIL` como ajustes de permisos,
-   `reattributeEntries`, la pantalla de configuración por empresa, y publicar una versión
+   **Falta de la fase 0:** importar usuarios y `PERFIL` como ajustes de permisos (decidir antes
+   cómo reciben su clave: no hay restablecimiento por correo), la pantalla de configuración por empresa, y publicar una versión
    (`ship-mc-update`) para probar las migraciones sobre la instalación real. **Desbloquea Bancos.**
 
 6. **Por cada módulo siguiente, el mismo ciclo:** verificar su spec contra el código con un
