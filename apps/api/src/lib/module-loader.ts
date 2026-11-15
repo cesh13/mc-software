@@ -8,6 +8,8 @@ import { registerPermissions, type ModuleManifest } from '@accounting/shared'
 import { nowIso, type Db } from '@accounting/shared/server'
 import { modules } from '../db/schema.js'
 import { moduleContext, type PlatformDeps } from '../middleware/module-context.js'
+import type { ModuleCatalog } from './activation.js'
+import { ServiceDirectory } from './services.js'
 
 export function getModulesDir(): string {
   // Tray app sets this when spawning the API. Dev fallback: two levels up from cwd.
@@ -86,15 +88,29 @@ export function migrateModule(db: Db, modulesDir: string, moduleId: string): voi
   })
 }
 
+export type LoadedModules = {
+  loaded: string[]
+  catalog: ModuleCatalog
+  directory: ServiceDirectory
+}
+
 export async function loadModules(
   app: Hono,
   deps: PlatformDeps,
-  opts: { modulesDir?: string; only?: string[]; manifests?: ModuleManifest[] } = {},
-): Promise<string[]> {
+  opts: {
+    modulesDir?: string
+    only?: string[]
+    manifests?: ModuleManifest[]
+    // Added to the discovered ones (tests).
+    extraManifests?: ModuleManifest[]
+    // Services provided by the platform core (periods, settings, sequences…).
+    registerCore?: (directory: ServiceDirectory) => void
+  } = {},
+): Promise<LoadedModules> {
   const db = deps.db()
   const modulesDir = opts.modulesDir ?? getModulesDir()
 
-  const manifests = opts.manifests ?? (await discoverManifests(modulesDir))
+  const manifests = [...(opts.manifests ?? (await discoverManifests(modulesDir))), ...(opts.extraManifests ?? [])]
   syncModulesTable(db, manifests)
 
   const enabledIds = new Set(
@@ -109,14 +125,22 @@ export async function loadModules(
     (m) => enabledIds.has(m.id) && (!opts.only || opts.only.includes(m.id)),
   )
 
-  const loaded: string[] = []
-  for (const manifest of topoSort(wanted)) {
+  const ordered = topoSort(wanted)
+  const directory = new ServiceDirectory()
+  opts.registerCore?.(directory)
+  for (const manifest of ordered) {
     registerPermissions(manifest.permissions)
+    await directory.registerManifest(manifest)
+  }
+  const catalog: ModuleCatalog = { manifests: ordered, providerOf: (s) => directory.providerOf(s) }
+
+  const loaded: string[] = []
+  for (const manifest of ordered) {
     migrateModule(db, modulesDir, manifest.id)
     const router = (await manifest.router()) as Hono
-    app.use(`/api/${manifest.id}/*`, moduleContext(deps))
+    app.use(`/api/${manifest.id}/*`, moduleContext(deps, { moduleId: manifest.id, catalog, directory }))
     app.route(`/api/${manifest.id}`, router)
     loaded.push(manifest.id)
   }
-  return loaded
+  return { loaded, catalog, directory }
 }

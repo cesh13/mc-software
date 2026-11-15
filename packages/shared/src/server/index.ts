@@ -2,6 +2,9 @@ import { randomUUID } from 'node:crypto'
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 import { createMiddleware } from 'hono/factory'
 import { can, type PermissionOverride } from '../roles.js'
+import type { ServiceRegistry } from './services.js'
+
+export * from './services.js'
 
 // Server-only helpers for modules. The web app must never import this file.
 
@@ -34,6 +37,8 @@ export type ModuleEnv = {
     audit: (entry: AuditEntry, tx?: Db) => void
     // The user's permission overrides (core_permission_overrides), loaded once per request.
     permissionOverrides: PermissionOverride[]
+    // Contracts provided by modules active for this empresa (and by the core).
+    services: ServiceRegistry
   }
 }
 

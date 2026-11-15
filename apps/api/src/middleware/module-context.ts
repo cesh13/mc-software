@@ -6,6 +6,8 @@ import { RuleError, type CurrentUser, type Db, type ModuleEnv } from '@accountin
 import { coreEmpresas, coreUserEmpresas } from '../db/schema.js'
 import { writeAudit } from '../lib/audit.js'
 import { loadOverrides } from '../lib/permissions.js'
+import { activeModuleIds, type ModuleCatalog } from '../lib/activation.js'
+import { ServiceDirectory } from '../lib/services.js'
 
 export type ResolveUser = (headers: Headers) => Promise<CurrentUser | null>
 
@@ -16,9 +18,14 @@ export type PlatformDeps = {
 
 export const EMPRESA_HEADER = 'x-empresa-id'
 
+// Which module the route belongs to, and what is loaded (to check activation
+// per empresa and hand out services).
+export type ModuleScope = { moduleId: string; catalog: ModuleCatalog; directory: ServiceDirectory }
+
 // Runs before every module route: authenticates, resolves the active empresa
-// from the X-Empresa-Id header and checks the user may work in it.
-export function moduleContext(deps: PlatformDeps) {
+// from the X-Empresa-Id header, checks the user may work in it and that the
+// module is active for it.
+export function moduleContext(deps: PlatformDeps, scope?: ModuleScope) {
   return createMiddleware<ModuleEnv>(async (c, next) => {
     const user = await deps.resolveUser(c.req.raw.headers)
     if (!user) return c.json({ error: 'No autorizado.' }, 401)
@@ -51,14 +58,22 @@ export function moduleContext(deps: PlatformDeps) {
       }
     }
 
+    const active = scope ? activeModuleIds(db, empresaId, scope.catalog) : new Set<string>()
+    if (scope && !active.has(scope.moduleId)) {
+      return c.json({ error: 'Este módulo no está activo para la empresa.', code: 'module_disabled' }, 403)
+    }
+
     c.set('db', db)
     c.set('user', user)
     c.set('empresaId', empresaId)
     c.set('permissionOverrides', loadOverrides(db, user.id, empresaId))
     c.set('audit', (entry, tx) => writeAudit(tx ?? db, { userId: user.id, empresaId }, entry))
+    c.set('services', scope ? scope.directory.forActive(active) : emptyServices)
     await next()
   })
 }
+
+const emptyServices = new ServiceDirectory().forActive(new Set())
 
 // app.onError handler: business-rule and validation failures become 4xx JSON.
 export function handleError(err: Error, c: Context) {

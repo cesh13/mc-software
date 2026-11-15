@@ -16,6 +16,7 @@ import { getSettings } from './lib/settings.js'
 import setup from './routes/setup.js'
 import modulesRoute from './routes/modules.js'
 import { createPermissionsRoute } from './routes/permissions.js'
+import { createEmpresaModulesRoute } from './routes/empresa-modules.js'
 import { createUsersRoute } from './routes/users.js'
 import appSettings from './routes/app-settings.js'
 
@@ -56,7 +57,8 @@ export async function start(opts: { manifests?: ModuleManifest[] } = {}) {
   app.on(['GET', 'POST'], '/api/auth/*', (c) => getAuth().handler(c.req.raw))
 
   // 5. Load enabled modules (their migrations → routes) in dependency order
-  const loaded = await loadModules(app, deps, { manifests: opts.manifests })
+  const { loaded, catalog } = await loadModules(app, deps, { manifests: opts.manifests })
+  app.route('/api/empresa-modules', createEmpresaModulesRoute(deps, catalog))
   console.log(`Modules loaded: ${loaded.join(', ') || 'none'}`)
 
   // 6. Serve built Next.js static files

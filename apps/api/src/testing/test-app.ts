@@ -10,6 +10,8 @@ import { loadModules } from '../lib/module-loader.js'
 import { EMPRESA_HEADER, handleError, type PlatformDeps } from '../middleware/module-context.js'
 import { createEmpresasRoute } from '../routes/empresas.js'
 import { createPermissionsRoute } from '../routes/permissions.js'
+import { createEmpresaModulesRoute } from '../routes/empresa-modules.js'
+import type { ModuleManifest } from '@accounting/shared'
 import { createUsersRoute, type CreateAccount } from '../routes/users.js'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
@@ -37,7 +39,12 @@ export type TestSqlite = {
 
 // In-memory platform for tests: real migrations, real module routers, no
 // encryption and no Better Auth (the caller is taken from test headers).
-export async function createTestApp(opts: { modules: string[]; createAccount?: CreateAccount }) {
+export async function createTestApp(opts: {
+  modules: string[]
+  createAccount?: CreateAccount
+  // Extra in-memory modules (e.g. fake providers/consumers); installed globally.
+  extraManifests?: ModuleManifest[]
+}) {
   const raw = new Database(':memory:')
   raw.pragma('foreign_keys=ON')
   const sqlite: TestSqlite = raw
@@ -65,10 +72,16 @@ export async function createTestApp(opts: { modules: string[]; createAccount?: C
   app.route('/api/empresas', createEmpresasRoute(deps))
   app.route('/api/users', createUsersRoute(deps, { createAccount: opts.createAccount }))
   app.route('/api/permissions', createPermissionsRoute(deps))
-  const loaded = await loadModules(app, deps, {
+  for (const m of opts.extraManifests ?? []) {
+    raw.prepare("insert into modules (id, name, version, is_enabled, is_always_on, installed_at) values (?, ?, ?, 1, ?, 'x')")
+      .run(m.id, m.name, m.version, m.alwaysOn ? 1 : 0)
+  }
+  const { loaded, catalog, directory } = await loadModules(app, deps, {
     modulesDir: path.join(repoRoot, 'modules'),
-    only: opts.modules,
+    only: [...opts.modules, ...(opts.extraManifests ?? []).map((m) => m.id)],
+    extraManifests: opts.extraManifests,
   })
+  app.route('/api/empresa-modules', createEmpresaModulesRoute(deps, catalog))
 
   async function request(url: string, req: TestRequest = {}) {
     const headers: Record<string, string> = {
@@ -94,5 +107,5 @@ export async function createTestApp(opts: { modules: string[]; createAccount?: C
     return { status: res.status, json }
   }
 
-  return { app, db, sqlite, empresaId, loaded, request }
+  return { app, db, sqlite, empresaId, loaded, catalog, directory, request }
 }

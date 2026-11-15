@@ -83,3 +83,19 @@ export const corePermissionOverrides = sqliteTable(
   },
   (t) => [index('core_permission_overrides_user_idx').on(t.userId)],
 )
+
+// Module active per empresa (production, fixed assets, payroll are optional per
+// client). Always-on modules ignore this table. No row = not active.
+export const coreEmpresaModules = sqliteTable(
+  'core_empresa_modules',
+  {
+    empresaId: text('empresa_id')
+      .notNull()
+      .references(() => coreEmpresas.id),
+    moduleId: text('module_id').notNull(),
+    isEnabled: integer('is_enabled', { mode: 'boolean' }).notNull().default(false),
+    updatedBy: text('updated_by').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.empresaId, t.moduleId] })],
+)
