@@ -1,4 +1,5 @@
 import type { PermissionDef } from './roles.js'
+import type { SettingDef } from './settings.js'
 // Type-only: erased at runtime, so the browser bundle never loads server code.
 import type { ServiceFactory } from './server/services.js'
 
@@ -24,6 +25,8 @@ export type ModuleManifest = {
   // Services it calls. A missing required one blocks activating the module
   // for an empresa; a missing optional one resolves to null.
   consumes?: { required?: string[]; optional?: string[] }
+  // Per-empresa settings this module reads through the `settings` contract.
+  settings?: SettingDef[]
   schema: () => Promise<Record<string, unknown>>
   router: () => Promise<unknown>
   pages: () => Promise<Record<string, unknown>>

@@ -122,3 +122,47 @@ export const corePeriods = sqliteTable(
   },
   (t) => [uniqueIndex('core_periods_empresa_area_period_uq').on(t.empresaId, t.area, t.period)],
 )
+
+// Per-empresa settings by namespace and key (contratos.md §8). Dated settings
+// keep one row per valid_from; undated ones use valid_from = '0000-01-01'.
+export const coreEmpresaSettings = sqliteTable(
+  'core_empresa_settings',
+  {
+    id: text('id').primaryKey(),
+    empresaId: text('empresa_id')
+      .notNull()
+      .references(() => coreEmpresas.id),
+    namespace: text('namespace').notNull(),
+    key: text('key').notNull(),
+    // JSON text, validated by the declaring manifest's Zod schema.
+    value: text('value').notNull(),
+    validFrom: text('valid_from').notNull(),
+    updatedBy: text('updated_by').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (t) => [uniqueIndex('core_empresa_settings_uq').on(t.empresaId, t.namespace, t.key, t.validFrom)],
+)
+
+// Document numbering with ranges and authorizations (cheques, receipts,
+// fiscal series, retention vouchers). Journal entries are numbered by the GL.
+export const coreSequences = sqliteTable(
+  'core_sequences',
+  {
+    id: text('id').primaryKey(),
+    empresaId: text('empresa_id')
+      .notNull()
+      .references(() => coreEmpresas.id),
+    scope: text('scope').notNull(),
+    key: text('key').notNull(),
+    nextValue: integer('next_value').notNull(),
+    width: integer('width').notNull(),
+    prefix: text('prefix').notNull().default(''),
+    rangeFrom: integer('range_from'),
+    rangeTo: integer('range_to'),
+    validFrom: text('valid_from'),
+    validTo: text('valid_to'),
+    authorizationRef: text('authorization_ref'),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (t) => [uniqueIndex('core_sequences_uq').on(t.empresaId, t.scope, t.key)],
+)

@@ -11,6 +11,7 @@ import { loadModules } from '../lib/module-loader.js'
 import { EMPRESA_HEADER, handleError, type PlatformDeps } from '../middleware/module-context.js'
 import { createEmpresasRoute } from '../routes/empresas.js'
 import { createPermissionsRoute } from '../routes/permissions.js'
+import { createEmpresaSettingsRoute } from '../routes/empresa-settings.js'
 import { createEmpresaModulesRoute } from '../routes/empresa-modules.js'
 import type { ModuleManifest } from '@accounting/shared'
 import { createUsersRoute, type CreateAccount } from '../routes/users.js'
@@ -73,6 +74,7 @@ export async function createTestApp(opts: {
   app.route('/api/empresas', createEmpresasRoute(deps))
   app.route('/api/users', createUsersRoute(deps, { createAccount: opts.createAccount }))
   app.route('/api/permissions', createPermissionsRoute(deps))
+  app.route('/api/empresa-settings', createEmpresaSettingsRoute(deps))
   for (const m of opts.extraManifests ?? []) {
     raw.prepare("insert into modules (id, name, version, is_enabled, is_always_on, installed_at) values (?, ?, ?, 1, ?, 'x')")
       .run(m.id, m.name, m.version, m.alwaysOn ? 1 : 0)

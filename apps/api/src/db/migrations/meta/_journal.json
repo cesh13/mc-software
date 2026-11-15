@@ -43,6 +43,13 @@
       "when": 1794762791594,
       "tag": "0005_aspiring_sugar_man",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1794763141158,
+      "tag": "0006_secret_slayback",
+      "breakpoints": true
     }
   ]
 }

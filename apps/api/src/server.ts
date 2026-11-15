@@ -17,6 +17,7 @@ import { getSettings } from './lib/settings.js'
 import setup from './routes/setup.js'
 import modulesRoute from './routes/modules.js'
 import { createPermissionsRoute } from './routes/permissions.js'
+import { createEmpresaSettingsRoute } from './routes/empresa-settings.js'
 import { createEmpresaModulesRoute } from './routes/empresa-modules.js'
 import { createUsersRoute } from './routes/users.js'
 import appSettings from './routes/app-settings.js'
@@ -51,6 +52,7 @@ export async function start(opts: { manifests?: ModuleManifest[] } = {}) {
   app.route('/api/modules', modulesRoute)
   app.route('/api/users', createUsersRoute(deps))
   app.route('/api/permissions', createPermissionsRoute(deps))
+  app.route('/api/empresa-settings', createEmpresaSettingsRoute(deps))
   app.route('/api/settings', appSettings)
   app.route('/api/empresas', createEmpresasRoute(deps))
 

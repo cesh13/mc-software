@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm'
 import path from 'path'
 import { existsSync, readdirSync } from 'fs'
 import { pathToFileURL } from 'url'
-import { registerPermissions, type ModuleManifest } from '@accounting/shared'
+import { registerPermissions, registerSettings, type ModuleManifest } from '@accounting/shared'
 import { nowIso, type Db } from '@accounting/shared/server'
 import { modules } from '../db/schema.js'
 import { moduleContext, type PlatformDeps } from '../middleware/module-context.js'
@@ -130,6 +130,7 @@ export async function loadModules(
   opts.registerCore?.(directory)
   for (const manifest of ordered) {
     registerPermissions(manifest.permissions)
+    registerSettings(manifest.settings ?? [])
     await directory.registerManifest(manifest)
   }
   const catalog: ModuleCatalog = { manifests: ordered, providerOf: (s) => directory.providerOf(s) }
