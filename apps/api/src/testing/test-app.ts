@@ -12,6 +12,7 @@ import { EMPRESA_HEADER, handleError, type PlatformDeps } from '../middleware/mo
 import { createEmpresasRoute } from '../routes/empresas.js'
 import { createEmpresaProfileRoute } from '../routes/empresa-profile.js'
 import { createAuditRoute } from '../routes/audit.js'
+import { createMigrationRoute } from '../routes/migration.js'
 import { createPermissionsRoute } from '../routes/permissions.js'
 import { createEmpresaSettingsRoute } from '../routes/empresa-settings.js'
 import { createEmpresaModulesRoute } from '../routes/empresa-modules.js'
@@ -78,6 +79,7 @@ export async function createTestApp(opts: {
   app.route('/api/audit', createAuditRoute(deps))
   app.route('/api/users', createUsersRoute(deps, { createAccount: opts.createAccount }))
   app.route('/api/permissions', createPermissionsRoute(deps))
+  app.route('/api/migration', createMigrationRoute(deps))
   app.route('/api/empresa-settings', createEmpresaSettingsRoute(deps))
   for (const m of opts.extraManifests ?? []) {
     raw.prepare("insert into modules (id, name, version, is_enabled, is_always_on, installed_at) values (?, ?, ?, 1, ?, 'x')")

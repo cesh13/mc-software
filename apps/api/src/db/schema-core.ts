@@ -189,3 +189,28 @@ export const coreSequences = sqliteTable(
   },
   (t) => [uniqueIndex('core_sequences_uq').on(t.empresaId, t.scope, t.key)],
 )
+
+// Trial imports from the legacy system (docs/sistema/migracion.md). JSON columns
+// hold counts and keys only, never full legacy rows.
+export const coreMigrationRuns = sqliteTable('core_migration_runs', {
+  id: text('id').primaryKey(),
+  root: text('root').notNull(),
+  importers: text('importers').notNull(),
+  options: text('options').notNull(),
+  status: text('status', { enum: ['running', 'ok', 'failed'] }).notNull(),
+  startedBy: text('started_by').notNull(),
+  startedAt: text('started_at').notNull(),
+  finishedAt: text('finished_at'),
+  error: text('error'),
+  inspection: text('inspection'),
+  results: text('results'),
+})
+
+// Decision taken on a finding, kept across runs (key = '<importer>:<code>').
+export const coreMigrationDecisions = sqliteTable('core_migration_decisions', {
+  key: text('key').primaryKey(),
+  decision: text('decision', { enum: ['aceptar', 'corregir', 'pendiente'] }).notNull(),
+  note: text('note').notNull().default(''),
+  decidedBy: text('decided_by').notNull(),
+  decidedAt: text('decided_at').notNull(),
+})

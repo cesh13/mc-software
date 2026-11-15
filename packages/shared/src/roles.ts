@@ -144,6 +144,7 @@ export const CORE_PERMISSIONS: readonly PermissionDef[] = [
   { id: 'core.modules.manage', label: 'Activar módulos por empresa', group: 'Administración', packages: [] },
   { id: 'core.settings.manage', label: 'Configuración de la empresa', group: 'Administración', packages: ['supervise'] },
   { id: 'core.audit.view', label: 'Bitácora', group: 'Administración', packages: ['supervise'] },
+  { id: 'core.migration.run', label: 'Migración desde el sistema anterior', group: 'Administración', packages: [] },
   { id: 'core.costs.view', label: 'Ver costos', group: 'Datos sensibles', packages: [] },
   { id: 'core.salaries.view', label: 'Ver sueldos', group: 'Datos sensibles', packages: [] },
 ]

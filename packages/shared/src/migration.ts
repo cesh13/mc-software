@@ -65,7 +65,7 @@ export type MigrationRun = {
   id: string
   root: string
   importers: string[]
-  options: { siglas?: string }
+  options: { siglas?: string; replace?: boolean }
   status: MigrationRunStatus
   startedBy: string
   startedByName: string | null
@@ -102,6 +102,8 @@ export const runInput = z.object({
   root: z.string().trim().min(3, 'Indique la carpeta.'),
   importers: z.array(z.string().min(1)).min(1, 'Elija al menos un importador.'),
   siglas: z.string().trim().min(1).optional(),
+  // Show what a repeated import would do (wipes the previous import in the copy only).
+  replace: z.boolean().default(false),
 })
 export const decisionInput = z.object({
   key: z.string().min(1),
