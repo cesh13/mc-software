@@ -31,6 +31,29 @@ export const coreEmpresas = sqliteTable('core_empresas', {
   updatedAt: text('updated_at').notNull(),
 })
 
+// Fiscal profile of an empresa ("ficha fiscal"): one row per empresa.
+export const coreEmpresaProfile = sqliteTable('core_empresa_profile', {
+  empresaId: text('empresa_id')
+    .primaryKey()
+    .references(() => coreEmpresas.id),
+  legalName: text('legal_name').notNull(),
+  tradeName: text('trade_name').notNull().default(''),
+  nit: text('nit').notNull().default(''),
+  nrc: text('nrc').notNull().default(''),
+  giro: text('giro').notNull().default(''),
+  economicActivityCode: text('economic_activity_code').notNull().default(''),
+  departmentCode: text('department_code').notNull().default(''),
+  municipalityCode: text('municipality_code').notNull().default(''),
+  address: text('address').notNull().default(''),
+  phone: text('phone').notNull().default(''),
+  email: text('email').notNull().default(''),
+  // Reference to a stored file; upload comes later.
+  logoRef: text('logo_ref'),
+  amountsLegend: text('amounts_legend').notNull().default(''),
+  updatedBy: text('updated_by'),
+  updatedAt: text('updated_at').notNull(),
+})
+
 // Which empresas a user may work in (legacy USREMP).
 export const coreUserEmpresas = sqliteTable(
   'core_user_empresas',

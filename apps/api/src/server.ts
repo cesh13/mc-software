@@ -12,6 +12,8 @@ import { handleError, type PlatformDeps } from './middleware/module-context.js'
 import { sessionUser } from './middleware/auth.js'
 import { getDb } from './db/client.js'
 import { createEmpresasRoute } from './routes/empresas.js'
+import { createEmpresaProfileRoute } from './routes/empresa-profile.js'
+import { createAuditRoute } from './routes/audit.js'
 import type { Db } from '@accounting/shared/server'
 import { getSettings } from './lib/settings.js'
 import setup from './routes/setup.js'
@@ -55,6 +57,8 @@ export async function start(opts: { manifests?: ModuleManifest[] } = {}) {
   app.route('/api/empresa-settings', createEmpresaSettingsRoute(deps))
   app.route('/api/settings', appSettings)
   app.route('/api/empresas', createEmpresasRoute(deps))
+  app.route('/api/empresa-profile', createEmpresaProfileRoute(deps))
+  app.route('/api/audit', createAuditRoute(deps))
 
   // Better Auth handles /api/auth/* itself
   app.on(['GET', 'POST'], '/api/auth/*', (c) => getAuth().handler(c.req.raw))
