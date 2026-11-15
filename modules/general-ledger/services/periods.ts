@@ -1,35 +1,21 @@
 import { and, eq, like, sql } from 'drizzle-orm'
-import { RuleError, newId, nowIso } from '@accounting/shared/server'
+import { RuleError } from '@accounting/shared/server'
 import { periodLabel, type PeriodStatusRow } from '@accounting/shared'
-import { glJournalEntries, glPeriods } from '../schema.js'
-import { auditIn, inTx, type Ctx } from '../lib/context.js'
+import { glJournalEntries } from '../schema.js'
+import { inTx, periodsOf, type Ctx } from '../lib/context.js'
 import { DetailedRuleError } from '../lib/errors.js'
 
+// The GL month state lives in the platform's core_periods (area 'gl').
 export function isPeriodClosed(ctx: Ctx, period: string): boolean {
-  const row = ctx.db
-    .select({ status: glPeriods.status })
-    .from(glPeriods)
-    .where(and(eq(glPeriods.empresaId, ctx.empresaId), eq(glPeriods.period, period)))
-    .get()
-  return row?.status === 'closed'
+  return periodsOf(ctx).status(period, 'gl') !== 'open'
 }
 
 export function assertPeriodOpen(ctx: Ctx, period: string): void {
-  if (isPeriodClosed(ctx, period)) {
-    throw new RuleError(
-      `El mes ${periodLabel(period)} está cerrado; solo se puede consultar.`,
-      409,
-      'period_closed',
-    )
-  }
+  periodsOf(ctx).assertOpen(period, ['gl'])
 }
 
 export function listPeriods(ctx: Ctx, year: string): PeriodStatusRow[] {
-  const rows = ctx.db
-    .select()
-    .from(glPeriods)
-    .where(and(eq(glPeriods.empresaId, ctx.empresaId), like(glPeriods.period, `${year}-%`)))
-    .all()
+  const rows = periodsOf(ctx).list('gl', year)
   const counts = ctx.db
     .select({
       period: glJournalEntries.period,
@@ -46,38 +32,20 @@ export function listPeriods(ctx: Ctx, year: string): PeriodStatusRow[] {
     const period = `${year}-${String(m).padStart(2, '0')}`
     const row = rows.find((r) => r.period === period)
     const n = counts.find((r) => r.period === period)
+    const closed = !!row && row.status !== 'open'
     result.push({
       period,
       label: periodLabel(period),
-      status: row?.status ?? 'open',
-      closedAt: row?.status === 'closed' ? row.closedAt : null,
-      closedBy: row?.status === 'closed' ? row.closedBy : null,
+      status: closed ? 'closed' : 'open',
+      closedAt: closed ? row.closedAt : null,
+      closedBy: closed ? row.closedBy : null,
       entries: { aplicada: n?.aplicada ?? 0, borrador: n?.borrador ?? 0, voided: n?.voided ?? 0 },
     })
   }
   return result
 }
 
-function setStatus(ctx: Ctx, period: string, status: 'open' | 'closed') {
-  const now = nowIso()
-  const closedBy = status === 'closed' ? ctx.userId : null
-  const closedAt = status === 'closed' ? now : null
-  const existing = ctx.db
-    .select({ id: glPeriods.id })
-    .from(glPeriods)
-    .where(and(eq(glPeriods.empresaId, ctx.empresaId), eq(glPeriods.period, period)))
-    .get()
-  if (existing) {
-    ctx.db.update(glPeriods)
-      .set({ status, closedBy, closedAt, updatedAt: now })
-      .where(eq(glPeriods.id, existing.id))
-      .run()
-  } else {
-    ctx.db.insert(glPeriods)
-      .values({ id: newId(), empresaId: ctx.empresaId, period, status, closedBy, closedAt, updatedAt: now })
-      .run()
-  }
-}
+const rowOf = (ctx: Ctx, period: string) => listPeriods(ctx, period.slice(0, 4)).find((p) => p.period === period)!
 
 export function closePeriod(ctx: Ctx, period: string): PeriodStatusRow {
   if (isPeriodClosed(ctx, period)) {
@@ -104,20 +72,12 @@ export function closePeriod(ctx: Ctx, period: string): PeriodStatusRow {
       { count: n },
     )
   }
-  inTx(ctx, (tx) => {
-    setStatus(tx, period, 'closed')
-    auditIn(tx, 'cerrar_mes', 'period', period)
-  })
-  return listPeriods(ctx, period.slice(0, 4)).find((p) => p.period === period)!
+  inTx(ctx, (tx) => periodsOf(tx).close(period, 'gl'))
+  return rowOf(ctx, period)
 }
 
-export function reopenPeriod(ctx: Ctx, period: string): PeriodStatusRow {
-  if (!isPeriodClosed(ctx, period)) {
-    throw new RuleError(`El mes ${periodLabel(period)} no está cerrado.`, 409, 'period_not_closed')
-  }
-  inTx(ctx, (tx) => {
-    setStatus(tx, period, 'open')
-    auditIn(tx, 'abrir_mes', 'period', period)
-  })
-  return listPeriods(ctx, period.slice(0, 4)).find((p) => p.period === period)!
+// Reopening needs a reason (contratos.md §2); the core service audits it.
+export function reopenPeriod(ctx: Ctx, period: string, reason: string): PeriodStatusRow {
+  inTx(ctx, (tx) => periodsOf(tx).reopen(period, 'gl', reason))
+  return rowOf(ctx, period)
 }

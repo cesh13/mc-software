@@ -6,6 +6,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { nowIso, type CurrentUser, type Db } from '@accounting/shared/server'
 import * as schema from '../db/schema.js'
+import { registerCoreServices } from '../core/index.js'
 import { loadModules } from '../lib/module-loader.js'
 import { EMPRESA_HEADER, handleError, type PlatformDeps } from '../middleware/module-context.js'
 import { createEmpresasRoute } from '../routes/empresas.js'
@@ -80,6 +81,7 @@ export async function createTestApp(opts: {
     modulesDir: path.join(repoRoot, 'modules'),
     only: [...opts.modules, ...(opts.extraManifests ?? []).map((m) => m.id)],
     extraManifests: opts.extraManifests,
+    registerCore: registerCoreServices,
   })
   app.route('/api/empresa-modules', createEmpresaModulesRoute(deps, catalog))
 

@@ -1,4 +1,4 @@
-import { glEntryTypes, glCostCenters, glFiscalYears, glPeriods } from './schema/setup.js'
+import { glEntryTypes, glCostCenters, glFiscalYears } from './schema/setup.js'
 import { glJournalEntries, glJournalLines } from './schema/entries.js'
 import { glBudgets } from './schema/budgets.js'
 
@@ -13,7 +13,6 @@ export default {
   glEntryTypes,
   glCostCenters,
   glFiscalYears,
-  glPeriods,
   glJournalEntries,
   glJournalLines,
   glBudgets,

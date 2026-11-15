@@ -13,9 +13,11 @@ const MONEDAS: Record<number, string> = { 2: 'USD' }
 // Tables with an empresa_id that `replace` wipes, children first. gl_journal_lines
 // has no empresa_id; it is wiped through its entries.
 const WIPE_ORDER = [
-  'gl_budgets', 'gl_journal_entries', 'gl_periods', 'gl_fiscal_years',
+  'gl_budgets', 'gl_journal_entries', 'core_periods', 'gl_fiscal_years',
   'gl_cost_centers', 'gl_entry_types', 'coa_accounts', 'coa_budget_groups',
 ] as const
+// Shared tables: only the rows this importer owns.
+const SCOPE: Partial<Record<(typeof WIPE_ORDER)[number], string>> = { core_periods: " AND area = 'gl'" }
 
 export function monedaOf(report: ImportReport, raw: unknown, siglas: string): string {
   const code = int(raw)
@@ -93,7 +95,7 @@ export function importEmpresas(
 // the previous *import* of one empresa so the load can be repeated.
 export function prepareEmpresa(db: SqlHandle, empresaId: string, siglas: string, replace: boolean, report: ImportReport): void {
   const used = WIPE_ORDER.filter(
-    (t) => (db.prepare(`SELECT COUNT(*) AS n FROM ${t} WHERE empresa_id = ?`).get(empresaId) as { n: number }).n > 0,
+    (t) => (db.prepare(`SELECT COUNT(*) AS n FROM ${t} WHERE empresa_id = ?${SCOPE[t] ?? ''}`).get(empresaId) as { n: number }).n > 0,
   )
   if (used.length === 0) return
   if (!replace) {
@@ -107,6 +109,6 @@ export function prepareEmpresa(db: SqlHandle, empresaId: string, siglas: string,
   }
   db.prepare('DELETE FROM gl_journal_lines WHERE entry_id IN (SELECT id FROM gl_journal_entries WHERE empresa_id = ?)').run(empresaId)
   db.prepare('UPDATE coa_accounts SET parent_id = NULL WHERE empresa_id = ?').run(empresaId)
-  for (const t of WIPE_ORDER) db.prepare(`DELETE FROM ${t} WHERE empresa_id = ?`).run(empresaId)
+  for (const t of WIPE_ORDER) db.prepare(`DELETE FROM ${t} WHERE empresa_id = ?${SCOPE[t] ?? ''}`).run(empresaId)
   report.empresa.replaced = true
 }

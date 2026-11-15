@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { RuleError, requirePermission, type ModuleEnv } from '@accounting/shared/server'
-import { isPeriod, periodsQuery } from '@accounting/shared'
+import { isPeriod, periodsQuery, reopenPeriodInput as reopenInput } from '@accounting/shared'
 import { ctxOf } from '../lib/context.js'
 import { respond } from '../lib/errors.js'
 import { closePeriod, listPeriods, reopenPeriod } from '../services/periods.js'
@@ -16,8 +16,9 @@ router.get('/periods', requirePermission('gl.period.view'), (c) => c.json(listPe
 router.post('/periods/:period/close', requirePermission('gl.period.close'), (c) =>
   respond(c, () => closePeriod(ctxOf(c), periodParam(c.req.param('period')))),
 )
-router.post('/periods/:period/reopen', requirePermission('gl.period.reopen'), (c) =>
-  c.json(reopenPeriod(ctxOf(c), periodParam(c.req.param('period')))),
-)
+router.post('/periods/:period/reopen', requirePermission('gl.period.reopen'), async (c) => {
+  const body = reopenInput.parse(await c.req.json().catch(() => ({})))
+  return c.json(reopenPeriod(ctxOf(c), periodParam(c.req.param('period')), body.reason))
+})
 
 export default router

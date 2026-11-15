@@ -1,5 +1,5 @@
 import type { Context } from 'hono'
-import type { Db, ModuleEnv } from '@accounting/shared/server'
+import type { Db, ModuleEnv, PeriodsService, ServiceRegistry } from '@accounting/shared/server'
 
 export const MODULE = 'general-ledger'
 
@@ -10,6 +10,7 @@ export type Ctx = {
   userId: string
   role: string
   audit: ModuleEnv['Variables']['audit']
+  services: ServiceRegistry
 }
 
 export function ctxOf(c: Context<ModuleEnv>): Ctx {
@@ -19,7 +20,13 @@ export function ctxOf(c: Context<ModuleEnv>): Ctx {
     userId: c.get('user').id,
     role: c.get('user').role,
     audit: c.get('audit'),
+    services: c.get('services'),
   }
+}
+
+// The platform's shared period state, bound to this context (and its transaction).
+export function periodsOf(ctx: Ctx): PeriodsService {
+  return ctx.services.require<PeriodsService>('periods', ctx)
 }
 
 // Runs `fn` in one synchronous transaction, handing it a Ctx bound to `tx`.

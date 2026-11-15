@@ -62,13 +62,13 @@ export function importFiscalYears(ctx: Ctx, years: Iterable<string>): Map<string
   return out
 }
 
-// cerrado → gl_periods. The legacy system reads a month's status from the first entry of the month
+// cerrado → core_periods (area 'gl'). The legacy system reads a month's status from the first entry of the month
 // (CGMPAR01.SCT ReadWhen: SEEK mesact, then IF !cerrado), so that header decides; blank = open.
 // Months where the former rule (every entry closed) would differ are listed in the report.
 export function importPeriods(ctx: Ctx, stats: Map<string, MonthStat>): void {
   const insert = ctx.db.prepare(
-    `INSERT INTO gl_periods (id, empresa_id, period, status, closed_by, closed_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO core_periods (id, empresa_id, area, period, status, closed_by, closed_at, updated_at)
+     VALUES (?, ?, 'gl', ?, ?, ?, ?, ?)`,
   )
   for (const [period, s] of [...stats].sort(([a], [b]) => a.localeCompare(b))) {
     const closed = s.first === true
@@ -77,7 +77,7 @@ export function importPeriods(ctx: Ctx, stats: Map<string, MonthStat>): void {
     if (closed !== allClosed) ctx.report.periods.ruleDifferences.push(period)
     insert.run(newId(), ctx.empresaId, period, closed ? 'closed' : 'open', closed ? ctx.userId : null, closed ? ctx.now : null, ctx.now)
     ctx.report.periods[closed ? 'closed' : 'open']++
-    bump(ctx.report, 'gl_periods')
+    bump(ctx.report, 'core_periods')
   }
   if (ctx.report.periods.mixed.length) {
     warn(ctx.report, 'meses_mixtos', `Meses con partidas cerradas y abiertas (quedan abiertos): ${ctx.report.periods.mixed.join(', ')}.`)

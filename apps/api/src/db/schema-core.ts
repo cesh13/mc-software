@@ -3,6 +3,7 @@ import {
   text,
   integer,
   index,
+  uniqueIndex,
   primaryKey,
   type AnySQLiteColumn,
 } from 'drizzle-orm/sqlite-core'
@@ -98,4 +99,26 @@ export const coreEmpresaModules = sqliteTable(
     updatedAt: text('updated_at').notNull(),
   },
   (t) => [primaryKey({ columns: [t.empresaId, t.moduleId] })],
+)
+
+// Shared period state per empresa, area and month (contratos.md §2). No row = open.
+export const corePeriods = sqliteTable(
+  'core_periods',
+  {
+    id: text('id').primaryKey(),
+    empresaId: text('empresa_id')
+      .notNull()
+      .references(() => coreEmpresas.id),
+    area: text('area').notNull(),
+    period: text('period').notNull(),
+    status: text('status', { enum: ['open', 'closed', 'filed'] }).notNull(),
+    closedBy: text('closed_by'),
+    closedAt: text('closed_at'),
+    reopenedBy: text('reopened_by'),
+    reopenedAt: text('reopened_at'),
+    reopenReason: text('reopen_reason'),
+    filedRef: text('filed_ref'),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (t) => [uniqueIndex('core_periods_empresa_area_period_uq').on(t.empresaId, t.area, t.period)],
 )

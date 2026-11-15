@@ -8,7 +8,7 @@ test('loads the always-on modules and runs their migrations', async () => {
   const tables = t.sqlite
     .prepare("select name from sqlite_master where type='table' and name like 'gl_%'")
     .all()
-  assert.ok(tables.length >= 7)
+  assert.ok(tables.length >= 6)
 })
 
 test('module routes require a user and an allowed empresa', async () => {

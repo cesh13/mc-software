@@ -5,6 +5,7 @@ import { can, type PermissionOverride } from '../roles.js'
 import type { ServiceRegistry } from './services.js'
 
 export * from './services.js'
+export * from './contracts.js'
 
 // Server-only helpers for modules. The web app must never import this file.
 

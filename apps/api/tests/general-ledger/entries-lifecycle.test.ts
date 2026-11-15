@@ -74,7 +74,7 @@ test('closed period blocks edit, apply, void and moving into it', async () => {
   const detail = await get(t, `/entries/${applied.id}`)
   assert.equal(detail.json.periodStatus, 'closed')
   assert.equal(detail.json.editable, false)
-  await post(t, '/periods/2026-01/reopen')
+  await post(t, '/periods/2026-01/reopen', { reason: 'Reabrir para la prueba' })
   assert.equal((await get(t, `/entries/${applied.id}`)).json.editable, true)
 })
 

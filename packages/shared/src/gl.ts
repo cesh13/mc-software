@@ -61,6 +61,8 @@ export type FiscalYearInput = z.input<typeof fiscalYearInput>
 export type FiscalYear = { id: string | null; name: string; startPeriod: string; endPeriod: string }
 
 export const periodsQuery = z.object({ year: z.string().regex(/^\d{4}$/, 'Año inválido.') })
+// The core service checks the minimum length and answers in Spanish.
+export const reopenPeriodInput = z.object({ reason: z.string().default('') })
 export type PeriodStatusRow = {
   period: string; label: string; status: 'open' | 'closed'; closedAt: string | null
   closedBy: string | null; entries: { aplicada: number; borrador: number; voided: number }

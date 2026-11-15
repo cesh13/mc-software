@@ -60,20 +60,3 @@ export const glFiscalYears = sqliteTable(
 
 export const PERIOD_STATUSES = ['open', 'closed'] as const
 
-// Monthly close state. A month with no row is open. The legacy system kept
-// this as a `cerrado` flag on every entry.
-export const glPeriods = sqliteTable(
-  'gl_periods',
-  {
-    id: text('id').primaryKey(),
-    empresaId: text('empresa_id')
-      .notNull()
-      .references(() => coreEmpresasRef.id),
-    period: text('period').notNull(), // 'AAAA-MM'
-    status: text('status', { enum: PERIOD_STATUSES }).notNull().default('open'),
-    closedBy: text('closed_by'),
-    closedAt: text('closed_at'),
-    updatedAt: text('updated_at').notNull(),
-  },
-  (t) => [uniqueIndex('gl_periods_empresa_period_uq').on(t.empresaId, t.period)],
-)

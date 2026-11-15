@@ -5,6 +5,7 @@ import { cors } from 'hono/cors'
 import { openDatabase } from './db/client.js'
 import { runPlatformMigrations } from './db/migrate.js'
 import { initAuth, getAuth } from './lib/auth.js'
+import { registerCoreServices } from './core/index.js'
 import { loadModules } from './lib/module-loader.js'
 import type { ModuleManifest } from '@accounting/shared'
 import { handleError, type PlatformDeps } from './middleware/module-context.js'
@@ -57,7 +58,7 @@ export async function start(opts: { manifests?: ModuleManifest[] } = {}) {
   app.on(['GET', 'POST'], '/api/auth/*', (c) => getAuth().handler(c.req.raw))
 
   // 5. Load enabled modules (their migrations → routes) in dependency order
-  const { loaded, catalog } = await loadModules(app, deps, { manifests: opts.manifests })
+  const { loaded, catalog } = await loadModules(app, deps, { manifests: opts.manifests, registerCore: registerCoreServices })
   app.route('/api/empresa-modules', createEmpresaModulesRoute(deps, catalog))
   console.log(`Modules loaded: ${loaded.join(', ') || 'none'}`)
 
