@@ -8,7 +8,7 @@ import type { PeriodStatusRow } from '@accounting/shared'
 import { ApiError, apiFetch, errorMessage, qs } from '@/lib/api'
 import { useEmpresa } from '@/lib/empresa'
 import { formatDate } from '@/lib/format'
-import { useCurrentUser } from '@/lib/session'
+import { usePermissions } from '@/lib/permissions'
 import { useWorkPeriod } from '@/lib/work-period'
 import { Button, cx } from '@/components/ui/button'
 import { Alert, ConfirmDialog, Loading, PageHeader } from '@/components/ui/feedback'
@@ -19,12 +19,14 @@ type Action = { row: PeriodStatusRow; kind: 'close' | 'reopen' }
 
 export function PeriodsScreen() {
   const { empresa } = useEmpresa()
-  const { can } = useCurrentUser()
+  const { can } = usePermissions()
   const qc = useQueryClient()
   const [work] = useWorkPeriod()
   const [year, setYear] = useState(Number(work.slice(0, 4)))
   const [action, setAction] = useState<Action | null>(null)
-  const allowed = can('supervise')
+  const canClose = can('gl.period.close')
+  const canReopen = can('gl.period.reopen')
+  const allowed = canClose || canReopen
 
   const { data, isLoading, error } = useQuery<PeriodStatusRow[]>({
     queryKey: [...reportKeys.periods, empresa.id, year],
@@ -49,7 +51,7 @@ export function PeriodsScreen() {
   return (
     <div className="max-w-5xl">
       <PageHeader title="Cierre de mes" subtitle={empresa.name} />
-      {!allowed && <Alert kind="info">Solo puede consultar el estado de los meses; cerrar o abrir requiere supervisor.</Alert>}
+      {!allowed && <Alert kind="info">Solo puede consultar el estado de los meses; no tiene permiso para cerrar ni abrir meses.</Alert>}
       <div className="my-3 flex items-center gap-2">
         <Button aria-label="Año anterior" size="sm" onClick={() => setYear(year - 1)}>
           <ChevronLeft size={14} />
@@ -91,7 +93,7 @@ export function PeriodsScreen() {
                 <Td>{r.status === 'closed' ? [r.closedBy, formatDate(r.closedAt)].filter(Boolean).join(' · ') : ''}</Td>
                 {allowed && (
                   <Td className="text-right">
-                    <Button
+                    {(r.status === 'closed' ? canReopen : canClose) && <Button
                       size="sm"
                       variant={r.status === 'closed' ? 'secondary' : 'primary'}
                       onClick={() => {
@@ -100,7 +102,7 @@ export function PeriodsScreen() {
                       }}
                     >
                       {r.status === 'closed' ? 'Abrir mes' : 'Cerrar mes'}
-                    </Button>
+                    </Button>}
                   </Td>
                 )}
               </tr>

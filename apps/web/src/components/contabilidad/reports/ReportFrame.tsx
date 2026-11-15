@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Printer } from 'lucide-react'
 import { errorMessage } from '@/lib/api'
 import { useEmpresa } from '@/lib/empresa'
-import { useCurrentUser } from '@/lib/session'
+import { usePermissions } from '@/lib/permissions'
 import { Button } from '@/components/ui/button'
 import { Alert, Loading, PageHeader } from '@/components/ui/feedback'
 
@@ -53,8 +53,8 @@ export type ReportFrameProps = {
 // loading / empty / error / no-permission states.
 export function ReportFrame({ title, range, params, loading, error, empty, ready = true, children }: ReportFrameProps) {
   const { empresa } = useEmpresa()
-  const { can } = useCurrentUser()
-  if (!can('reports')) {
+  const { can } = usePermissions()
+  if (!can('gl.report.view')) {
     return (
       <div className="max-w-5xl">
         <PageHeader title={title} subtitle={empresa.name} />
@@ -69,9 +69,11 @@ export function ReportFrame({ title, range, params, loading, error, empty, ready
         title={title}
         subtitle={range ? `${empresa.name} · ${range}` : empresa.name}
         actions={
-          <Button onClick={() => window.print()}>
-            <Printer size={14} /> Imprimir
-          </Button>
+          can('gl.report.export') && (
+            <Button onClick={() => window.print()}>
+              <Printer size={14} /> Imprimir
+            </Button>
+          )
         }
       />
       {params && (

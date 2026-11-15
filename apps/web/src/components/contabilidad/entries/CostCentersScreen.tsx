@@ -16,6 +16,7 @@ export function CostCentersScreen() {
   return (
     <SetupScreen<CostCenter>
       title="Centros de costo"
+      managePermission="gl.cost_center.manage"
       noun="centro de costo"
       rows={list.data}
       loading={list.isLoading}

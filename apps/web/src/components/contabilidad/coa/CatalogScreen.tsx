@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import type { Account } from '@accounting/shared'
 import { errorMessage } from '@/lib/api'
 import { useEmpresa } from '@/lib/empresa'
-import { useCurrentUser } from '@/lib/session'
+import { usePermissions } from '@/lib/permissions'
 import { Button } from '@/components/ui/button'
 import { Alert, ConfirmDialog, Loading, PageHeader } from '@/components/ui/feedback'
 import { ActionToolbar } from '@/components/ui/toolbar'
@@ -18,7 +18,7 @@ import { useAccounts, useCoaMutations } from './use-coa'
 
 export function CatalogScreen() {
   const { empresa } = useEmpresa()
-  const { can } = useCurrentUser()
+  const { can } = usePermissions()
   const accounts = useAccounts()
   const view = useCatalogView(accounts.data)
   const { reveal } = view
@@ -99,10 +99,10 @@ export function CatalogScreen() {
         subtitle={empresa.name}
         actions={
           <>
-            {selected && !selected.isActive && can('supervise') && (
+            {selected && !selected.isActive && can('coa.account.deactivate') && (
               <Button onClick={() => void toggleActive(selected, true)}>Reactivar</Button>
             )}
-            <Button onClick={() => setGroupsOpen(true)}>Agrupaciones</Button>
+            {can('coa.budget_group.view') && <Button onClick={() => setGroupsOpen(true)}>Agrupaciones</Button>}
           </>
         }
       />
@@ -110,11 +110,11 @@ export function CatalogScreen() {
         <ActionToolbar
           shortcuts={!busy}
           actions={{
-            agregar: can('capture') ? openAdd : undefined,
+            agregar: can('coa.account.create') ? openAdd : undefined,
             buscar: () => searchRef.current?.focus(),
-            modificar: can('capture') && selected ? () => openEdit(selected) : undefined,
+            modificar: can('coa.account.update') && selected ? () => openEdit(selected) : undefined,
             eliminar:
-              can('supervise') && selected?.isActive
+              can('coa.account.deactivate') && selected?.isActive
                 ? () => {
                     setAccountActive.reset()
                     setConfirm(selected)
@@ -148,7 +148,7 @@ export function CatalogScreen() {
           rows={view.rows}
           selectedId={selectedId}
           onSelect={select}
-          onOpen={(a) => can('capture') && openEdit(a)}
+          onOpen={(a) => can('coa.account.update') && openEdit(a)}
           wrapRef={tableRef}
         />
       )}

@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react'
 import type { Entry, EntrySaveResult } from '@accounting/shared'
 import { ApiError, errorMessage } from '@/lib/api'
-import { useCurrentUser } from '@/lib/session'
+import { usePermissions } from '@/lib/permissions'
 import { useAccounts } from '../coa/use-coa'
 import { draftFromEntry, newDraft } from './draft'
 import { COL } from './EntryLineRow'
@@ -32,8 +32,13 @@ export function lockReason(entry: Entry | null): string | null {
 }
 
 export function useEntryScreen() {
-  const { can } = useCurrentUser()
-  const canCapture = can('capture')
+  const { can } = usePermissions()
+  const perm = {
+    create: can('gl.entry.create'),
+    update: can('gl.entry.update'),
+    apply: can('gl.entry.apply'),
+    void: can('gl.entry.void'),
+  }
   const editor = useEntryEditor()
   const editing = editor.draft !== null
   const route = useEntryRoute(editing)
@@ -146,7 +151,7 @@ export function useEntryScreen() {
   }
 
   return {
-    canCapture, editor, editing, route, entry, period, status, types, saver, notice, setNotice,
+    perm, editor, editing, route, entry, period, status, types, saver, notice, setNotice,
     discard, setDiscard, startAdd, startEdit, cancel, changePeriod, open, applyEntry, voidCurrent, copyTo,
     applying: apply.isPending, voidMutation: voidEntry, copyMutation: copy,
   }

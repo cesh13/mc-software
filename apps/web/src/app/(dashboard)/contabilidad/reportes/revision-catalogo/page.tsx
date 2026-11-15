@@ -2,14 +2,14 @@
 
 import Link from 'next/link'
 import { errorMessage } from '@/lib/api'
-import { useCurrentUser } from '@/lib/session'
+import { usePermissions } from '@/lib/permissions'
 import { Alert, Loading, PageHeader } from '@/components/ui/feedback'
 import { Table, Td, Th, rowClass } from '@/components/ui/table'
 import { useIntegrityReport } from '@/components/contabilidad/coa/use-coa'
 
 export default function RevisionCatalogoPage() {
-  const { can } = useCurrentUser()
-  const allowed = can('reports')
+  const { can } = usePermissions()
+  const allowed = can('coa.integrity.view')
   const { data, isLoading, error } = useIntegrityReport(allowed)
 
   return (

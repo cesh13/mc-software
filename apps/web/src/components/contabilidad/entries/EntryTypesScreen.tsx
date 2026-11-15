@@ -16,6 +16,7 @@ export function EntryTypesScreen() {
   return (
     <SetupScreen<EntryType>
       title="Tipos de partida"
+      managePermission="gl.entry_type.manage"
       noun="tipo de partida"
       rows={list.data}
       loading={list.isLoading}
