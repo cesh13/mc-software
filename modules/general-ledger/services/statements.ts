@@ -67,11 +67,11 @@ export function balanceSheet(ctx: Ctx, period: string): BalanceSheet {
   }
 }
 
-// Estado de Resultados for a range of periods, without the closing entry.
-export function incomeStatement(ctx: Ctx, from: string, to: string): IncomeStatement {
+// Estado de Resultados for a range of periods. The closing entry is left out unless includeClosing.
+export function incomeStatement(ctx: Ctx, from: string, to: string, includeClosing = false): IncomeStatement {
   if (from > to) throw new RuleError('El período inicial es posterior al final.', 400, 'invalid_range')
   const chart = Chart.load(ctx)
-  const sums = rolledBalances(ctx, chart, { from, to, excludeClosing: true })
+  const sums = rolledBalances(ctx, chart, { from, to, excludeClosing: !includeClosing })
   const ingresos = section(chart, sums, 'ingresos')
   const gastos = section(chart, sums, 'gastos')
   return {

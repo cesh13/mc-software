@@ -128,6 +128,8 @@ export const trialBalanceQuery = z.object({
   period,
   level: z.coerce.number().int().min(1).max(20).optional(),
   onlyWithMovement: flag.optional(),
+  // The annual closing entry (source 'cierre') is left out unless asked for; the legacy system never excludes it.
+  includeClosing: flag.optional(),
   costCenterId: id.optional(),
 })
 export const accountLedgerQuery = z.object({
@@ -135,7 +137,7 @@ export const accountLedgerQuery = z.object({
 })
 export const journalQuery = z.object({ period })
 export const balanceSheetQuery = journalQuery
-export const incomeStatementQuery = z.object({ from: period, to: period })
+export const incomeStatementQuery = z.object({ from: period, to: period, includeClosing: flag.optional() })
 export type TrialBalanceQuery = z.input<typeof trialBalanceQuery>
 export type AccountLedgerQuery = z.input<typeof accountLedgerQuery>
 export type ReportAccount = {

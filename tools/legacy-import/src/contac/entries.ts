@@ -2,7 +2,7 @@ import { Decimal } from 'decimal.js'
 import { lastDayOfPeriod, periodFromSalfec } from '@accounting/shared'
 import { ensureAccount, ensureCostCenter, ensureEntryType, newId, type Ctx } from './context.js'
 import { money, str, type LegacyTables, type Row } from './source.js'
-import { bump, warn } from './types.js'
+import { bump, warn, type MonthStat } from './types.js'
 
 export const ORPHAN_CONCEPT = '(sin encabezado en el sistema anterior)'
 
@@ -56,10 +56,10 @@ function periodOf(p: Pending): string | null {
 }
 
 // PARTIDAS + DETAPART → gl_journal_entries + gl_journal_lines.
-// Returns per-month totals and the set of months with entries.
-export function importEntries(ctx: Ctx): Map<string, { total: number; closed: number }> {
+// Returns per-month counters (see MonthStat) for the months with entries.
+export function importEntries(ctx: Ctx): Map<string, MonthStat> {
   const { report } = ctx
-  const stats = new Map<string, { total: number; closed: number }>()
+  const stats = new Map<string, MonthStat>()
   const insertEntry = ctx.db.prepare(
     `INSERT INTO gl_journal_entries (id, empresa_id, period, entry_type_id, number, date, concept, status,
        imported_unbalanced, source, source_ref, is_active, created_by, created_at, updated_at)
@@ -122,9 +122,11 @@ export function importEntries(ctx: Ctx): Map<string, { total: number; closed: nu
     for (const row of lineRows) insertLine.run(...row)
     bump(report, 'gl_journal_lines', lineRows.length)
 
-    const s = stats.get(period) ?? { total: 0, closed: 0 }
+    const s = stats.get(period) ?? { total: 0, closed: 0, first: null }
     s.total++
     if (header?.['cerrado'] === true) s.closed++
+    // collect() lists live headers in file order, so the first one seen is the month's first entry.
+    if (header && s.first === null) s.first = header['cerrado'] === true
     stats.set(period, s)
   }
   return stats

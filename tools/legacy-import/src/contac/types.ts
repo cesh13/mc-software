@@ -24,6 +24,10 @@ export type ImportOptions = {
   now?: string
 }
 
+// Per-month entry counters used to decide the month status.
+// `first` = CERRADO of the first PARTIDAS header of the month in record order (null if the month has no header).
+export type MonthStat = { total: number; closed: number; first: boolean | null }
+
 export type WarningBucket = { count: number; messages: string[] }
 
 export type CatalogFinding = {
@@ -62,7 +66,15 @@ export type ImportReport = {
     budgetGroups: string[]
   }
   catalogFindings: CatalogFinding[]
-  periods: { closed: number; open: number; mixed: string[] }
+  periods: {
+    closed: number
+    open: number
+    // Months with some closed and some open entries.
+    mixed: string[]
+    // Months where "first entry of the month" (legacy rule, used) and "every entry closed" (old importer
+    // rule) give a different status. Period only.
+    ruleDifferences: string[]
+  }
   budgets: { rowsRead: number; rowsImported: number; rowsSkipped: number; monthsImported: number }
 }
 
@@ -77,7 +89,7 @@ export function newReport(): ImportReport {
     orphanHeaders: [],
     placeholders: { accounts: [], entryTypes: [], costCenters: [], budgetGroups: [] },
     catalogFindings: [],
-    periods: { closed: 0, open: 0, mixed: [] },
+    periods: { closed: 0, open: 0, mixed: [], ruleDifferences: [] },
     budgets: { rowsRead: 0, rowsImported: 0, rowsSkipped: 0, monthsImported: 0 },
   }
 }

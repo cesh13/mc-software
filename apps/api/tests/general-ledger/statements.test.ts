@@ -99,7 +99,7 @@ test('annual close: preview, apply, already closed, void and redo', async () => 
   assert.equal(applied.json.status, 'aplicada')
   assert.equal(applied.json.totals.difference, '0.00')
   assert.equal(applied.json.editable, false)
-  const tb = await get(t, '/reports/trial-balance?period=2026-12')
+  const tb = await get(t, '/reports/trial-balance?period=2026-12&includeClosing=true')
   const row = (code: string) => tb.json.rows.find((x: { code: string }) => x.code === code).balance
   assert.deepEqual([row('4'), row('5'), row('3102'), row('3')], ['0.00', '0.00', '450.00', '1450.00'])
   assert.equal(tb.json.totals.balanced, true)
@@ -152,4 +152,33 @@ test('annual close follows a configured fiscal year', async () => {
   const bs = await get(t, '/reports/balance-sheet?period=2026-02')
   assert.equal(bs.json.fiscalYear.id, fy.json.id)
   assert.equal(bs.json.currentYearResult, '5.00')
+})
+
+test('includeClosing: December income statement and trial balance differ with the flag once the year is closed', async () => {
+  const { t, close } = await year2026()
+  await post(t, '/annual-close/apply', close)
+  const dec = '/reports/income-statement?from=2026-12&to=2026-12'
+  const without = await get(t, dec)
+  assert.equal(without.json.ingresos.total, '0.00')
+  assert.equal(without.json.gastos.total, '0.00')
+  for (const flag of ['true', '1']) {
+    const withClosing = await get(t, `${dec}&includeClosing=${flag}`)
+    assert.equal(withClosing.json.ingresos.total, '-850.00')
+    assert.equal(withClosing.json.gastos.total, '-400.00')
+    assert.equal(withClosing.json.netResult, '-450.00')
+  }
+  assert.deepEqual((await get(t, `${dec}&includeClosing=false`)).json, without.json)
+  assert.equal((await get(t, `${dec}&includeClosing=maybe`)).status, 400)
+
+  // Trial balance: the closing entry zeroes income and expense accounts only when included.
+  const bal = async (q: string) => {
+    const tb = await get(t, `/reports/trial-balance?period=2026-12${q}`)
+    return Object.fromEntries(tb.json.rows.map((x: { code: string; balance: string }) => [x.code, x.balance]))
+  }
+  const off = await bal('')
+  const on = await bal('&includeClosing=true')
+  assert.equal(off['4101'], '300.00')
+  assert.equal(on['4101'], '0.00')
+  assert.equal(off['3102'], '0.00')
+  assert.equal(on['3102'], '450.00')
 })

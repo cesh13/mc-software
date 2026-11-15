@@ -1,6 +1,6 @@
 import { newId, type Ctx } from './context.js'
 import { int, str } from './source.js'
-import { bump, warn } from './types.js'
+import { bump, warn, type MonthStat } from './types.js'
 
 // TIPOPAR → gl_entry_types. `widths` = digits actually used per type code.
 export function importEntryTypes(ctx: Ctx, widths: Map<string, number>): void {
@@ -62,15 +62,19 @@ export function importFiscalYears(ctx: Ctx, years: Iterable<string>): Map<string
   return out
 }
 
-// cerrado → gl_periods. Closed only when every entry of the month is closed.
-export function importPeriods(ctx: Ctx, stats: Map<string, { total: number; closed: number }>): void {
+// cerrado → gl_periods. The legacy system reads a month's status from the first entry of the month
+// (CGMPAR01.SCT ReadWhen: SEEK mesact, then IF !cerrado), so that header decides; blank = open.
+// Months where the former rule (every entry closed) would differ are listed in the report.
+export function importPeriods(ctx: Ctx, stats: Map<string, MonthStat>): void {
   const insert = ctx.db.prepare(
     `INSERT INTO gl_periods (id, empresa_id, period, status, closed_by, closed_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
   )
   for (const [period, s] of [...stats].sort(([a], [b]) => a.localeCompare(b))) {
-    const closed = s.total > 0 && s.closed === s.total
-    if (s.closed > 0 && !closed) ctx.report.periods.mixed.push(period)
+    const closed = s.first === true
+    const allClosed = s.total > 0 && s.closed === s.total
+    if (s.closed > 0 && s.closed < s.total) ctx.report.periods.mixed.push(period)
+    if (closed !== allClosed) ctx.report.periods.ruleDifferences.push(period)
     insert.run(newId(), ctx.empresaId, period, closed ? 'closed' : 'open', closed ? ctx.userId : null, closed ? ctx.now : null, ctx.now)
     ctx.report.periods[closed ? 'closed' : 'open']++
     bump(ctx.report, 'gl_periods')

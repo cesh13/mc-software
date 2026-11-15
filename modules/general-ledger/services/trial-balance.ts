@@ -14,6 +14,7 @@ export function trialBalance(ctx: Ctx, q: z.output<typeof trialBalanceQuery>): T
   const sums = rolledBalances(ctx, chart, {
     to: q.period,
     splitAt: q.period,
+    excludeClosing: !q.includeClosing,
     costCenterId: q.costCenterId,
   })
 

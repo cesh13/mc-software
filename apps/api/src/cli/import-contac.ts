@@ -51,7 +51,11 @@ function printParity(t: ParityTable | null): void {
     `  ${t.table}: ${t.rowsCompared} filas, ${t.monthsCompared} meses, ${t.accountsCompared} cuentas; ` +
       `${t.fieldMismatches} diferencias en ${t.rowsWithMismatch} filas; ${t.missingInLegacy.count} movimientos sin fila en el legado.`,
   )
-  if (t.fieldMismatches) console.log(`    causas (filas): ${JSON.stringify(t.byCause)}  campos: ${JSON.stringify(t.byField)}`)
+  if (t.fieldMismatches) {
+    console.log('    filas con diferencia por causa:')
+    for (const [cause, n] of Object.entries(t.byCause)) console.log(`      ${cause}: ${n}${cause === 'other' ? ' (sin explicar)' : ''}`)
+    console.log(`    campos: ${JSON.stringify(t.byField)}`)
+  }
   for (const m of t.first.slice(0, 5)) {
     console.log(`    ${m.period} ${m.account}${m.costCenter !== undefined ? ` cc=${m.costCenter}` : ''} ${m.field}: legado ${m.legacy} / nuevo ${m.computed} [${m.cause}]`)
   }
@@ -63,11 +67,14 @@ function printSummary(r: ImportReport, parity: ParityReport | null): void {
   for (const [name, s] of Object.entries(r.source)) {
     console.log(`  fuente ${name}: ${s.live} vigentes, ${s.deleted} borrados omitidos, ${s.encoding} (${s.encodingReason === 'marked' ? 'marcada' : 'detectada'})`)
   }
+  const per = r.periods
+  console.log(`  meses: ${per.closed} cerrados, ${per.open} abiertos; estado por la primera partida del mes difiere de "todas cerradas" en ${per.ruleDifferences.length}: ${per.ruleDifferences.join(', ') || '(ninguno)'}`)
   console.log(`  partidas descuadradas: ${r.unbalancedEntries.length}; encabezados creados: ${r.orphanHeaders.length}`)
   console.log(`  cuentas provisionales: ${r.placeholders.accounts.length}; hallazgos del catálogo: ${r.catalogFindings.length}`)
   for (const [cat, w] of Object.entries(r.warnings)) console.log(`  aviso ${cat}: ${w.count}`)
   if (parity) {
-    console.log(`\nParidad con los saldos del sistema anterior: ${parity.ok ? 'SIN DIFERENCIAS' : 'HAY DIFERENCIAS'}`)
+    console.log(`\nParidad con los saldos del sistema anterior: ${parity.ok ? 'SIN DIFERENCIAS SIN EXPLICAR' : 'HAY DIFERENCIAS SIN EXPLICAR'}`)
+    console.log(`  Nota: ${parity.note}`)
     printParity(parity.saldos)
     printParity(parity.saldocc)
   }
