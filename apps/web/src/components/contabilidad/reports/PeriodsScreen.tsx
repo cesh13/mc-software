@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { PeriodStatusRow } from '@accounting/shared'
+import { REOPEN_REASON_MIN, type PeriodStatusRow } from '@accounting/shared'
 import { ApiError, apiFetch, errorMessage, qs } from '@/lib/api'
 import { useEmpresa } from '@/lib/empresa'
 import { formatDate } from '@/lib/format'
@@ -12,6 +12,7 @@ import { usePermissions } from '@/lib/permissions'
 import { useWorkPeriod } from '@/lib/work-period'
 import { Button, cx } from '@/components/ui/button'
 import { Alert, ConfirmDialog, Loading, PageHeader } from '@/components/ui/feedback'
+import { Input } from '@/components/ui/form'
 import { Table, Td, Th, rowClass } from '@/components/ui/table'
 import { GL_API, reportKeys } from './api'
 
@@ -24,6 +25,7 @@ export function PeriodsScreen() {
   const [work] = useWorkPeriod()
   const [year, setYear] = useState(Number(work.slice(0, 4)))
   const [action, setAction] = useState<Action | null>(null)
+  const [reason, setReason] = useState('')
   const canClose = can('gl.period.close')
   const canReopen = can('gl.period.reopen')
   const allowed = canClose || canReopen
@@ -33,7 +35,11 @@ export function PeriodsScreen() {
     queryFn: () => apiFetch(`${GL_API}/periods${qs({ year: String(year) })}`),
   })
   const change = useMutation({
-    mutationFn: (a: Action) => apiFetch<PeriodStatusRow>(`${GL_API}/periods/${a.row.period}/${a.kind}`, { method: 'POST' }),
+    mutationFn: (a: Action) =>
+      apiFetch<PeriodStatusRow>(`${GL_API}/periods/${a.row.period}/${a.kind}`, {
+        method: 'POST',
+        json: a.kind === 'reopen' ? { reason } : {},
+      }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: reportKeys.periods })
       void qc.invalidateQueries({ queryKey: reportKeys.report })
@@ -98,6 +104,7 @@ export function PeriodsScreen() {
                       variant={r.status === 'closed' ? 'secondary' : 'primary'}
                       onClick={() => {
                         change.reset()
+                        setReason('')
                         setAction({ row: r, kind: r.status === 'closed' ? 'reopen' : 'close' })
                       }}
                     >
@@ -119,6 +126,21 @@ export function PeriodsScreen() {
             {closing
               ? `¿Desea cerrar ${action?.row.label}? En un mes cerrado no se puede agregar, modificar ni anular partidas.`
               : `¿Desea abrir ${action?.row.label}? Podrá agregar, modificar y anular partidas de ese mes otra vez.`}
+            {!closing && (
+              <label className="mt-3 block text-sm">
+                Motivo (obligatorio, queda en la bitácora)
+                <Input
+                  className="mt-1 w-full"
+                  value={reason}
+                  maxLength={200}
+                  autoFocus
+                  onChange={(e) => setReason(e.target.value)}
+                />
+                {reason.trim().length < REOPEN_REASON_MIN && (
+                  <span className="mt-1 block text-xs text-gray-500">Al menos {REOPEN_REASON_MIN} caracteres.</span>
+                )}
+              </label>
+            )}
             {change.error && action && (
               <span className="mt-2 block text-red-700">
                 {errorMessage(change.error)}
@@ -137,7 +159,10 @@ export function PeriodsScreen() {
             )}
           </>
         }
-        onConfirm={() => action && change.mutate(action)}
+        onConfirm={() => {
+          if (!action || (!closing && reason.trim().length < REOPEN_REASON_MIN)) return
+          change.mutate(action)
+        }}
         onClose={close}
       />
     </div>
