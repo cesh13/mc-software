@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiFetch, errorMessage } from '@/lib/api'
 import { useEmpresas, type Empresa } from '@/lib/empresa'
+import { EmpresaProfileDialog } from '@/components/admin/EmpresaProfileDialog'
 import { Button } from '@/components/ui/button'
 import { Alert, Dialog, Loading, PageHeader } from '@/components/ui/feedback'
 import { Checkbox, Field, Input } from '@/components/ui/form'
@@ -17,6 +18,7 @@ export default function EmpresasPage() {
   const qc = useQueryClient()
   const { data: empresas, isLoading, error } = useEmpresas()
   const [draft, setDraft] = useState<Draft | null>(null)
+  const [profileFor, setProfileFor] = useState<Empresa | null>(null)
 
   const save = useMutation({
     mutationFn: (d: Draft) =>
@@ -57,13 +59,16 @@ export default function EmpresasPage() {
                 <Td>{e.moneda}</Td>
                 <Td>{e.granContribuyente ? 'Sí' : 'No'}</Td>
                 <Td className="text-right">
-                  <Button size="sm" onClick={() => { save.reset(); setDraft({ ...e }) }}>Modificar</Button>
+                  <Button size="sm" onClick={() => { save.reset(); setDraft({ ...e }) }}>Modificar</Button>{' '}
+                  <Button size="sm" onClick={() => setProfileFor(e)}>Ficha fiscal</Button>
                 </Td>
               </tr>
             ))}
           </tbody>
         </Table>
       )}
+
+      {profileFor && <EmpresaProfileDialog key={profileFor.id} empresa={profileFor} onClose={() => setProfileFor(null)} />}
 
       <Dialog
         open={draft !== null}

@@ -10,6 +10,8 @@ import { registerCoreServices } from '../core/index.js'
 import { loadModules } from '../lib/module-loader.js'
 import { EMPRESA_HEADER, handleError, type PlatformDeps } from '../middleware/module-context.js'
 import { createEmpresasRoute } from '../routes/empresas.js'
+import { createEmpresaProfileRoute } from '../routes/empresa-profile.js'
+import { createAuditRoute } from '../routes/audit.js'
 import { createPermissionsRoute } from '../routes/permissions.js'
 import { createEmpresaSettingsRoute } from '../routes/empresa-settings.js'
 import { createEmpresaModulesRoute } from '../routes/empresa-modules.js'
@@ -72,6 +74,8 @@ export async function createTestApp(opts: {
   const app = new Hono()
   app.onError(handleError)
   app.route('/api/empresas', createEmpresasRoute(deps))
+  app.route('/api/empresa-profile', createEmpresaProfileRoute(deps))
+  app.route('/api/audit', createAuditRoute(deps))
   app.route('/api/users', createUsersRoute(deps, { createAccount: opts.createAccount }))
   app.route('/api/permissions', createPermissionsRoute(deps))
   app.route('/api/empresa-settings', createEmpresaSettingsRoute(deps))

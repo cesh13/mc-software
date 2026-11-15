@@ -35,6 +35,7 @@ export const NAV: NavGroup[] = [
       { label: 'Empresas', path: '/empresas', permission: 'core.empresas.manage' },
       { label: 'Usuarios', path: '/usuarios', permission: 'core.users.manage' },
       { label: 'Configuración', path: '/settings', permission: 'core.settings.manage' },
+      { label: 'Bitácora', path: '/bitacora', permission: 'core.audit.view' },
     ],
   },
 ]
