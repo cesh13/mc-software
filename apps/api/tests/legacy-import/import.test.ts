@@ -55,8 +55,10 @@ test('imports a synthetic CONTAC folder end to end', async () => {
     assert.equal(s.one("SELECT COUNT(*) AS n FROM coa_accounts WHERE parent_id IS NOT NULL")['n'], 3)
     assert.equal(s.one("SELECT width FROM (SELECT number_width AS width FROM gl_entry_types WHERE code = '01')")['width'], 6)
 
-    // Months: January has a closed and an open entry → open and reported as mixed.
-    assert.deepEqual(r.periods, { closed: 1, open: 1, mixed: ['2024-01'] })
+    // Months: the status comes from the first entry of the month (legacy rule), so January (first header
+    // closed) is closed even though its header-less entry is not; the old "all closed" rule would say open,
+    // so January is listed as a rule difference and as mixed.
+    assert.deepEqual(r.periods, { closed: 2, open: 0, mixed: ['2024-01'], ruleDifferences: ['2024-01'] })
     assert.equal(r.counts['gl_fiscal_years'], 1)
     assert.deepEqual(r.budgets, { rowsRead: 2, rowsImported: 1, rowsSkipped: 1, monthsImported: 1 })
     assert.ok(r.warnings['presupuesto_cuenta_no_encontrada'])
@@ -108,7 +110,10 @@ test('parity reports a mismatch when the legacy balance is off by a cent', async
   try {
     const r = importContac(s.db, { sourceDir: s.dir })
     const p = checkContacParity(s.db, s.dir, r.empresa.id)
-    assert.equal(p.ok, false)
+    // Explained causes do not fail parity.
+    assert.equal(p.ok, true)
+    assert.equal(p.saldos!.unexplained, 0)
+    assert.equal(p.saldos!.byCause.legacy_row_inconsistent, 1)
     assert.equal(p.saldos!.fieldMismatches, 1)
     assert.equal(p.saldos!.rowsWithMismatch, 1)
     assert.deepEqual(p.saldos!.first[0], {
@@ -124,9 +129,26 @@ test('parity flags computed movement that legacy balances omit', async () => {
   try {
     const r = importContac(s.db, { sourceDir: s.dir })
     const p = checkContacParity(s.db, s.dir, r.empresa.id)
-    assert.equal(p.ok, false)
+    // Movement missing from SALDOS is reported but is not a cause `other` row.
+    assert.equal(p.ok, true)
     assert.equal(p.saldos!.missingInLegacy.count, 1)
     assert.deepEqual(p.saldos!.missingInLegacy.first, [{ period: '2024-01', account: '31' }])
+  } finally {
+    s.done()
+  }
+})
+
+test('parity fails only on unexplained differences and carries a note about SALDOS', async () => {
+  // Legacy movement differs from the ledger in a month with entries, with a self-consistent row.
+  const odd = GOOD_SALDOS.map((row) => (row[0] === '202401' && row[1] === '21' ? [row[0], row[1], null, '0.00', '100.50', '100.50', '100.50'] : row))
+  const s = await setup(odd as Cell[][])
+  try {
+    const r = importContac(s.db, { sourceDir: s.dir })
+    const p = checkContacParity(s.db, s.dir, r.empresa.id)
+    assert.equal(p.ok, false)
+    assert.equal(p.saldos!.byCause.other, 1)
+    assert.equal(p.saldos!.unexplained, 1)
+    assert.match(p.note, /diagnóstico, no la referencia/)
   } finally {
     s.done()
   }

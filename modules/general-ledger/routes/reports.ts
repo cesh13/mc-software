@@ -29,7 +29,7 @@ router.get('/reports/balance-sheet', (c) =>
 )
 router.get('/reports/income-statement', (c) => {
   const q = incomeStatementQuery.parse(c.req.query())
-  return c.json(incomeStatement(ctxOf(c), q.from, q.to))
+  return c.json(incomeStatement(ctxOf(c), q.from, q.to, q.includeClosing))
 })
 
 // Annual close (cierre anual).

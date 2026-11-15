@@ -33,13 +33,27 @@ export type ParityTable = {
   fieldMismatches: number
   byField: Record<string, number>
   byCause: Record<MismatchCause, number>
+  // Mismatching rows whose cause is not explained (cause `other`).
+  unexplained: number
   first: Mismatch[]
   // Computed movement with no legacy row at all.
   missingInLegacy: { count: number; first: { period: string; account: string; costCenter?: string }[] }
   encoding: string
 }
 
-export type ParityReport = { empresaId: string; saldos: ParityTable | null; saldocc: ParityTable | null; ok: boolean }
+export type ParityReport = {
+  empresaId: string
+  saldos: ParityTable | null
+  saldocc: ParityTable | null
+  // True when no row mismatches with cause `other`; explained causes do not fail parity.
+  ok: boolean
+  note: string
+}
+
+export const PARITY_NOTE =
+  'SALDOS y SALDOCC son diagnóstico, no la referencia: el sistema anterior solo actualiza el mes de trabajo en cada ' +
+  'grabación y sus cuatro rutinas de contabilización difieren, así que nunca cuadran del todo por diseño. Las diferencias ' +
+  'con causa explicada no fallan la paridad; solo las de causa "other" (sin explicar) la fallan.'
 
 export type ParityOptions = { limit?: number }
 
@@ -69,7 +83,7 @@ function compare(
   const out: ParityTable = {
     table: name, legacyRows: rows.length, monthsCompared: 0, accountsCompared: 0, rowsCompared: 0,
     rowsWithMismatch: 0, fieldMismatches: 0, byField: {}, byCause: { carried_from_earlier_month: 0, legacy_chain_broken: 0, legacy_row_inconsistent: 0, month_without_entries: 0, other: 0 },
-    first: [], missingInLegacy: { count: 0, first: [] }, encoding,
+    unexplained: 0, first: [], missingInLegacy: { count: 0, first: [] }, encoding,
   }
   const months = new Set<string>()
   const accounts = new Set<string>()
@@ -126,6 +140,7 @@ function compare(
       out.byCause[cause]++
     }
   }
+  out.unexplained = out.byCause.other
   out.monthsCompared = months.size
   out.accountsCompared = accounts.size
 
@@ -142,8 +157,9 @@ function compare(
   return out
 }
 
-// Recomputes balances from the imported lines and compares them to the cent with
-// the legacy SALDOS (per account) and SALDOCC (per account and cost center).
+// Recomputes balances from the imported lines and compares them to the cent with the legacy
+// SALDOS (per account) and SALDOCC (per account and cost center), classifying each difference.
+// The legacy tables are diagnostic, not the reference (see PARITY_NOTE).
 export function checkContacParity(
   db: SqlHandle, sourceDir: string, empresaId: string, options: ParityOptions = {},
 ): ParityReport {
@@ -156,6 +172,6 @@ export function checkContacParity(
   }
   const saldos = run('saldos', false)
   const saldocc = run('saldocc', true)
-  const ok = [saldos, saldocc].every((t) => t === null || (t.fieldMismatches === 0 && t.missingInLegacy.count === 0))
-  return { empresaId, saldos, saldocc, ok }
+  const ok = [saldos, saldocc].every((t) => t === null || t.byCause.other === 0)
+  return { empresaId, saldos, saldocc, ok, note: PARITY_NOTE }
 }
