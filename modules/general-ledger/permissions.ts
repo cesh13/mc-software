@@ -21,7 +21,6 @@ export const GL_PERMISSIONS: PermissionDef[] = [
   P('gl.period.close', 'Cerrar mes', 'Cierre de mes', ['supervise']),
   P('gl.period.reopen', 'Abrir mes cerrado', 'Cierre de mes', ['supervise']),
   P('gl.annual_close.run', 'Cierre anual', 'Cierre anual', ['supervise']),
-  P('gl.budget.view', 'Consultar presupuestos', 'Presupuestos', ['reports']),
   P('gl.report.view', 'Reportes contables', 'Reportes', ['reports']),
   P('gl.report.export', 'Imprimir y exportar reportes', 'Reportes', ['reports']),
 ]

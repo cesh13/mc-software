@@ -16,7 +16,7 @@ import { applyAnnualClose, previewAnnualClose } from '../services/annual-close.j
 
 const router = new Hono<ModuleEnv>()
 
-router.use('/reports/*', requirePermission('reports'))
+router.use('/reports/*', requirePermission('gl.report.view'))
 router.get('/reports/trial-balance', (c) =>
   c.json(trialBalance(ctxOf(c), trialBalanceQuery.parse(c.req.query()))),
 )
@@ -33,7 +33,7 @@ router.get('/reports/income-statement', (c) => {
 })
 
 // Annual close (cierre anual).
-router.use('/annual-close/*', requirePermission('supervise'))
+router.use('/annual-close/*', requirePermission('gl.annual_close.run'))
 router.post('/annual-close/preview', async (c) =>
   c.json(previewAnnualClose(ctxOf(c), annualCloseInput.parse(await c.req.json()))),
 )

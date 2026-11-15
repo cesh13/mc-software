@@ -9,6 +9,7 @@ import * as schema from '../db/schema.js'
 import { loadModules } from '../lib/module-loader.js'
 import { EMPRESA_HEADER, handleError, type PlatformDeps } from '../middleware/module-context.js'
 import { createEmpresasRoute } from '../routes/empresas.js'
+import { createPermissionsRoute } from '../routes/permissions.js'
 import { createUsersRoute, type CreateAccount } from '../routes/users.js'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
@@ -63,6 +64,7 @@ export async function createTestApp(opts: { modules: string[]; createAccount?: C
   app.onError(handleError)
   app.route('/api/empresas', createEmpresasRoute(deps))
   app.route('/api/users', createUsersRoute(deps, { createAccount: opts.createAccount }))
+  app.route('/api/permissions', createPermissionsRoute(deps))
   const loaded = await loadModules(app, deps, {
     modulesDir: path.join(repoRoot, 'modules'),
     only: opts.modules,

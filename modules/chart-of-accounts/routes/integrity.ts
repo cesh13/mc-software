@@ -4,7 +4,7 @@ import { checkIntegrity } from '../services/integrity.js'
 
 const router = new Hono<ModuleEnv>()
 
-router.get('/', requirePermission('reports'), (c) =>
+router.get('/', requirePermission('coa.integrity.view'), (c) =>
   c.json(checkIntegrity(c.get('db'), c.get('empresaId'))),
 )
 

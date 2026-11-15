@@ -5,6 +5,7 @@ import { seesAllEmpresas } from '@accounting/shared'
 import { RuleError, type CurrentUser, type Db, type ModuleEnv } from '@accounting/shared/server'
 import { coreEmpresas, coreUserEmpresas } from '../db/schema.js'
 import { writeAudit } from '../lib/audit.js'
+import { loadOverrides } from '../lib/permissions.js'
 
 export type ResolveUser = (headers: Headers) => Promise<CurrentUser | null>
 
@@ -53,7 +54,7 @@ export function moduleContext(deps: PlatformDeps) {
     c.set('db', db)
     c.set('user', user)
     c.set('empresaId', empresaId)
-    c.set('permissionOverrides', [])
+    c.set('permissionOverrides', loadOverrides(db, user.id, empresaId))
     c.set('audit', (entry, tx) => writeAudit(tx ?? db, { userId: user.id, empresaId }, entry))
     await next()
   })

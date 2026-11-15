@@ -12,11 +12,11 @@ function periodParam(value: string): string {
   return value
 }
 
-router.get('/periods', (c) => c.json(listPeriods(ctxOf(c), periodsQuery.parse(c.req.query()).year)))
-router.post('/periods/:period/close', requirePermission('supervise'), (c) =>
+router.get('/periods', requirePermission('gl.period.view'), (c) => c.json(listPeriods(ctxOf(c), periodsQuery.parse(c.req.query()).year)))
+router.post('/periods/:period/close', requirePermission('gl.period.close'), (c) =>
   respond(c, () => closePeriod(ctxOf(c), periodParam(c.req.param('period')))),
 )
-router.post('/periods/:period/reopen', requirePermission('supervise'), (c) =>
+router.post('/periods/:period/reopen', requirePermission('gl.period.reopen'), (c) =>
   c.json(reopenPeriod(ctxOf(c), periodParam(c.req.param('period')))),
 )
 

@@ -5,6 +5,7 @@ import { can, seesAllEmpresas } from '@accounting/shared'
 import { RuleError, newId, nowIso, type CurrentUser } from '@accounting/shared/server'
 import { coreEmpresas, coreUserEmpresas } from '../db/schema.js'
 import { writeAudit } from '../lib/audit.js'
+import { loadOverrides } from '../lib/permissions.js'
 import type { PlatformDeps } from '../middleware/module-context.js'
 
 const empresaInput = z.object({
@@ -29,7 +30,10 @@ export function createEmpresasRoute(deps: PlatformDeps) {
   })
 
   const requireSupervise = (user: CurrentUser) => {
-    if (!can(user.role, 'supervise')) throw new RuleError('No tiene permiso para esta acción.', 403)
+    const overrides = loadOverrides(deps.db(), user.id, null)
+    if (!can(user.role, 'core.empresas.manage', { overrides })) {
+      throw new RuleError('No tiene permiso para esta acción.', 403)
+    }
   }
 
   // Empresas the current user can pick at login.

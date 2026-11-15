@@ -5,6 +5,7 @@ import { can } from '@accounting/shared'
 import { RuleError, nowIso, type CurrentUser, type Db } from '@accounting/shared/server'
 import { coreEmpresas, coreUserEmpresas, user as userTable } from '../db/schema.js'
 import { writeAudit } from '../lib/audit.js'
+import { loadOverrides } from '../lib/permissions.js'
 import type { PlatformDeps } from '../middleware/module-context.js'
 
 // `admin` and `member` are legacy aliases and are not accepted as input.
@@ -40,7 +41,7 @@ const betterAuthCreateAccount: CreateAccount = async (input) => {
 type Env = { Variables: { user: CurrentUser } }
 type Target = { id: string; role: string; banned: boolean | null }
 
-// User administration (legacy USUARIOS / USREMP). Requires `supervise`.
+// User administration (legacy USUARIOS / USREMP). Requires `core.users.manage`.
 export function createUsersRoute(deps: PlatformDeps, options: UsersRouteOptions = {}) {
   const createAccount = options.createAccount ?? betterAuthCreateAccount
   const route = new Hono<Env>()
@@ -48,7 +49,7 @@ export function createUsersRoute(deps: PlatformDeps, options: UsersRouteOptions 
   route.use('*', async (c, next) => {
     const me = await deps.resolveUser(c.req.raw.headers)
     if (!me) return c.json({ error: 'No autorizado.' }, 401)
-    if (!can(me.role, 'supervise')) {
+    if (!can(me.role, 'core.users.manage', { overrides: loadOverrides(deps.db(), me.id, null) })) {
       return c.json({ error: 'No tiene permiso para esta acción.', code: 'forbidden' }, 403)
     }
     c.set('user', me)
