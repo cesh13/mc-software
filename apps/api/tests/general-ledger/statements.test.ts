@@ -99,7 +99,7 @@ test('annual close: preview, apply, already closed, void and redo', async () => 
   assert.equal(applied.json.status, 'aplicada')
   assert.equal(applied.json.totals.difference, '0.00')
   assert.equal(applied.json.editable, false)
-  const tb = await get(t, '/reports/trial-balance?period=2026-12&includeClosing=true')
+  const tb = await get(t, '/reports/trial-balance?period=2026-12')
   const row = (code: string) => tb.json.rows.find((x: { code: string }) => x.code === code).balance
   assert.deepEqual([row('4'), row('5'), row('3102'), row('3')], ['0.00', '0.00', '450.00', '1450.00'])
   assert.equal(tb.json.totals.balanced, true)
@@ -170,13 +170,13 @@ test('includeClosing: December income statement and trial balance differ with th
   assert.deepEqual((await get(t, `${dec}&includeClosing=false`)).json, without.json)
   assert.equal((await get(t, `${dec}&includeClosing=maybe`)).status, 400)
 
-  // Trial balance: the closing entry zeroes income and expense accounts only when included.
+  // Trial balance: includes the closing entry by default; includeClosing=false leaves it out.
   const bal = async (q: string) => {
     const tb = await get(t, `/reports/trial-balance?period=2026-12${q}`)
     return Object.fromEntries(tb.json.rows.map((x: { code: string; balance: string }) => [x.code, x.balance]))
   }
-  const off = await bal('')
-  const on = await bal('&includeClosing=true')
+  const off = await bal('&includeClosing=false')
+  const on = await bal('')
   assert.equal(off['4101'], '300.00')
   assert.equal(on['4101'], '0.00')
   assert.equal(off['3102'], '0.00')
