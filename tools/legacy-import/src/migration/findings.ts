@@ -5,6 +5,9 @@ import type { PartiesImportReport } from '../parties/types.js'
 
 // Turns the importers' own reports into standard findings (docs/sistema/migracion.md).
 
+// Enough for a business review list (e.g. every NRC with conflicting names).
+const SAMPLE_LIMIT = 500
+
 type Rule = { severity: FindingSeverity; title: string; recommendation: string; questionRef?: string }
 
 const WARNINGS: Record<string, Rule> = {
@@ -32,7 +35,7 @@ function fromWarnings(prefix: string, warnings: Record<string, WarningBucket>): 
 }
 
 const push = (out: Finding[], f: Omit<Finding, 'samples'> & { samples?: string[] }) => {
-  if (f.count > 0) out.push({ ...f, samples: (f.samples ?? []).slice(0, 20) })
+  if (f.count > 0) out.push({ ...f, samples: (f.samples ?? []).slice(0, SAMPLE_LIMIT) })
 }
 
 export function contacFindings(r: ImportReport, parity: ParityReport | null): Finding[] {

@@ -87,7 +87,7 @@ test('a failing importer stops its dependents; unknown importers are refused', a
     const start = await s.t.request('/api/migration/runs', { body: { root: s.root, importers: ['contac', 'parties'] } })
     const run = await waitRun(s.t, start.json.id)
     assert.equal(run.status, 'failed')
-    assert.match(run.results.find((r) => r.importer === 'parties')!.error ?? '', /falló contac/)
+    assert.match(run.results.find((r) => r.importer === 'parties')!.error ?? '', /Contabilidad falló/)
     const unknown = await s.t.request('/api/migration/runs', { body: { root: s.root, importers: ['nope'] } })
     assert.equal(unknown.status, 400)
   } finally {

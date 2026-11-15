@@ -80,7 +80,9 @@ export function runImporters(db: SqlHandle, ids: string[], opts: RunOptions): Im
     const t0 = Date.now()
     const blocked = imp.dependsOn.filter((d) => ids.includes(d) && !done.get(d)?.ok)
     if (blocked.length) {
-      done.set(imp.id, { importer: imp.id, ok: false, error: `No se corrió: falló ${blocked.join(', ')}.`, counts: {}, findings: [], durationMs: 0 })
+      const names = blocked.map((d) => IMPORTERS.find((i) => i.id === d)?.label ?? d).join(', ')
+      const why = blocked.some((d) => done.get(d)?.error) ? 'falló' : 'tiene hallazgos que bloquean'
+      done.set(imp.id, { importer: imp.id, ok: false, error: `No se corrió: ${names} ${why}.`, counts: {}, findings: [], durationMs: 0 })
       continue
     }
     try {

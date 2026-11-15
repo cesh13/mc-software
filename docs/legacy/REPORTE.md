@@ -41,9 +41,14 @@ En orden:
    cómo reciben su clave: no hay restablecimiento por correo), la pantalla de configuración por empresa, y publicar una versión
    (`ship-mc-update`) para probar las migraciones sobre la instalación real. **Desbloquea Bancos.**
 
-6. **Por cada módulo siguiente, el mismo ciclo:** verificar su spec contra el código con un
+6. **Pantalla de migración (V1) hecha el 2026-11-15** ([migracion.md](../sistema/migracion.md)): en
+   Administración › Migración se revisa una copia del sistema anterior (tablas, registros, fechas por
+   módulo, archivos comprimidos) y se prueba su importación sobre una copia en memoria, con hallazgos
+   y una decisión guardada por hallazgo. Úsela para revisar cada copia que mande un cliente. Falta V2
+   ("Aplicar" con respaldo y modo mantenimiento).
+7. **Por cada módulo siguiente, el mismo ciclo:** verificar su spec contra el código con un
    modelo distinto al que lo escribió → revisarlo con el negocio → schema, API y pruebas →
-   pantallas → importador → paridad → prueba con una persona → publicar. Orden de módulos en
+   pantallas → importador **registrado en la pantalla de migración con sus revisiones** → paridad → prueba con una persona → publicar. Orden de módulos en
    [docs/sistema/README.md §4](../sistema/README.md#4-hoja-de-ruta).
 
 Decisiones pendientes de Cesar:
@@ -151,7 +156,7 @@ No se ejecutó código del sistema anterior: todo sale de leerlo.
 | Spec de Inventario, facturación y DTE | Hecho, sin revisar con el negocio (55 preguntas); ~244 reportes sin leer | [inv64/](inv64/README.md) |
 | Usuarios: API y pantalla (roles, bloqueo, empresas) | Hecho, 9 pruebas; pantalla sin abrir en navegador | `apps/api/src/routes/users.ts`, `apps/web/src/components/admin` |
 
-Pruebas automáticas: 133 en `apps/api` (`pnpm --filter @accounting/api test`). La web compila como
+Pruebas automáticas: 138 en `apps/api` (`pnpm --filter @accounting/api test`). La web compila como
 exportación estática (`pnpm build:web`).
 
 Probado a mano en navegador, contra una base cifrada temporal con los datos reales: inicio de

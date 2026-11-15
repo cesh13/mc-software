@@ -36,6 +36,7 @@ export const NAV: NavGroup[] = [
       { label: 'Usuarios', path: '/usuarios', permission: 'core.users.manage' },
       { label: 'Configuración', path: '/settings', permission: 'core.settings.manage' },
       { label: 'Bitácora', path: '/bitacora', permission: 'core.audit.view' },
+      { label: 'Migración', path: '/migracion', permission: 'core.migration.run' },
     ],
   },
 ]

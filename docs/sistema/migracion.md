@@ -4,7 +4,14 @@ Fecha: 2026-11-15. Pantalla de administración para revisar una copia del sistem
 sin tocar la base real. Complementa [import.md](../legacy/contac/import.md) (el importador de Contabilidad) y
 [fase-0.md](fase-0.md).
 
-## Versión 1 (esta entrega)
+## Estado (2026-11-15)
+
+Versión 1 construida y probada en el navegador contra la copia real de `MCERP/`: revisión de carpeta en 0.3 s,
+prueba de Contabilidad + Terceros en 3 s, la base real sin cambios. Código: `tools/legacy-import/src/migration/`
+(catálogo de módulos, revisión, hallazgos, registro de importadores), `apps/api/src/routes/migration.ts`,
+`apps/api/src/lib/migration-run.ts`, `apps/web/src/components/migration/`. Pruebas en `apps/api/tests/migration.test.ts`.
+
+## Versión 1
 
 Tres pasos, todos de solo lectura sobre la base real:
 
@@ -35,6 +42,9 @@ Cada corrida queda en un historial con su informe, quién la hizo, la carpeta y 
 | Aplicar | **No en V1.** V2: respaldo automático, modo mantenimiento de la empresa e importación en una transacción |
 
 ## Pendiente (V2 y siguientes)
+
+- Hoy los hallazgos de *bloquea* también admiten decisión; en V2 "Aplicar" debe exigir que no quede ninguno.
+- Las muestras se guardan hasta 500 por hallazgo (suficiente para la lista de revisión de terceros).
 
 - "Aplicar" con respaldo y modo mantenimiento.
 - Importadores de cada módulo nuevo (Bancos, CxP…) con sus revisiones: forma parte del "terminado" de cada módulo.

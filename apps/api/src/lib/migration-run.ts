@@ -33,9 +33,10 @@ export function executeTrial(db: Db, req: TrialRequest): void {
       const results = runImporters(copy as unknown as SqlHandle, req.importers, {
         root: req.root, siglas: req.siglas, replace: req.replace, userId: req.userId,
       })
-      const failed = results.find((r) => r.error)
+      // The run-level message is the first importer that really failed, else the first one blocked.
+      const failed = results.find((r) => r.error && !r.error.startsWith('No se corrió')) ?? results.find((r) => r.error)
       db.update(runs).set({
-        status: failed ? 'failed' : 'ok', finishedAt: nowIso(), error: failed?.error ?? null,
+        status: failed ? 'failed' : 'ok', finishedAt: nowIso(), error: failed ? `${failed.importer}: ${failed.error}` : null,
         inspection: JSON.stringify(inspection), results: JSON.stringify(results),
       }).where(eq(runs.id, req.id)).run()
     } finally {
