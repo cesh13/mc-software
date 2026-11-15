@@ -26,6 +26,7 @@ ssh client cannot read the VPS key, the Windows one can.
   pnpm --filter @accounting/shared type-check
   pnpm --filter @accounting/module-chart-of-accounts type-check
   pnpm --filter @accounting/module-general-ledger type-check
+  pnpm --filter @accounting/module-parties type-check
   pnpm --filter @accounting/tray exec tsc --noEmit
   ```
   If the API tests fail with a native-module / `NODE_MODULE_VERSION` error, a previous
