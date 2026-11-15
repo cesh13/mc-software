@@ -1,7 +1,7 @@
 # Reporte de avance — migración MCERP
 
 Documento para retomar el trabajo. Se actualiza al final de cada sesión de trabajo.
-Última actualización: 2026-11-13.
+Última actualización: 2026-11-15.
 
 ## Cómo retomar
 
@@ -14,7 +14,7 @@ Documento para retomar el trabajo. Se actualiza al final de cada sesión de trab
    ocho módulos, con respuesta propuesta, y la segunda ronda por módulo. Varias cambian reglas ya construidas.
 4. Revisar los **supuestos**: cada uno dice dónde cambiarlo.
 
-## Siguientes pasos (al 2026-11-13)
+## Siguientes pasos (al 2026-11-15)
 
 Hay una versión instalable (0.1.1) publicada en el feed de actualizaciones y una instalación de
 prueba en la computadora de Cesar. Detalle en [prueba-interna.md](../prueba-interna.md).
@@ -33,10 +33,13 @@ En orden:
 4. **Lo que falta para instalar en un cliente:** servicio de Windows, llave de recuperación,
    respaldo automático, cambio de contraseña, firma del instalador y feed por HTTPS
    ([architecture.md](../architecture.md)).
-5. **Fase 0: diseño cerrado el 2026-11-13** en [fase-0.md](../sistema/fase-0.md): decisiones de
-   permisos, activación por empresa, contrato de partidas y períodos; clasificación de los
-   hallazgos de la verificación; y **nueve pasos de construcción** con su criterio de terminado.
-   Siguiente: construir el paso 1 (permisos por acción) con Opus. Desbloquea Bancos.
+5. **Fase 0: construida el 2026-11-15** salvo una parte del paso 8 (estado por paso en
+   [fase-0.md](../sistema/fase-0.md#estado-de-la-construcción-2026-11-15)). Permisos por acción,
+   activación por empresa, registro de servicios, períodos compartidos, configuración y
+   correlativos, contrato de partidas (`ledger`), ficha fiscal, bitácora y el módulo `parties`.
+   **Falta de la fase 0:** importar usuarios y `PERFIL` como ajustes de permisos,
+   `reattributeEntries`, la pantalla de configuración por empresa, y publicar una versión
+   (`ship-mc-update`) para probar las migraciones sobre la instalación real. **Desbloquea Bancos.**
 
 6. **Por cada módulo siguiente, el mismo ciclo:** verificar su spec contra el código con un
    modelo distinto al que lo escribió → revisarlo con el negocio → schema, API y pruebas →
@@ -48,10 +51,14 @@ Decisiones pendientes de Cesar:
 - ¿La venta se contabiliza al grabar la factura o cuando Hacienda la acepta? (propuesta: al grabar)
 - ¿Cómo lee el servicio de Windows la llave de cifrado? (propuesta: cuenta de servicio dedicada
   más llave de recuperación)
-- Permisos: **propuesto en [fase-0.md](../sistema/fase-0.md) F1**: permisos por acción
+- Permisos: **construido como en [fase-0.md](../sistema/fase-0.md) F1**: permisos por acción
   (`gl.entry.void`…) con los tres actuales como paquetes, más ajustes por usuario (conceder o
-  negar, global o por empresa) que reproducen `PERFIL`. Falta que Cesar lo confirme; si el
-  negocio dice que bastan tres permisos por rol, el modelo queda igual y no se crean ajustes.
+  negar, global o por empresa) que reproducen `PERFIL`. Si el negocio dice que bastan tres
+  permisos por rol, el modelo queda igual y no se crean ajustes.
+- `parties` unió 1,344 filas por NRC/NIT y reportó **412 nombres distintos con el mismo NRC** y
+  48 NIT compartidos: hace falta una revisión con el negocio (lista por llave en el informe del
+  importador). También: `FRES` de `CCCLI01` se usó como razón social (el spec de CxC lo trata como
+  dirección de entrega) y las sucursales de un mismo NRC quedaron como un solo tercero.
 - Lo que la verificación cambia en lo construido: **resuelto en [fase-0.md](../sistema/fase-0.md) §3**.
   Nada obliga a rehacer módulos; hay tres ajustes pequeños (estado de mes en el importador,
   opción de incluir la partida de cierre en reportes, reporte de paridad) en el paso 8.
@@ -144,8 +151,8 @@ No se ejecutó código del sistema anterior: todo sale de leerlo.
 | Spec de Inventario, facturación y DTE | Hecho, sin revisar con el negocio (55 preguntas); ~244 reportes sin leer | [inv64/](inv64/README.md) |
 | Usuarios: API y pantalla (roles, bloqueo, empresas) | Hecho, 9 pruebas; pantalla sin abrir en navegador | `apps/api/src/routes/users.ts`, `apps/web/src/components/admin` |
 
-Pruebas automáticas: 81 en `apps/api` (`pnpm --filter @accounting/api test`). La web compila como
-exportación estática (`pnpm build:web`, 22 páginas).
+Pruebas automáticas: 133 en `apps/api` (`pnpm --filter @accounting/api test`). La web compila como
+exportación estática (`pnpm build:web`).
 
 Probado a mano en navegador, contra una base cifrada temporal con los datos reales: inicio de
 sesión, catálogo (619 cuentas), los 6 reportes, cierre de mes, y en partidas: abrir la última
@@ -292,8 +299,8 @@ El "programa externo" que los specs de Inventario e IVA daban por perdido es el 
 
 | # | Supuesto | Dónde cambiarlo |
 |---|---|---|
-| S1 | Roles: Propietario, Supervisor, Digitador y Consulta, Digitador, Consulta. Permisos: *capturar*, *reportes*, *supervisar*. El Digitador captura pero no ve reportes. | `packages/shared/src/roles.ts` |
-| S2 | No hay permiso por pantalla (pregunta 12), solo los tres permisos. | igual |
+| S1 | *(Reemplazado por los permisos por acción de fase-0 F1; los roles siguen y dan paquetes.)* Roles: Propietario, Supervisor, Digitador y Consulta, Digitador, Consulta. Permisos: *capturar*, *reportes*, *supervisar*. El Digitador captura pero no ve reportes. | `packages/shared/src/roles.ts` |
+| S2 | *(Reemplazado: ahora hay permiso `view` por pantalla y ajustes por usuario, fase-0 F1.)* | `packages/shared/src/roles.ts`, `modules/*/permissions.ts` |
 | S3 | El Propietario ve todas las empresas; los demás solo las asignadas. | igual (`seesAllEmpresas`) |
 | S4 | El mes de trabajo se recuerda por empresa en cada computadora. | `apps/web/src/lib/work-period.ts` |
 | S5 | Componentes de pantalla hechos a mano con Tailwind; shadcn/Radix no está instalado. | `apps/web/src/components/ui` |

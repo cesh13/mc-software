@@ -9,6 +9,37 @@ ya construido y se ordena el trabajo en pasos con su criterio de terminado.
 > [PREGUNTAS.md](../legacy/PREGUNTAS.md) la confirma y qué pasa si la respuesta es otra. Ninguna de esas respuestas
 > obliga a rehacer el diseño: solo cambian datos (paquetes por rol, valores por omisión).
 
+## Estado de la construcción (2026-11-15)
+
+Construidos los pasos 1 a 7 y 9, y parte del 8, en `master`; 133 pruebas pasan. Opus construyó los pasos 1, 3–6 y
+coordinó; Sonnet hizo los pasos 2 y 7 y las correcciones del importador; Opus hizo `parties` (paso 9), en paralelo.
+
+| Paso | Estado |
+|---|---|
+| 1. Permisos por acción | Hecho: catálogo, paquetes, `core_permission_overrides`, todas las rutas (GET incluidas), `/api/permissions` |
+| 2. Permisos en la web | Hecho: menú, botones, pantalla bloqueada por URL, diálogo "Permisos" en Usuarios. Visto en navegador |
+| 3. Servicios y activación | Hecho: `provides`/`consumes`, registro por empresa, `core_empresa_modules`, `/api/empresa-modules` |
+| 4. Períodos | Hecho: contrato `periods`, `core_periods`; `gl_periods` migrada y eliminada; motivo obligatorio al reabrir (API y web) |
+| 5. Configuración y correlativos | Hecho: contratos `settings` (con vigencia) y `sequences`; `/api/empresa-settings`. Falta la pantalla de configuración y el modo advertir/exigir al cerrar (no hay subledgers aún) |
+| 6. Contrato de contabilización | Hecho: servicio `ledger` (post, replace, void con reverso, find, preview) con las pruebas de reversión e idempotencia |
+| 7. Ficha de empresa y bitácora | Hecho: `core_empresa_profile`, `/api/empresa-profile`, `/api/audit` (+ CSV), pantallas. Bitácora vista en navegador |
+| 8. Importador y paridad | Parcial: estado de mes por la primera partida, `includeClosing`, paridad por causa, `legacy_ref`. **Falta:** importar `USUARIOS`/`USREMP`/`PERFIL` con su tabla de correspondencia, y la función común `reattributeEntries` |
+| 9. `parties` | Hecho: módulo, lookup como servicio, importador desde siete tablas (5,103 filas → 3,054 terceros) |
+
+Diferencias con lo escrito arriba, decididas al construir:
+
+- **Los servicios se ligan al contexto, no reciben `tx` en cada método:** `services.require('ledger', ctx)` con el
+  contexto de la transacción del consumidor. Mismo efecto que contratos §0.2, firma más corta.
+- **Reverso:** su `sourceRef` es `<ref>:reverso`, sin número. Un documento reversado no se vuelve a contabilizar con la
+  misma referencia (se emite otro documento), así que no hace falta numerarlo (F4.3 queda así).
+- **El número explícito no existe en el contrato:** solo el importador escribe números (F4.2).
+- **Balance de comprobación:** incluye la partida de cierre por omisión, como antes y como el legado;
+  `includeClosing=false` la quita. Solo el Estado de Resultados la excluye por omisión.
+- **`core.empresas.manage`** quedó en el paquete `supervise` para no cambiar lo que el Supervisor ya podía hacer.
+- **Limitación conocida:** si a un usuario se le niega `coa.account.view`, la pantalla de partidas no carga las cuentas
+  (la captura las necesita). Con los paquetes por omisión no pasa. Si el negocio quiere ese caso, la captura debe pedir
+  un permiso de consulta propio.
+
 ---
 
 ## 1. Decisiones que cierra este documento

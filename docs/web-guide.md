@@ -23,7 +23,7 @@ Reglas para todo el código de `apps/web`.
 | Qué | Dónde |
 |---|---|
 | Llamadas a la API | `lib/api.ts`: `apiFetch(path, { json, method })`, `qs({...})`, `ApiError` (`status`, `code`, `body`), `errorMessage(err)` |
-| Usuario y permisos | `lib/session.ts`: `useCurrentUser()` → `{ user, can('capture' \| 'reports' \| 'supervise') }` |
+| Usuario y permisos | `lib/session.ts`: `useCurrentUser()` → `{ user }`. Permisos: `lib/permissions.tsx`: `usePermissions()` → `{ can('gl.entry.void'), loading }`, cargados de `/api/permissions/me` para la empresa activa. Cada opción del menú (`lib/nav.ts`) declara su permiso `view`; botones por permiso fino. La API vuelve a comprobar |
 | Empresa activa | `lib/empresa.tsx`: `useEmpresa()` → `{ empresa, empresas }` |
 | Mes de trabajo | `lib/work-period.ts`: `useWorkPeriod()` → `[period, setPeriod]` (`AAAA-MM`) |
 | Formato | `lib/format.ts`: `formatMoney`, `parseMoneyInput`, `formatDate` |

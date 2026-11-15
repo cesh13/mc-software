@@ -28,7 +28,7 @@ import { requirePermission, RuleError, type ModuleEnv } from '@accounting/shared
 
 const router = new Hono<ModuleEnv>()
 
-router.post('/things', requirePermission('capture'), async (c) => {
+router.post('/things', requirePermission('mod.thing.create'), async (c) => {
   const db = c.get('db')            // Drizzle (better-sqlite3)
   const empresaId = c.get('empresaId')
   const user = c.get('user')        // { id, name, email, role }
@@ -42,9 +42,19 @@ router.post('/things', requirePermission('capture'), async (c) => {
 })
 ```
 
-- **Permisos** (`requirePermission`): `capture` (crear y modificar), `reports` (consultas y
-  reportes), `supervise` (cierres, configuración). Las lecturas que una pantalla de captura
-  necesita (listar cuentas, abrir una partida) no llevan permiso: basta estar autenticado.
+- **Permisos** (`requirePermission('<prefijo>.<recurso>.<acción>')`): cada módulo declara su catálogo en
+  `permissions.ts` (`PermissionDef[]`: id, etiqueta en español, grupo = pantalla, paquetes) y lo pone en el
+  manifiesto. **Toda ruta lleva su permiso, también las GET** (una prueba recorre los routers y falla si alguna
+  ruta no lo pide). Acciones estándar: `view`, `create`, `update`, `void`, `close`, `reopen`, `export`, `manage`.
+  Los paquetes `capture`, `reports` y `supervise` agrupan permisos finos y los roles dan paquetes; cada usuario
+  puede tener ajustes (conceder/negar, global o por empresa). Ver [fase-0.md F1](sistema/fase-0.md).
+- **Servicios entre módulos** (`c.get('services')`): `services.require<T>('ledger', ctx)` o `get` (opcional, `null`
+  si el módulo proveedor no está activo para la empresa). Se pasa el contexto **de la transacción** del
+  consumidor. El manifiesto declara `provides` y `consumes: { required, optional }`. Contratos del núcleo:
+  `periods`, `settings`, `sequences`; de módulos: `ledger` (general-ledger), `parties`. Tipos en
+  `@accounting/shared/server` (`PeriodsService`, `SettingsService`, `SequencesService`, `LedgerPosting`).
+- **Configuración por empresa:** el manifiesto declara `settings: SettingDef[]` (esquema Zod, valor por omisión,
+  `dated` si tiene vigencia); se lee con el servicio `settings`. Nunca escribir tasas ni cuentas en el código.
 - **Errores:** `RuleError(mensaje, status, code)` para reglas de negocio. No atrapar ZodError.
 - **Bitácora:** todo alta, cambio, anulación, cierre o apertura llama a `audit`, dentro de la
   misma transacción.
