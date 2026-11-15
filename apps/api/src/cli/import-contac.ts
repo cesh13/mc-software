@@ -1,6 +1,3 @@
-import Database from 'better-sqlite3-multiple-ciphers'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -11,39 +8,16 @@ import {
   type ImportReport,
   type ParityReport,
   type ParityTable,
-  type SqlHandle,
 } from '@accounting/legacy-import'
-import type { Db } from '@accounting/shared/server'
-import { migrateModule } from '../lib/module-loader.js'
+import { openTarget } from './target.js'
 
-const here = path.dirname(fileURLToPath(import.meta.url))
 const MODULES = ['chart-of-accounts', 'general-ledger']
 
 const USAGE = `Uso: pnpm --filter @accounting/api legacy:import -- --source <carpeta MCERP/CONTAC>
        [--db <archivo sqlite sin cifrar>] [--replace] [--parity] [--report <ruta json>]
        [--user <id>] [--siglas <siglas de la empresa>]
-Sin --db se usa la base de datos cifrada de la plataforma.`
-
-function runMigrations(db: Db): void {
-  migrate(db as never, { migrationsFolder: path.join(here, '..', 'db', 'migrations') })
-  const modulesDir = process.env.ACCOUNTING_MODULES_DIR ?? path.join(here, '..', '..', '..', '..', 'modules')
-  for (const id of MODULES) migrateModule(db, modulesDir, id)
-}
-
-async function openTarget(dbFile: string | undefined): Promise<SqlHandle> {
-  if (dbFile) {
-    mkdirSync(path.dirname(path.resolve(dbFile)), { recursive: true })
-    const raw = new Database(dbFile)
-    raw.pragma('foreign_keys=ON')
-    runMigrations(drizzle(raw) as unknown as Db)
-    return raw as unknown as SqlHandle
-  }
-  // Encrypted platform database (key from the OS keychain).
-  const { openDatabase } = await import('../db/client.js')
-  const db = await openDatabase()
-  runMigrations(db as unknown as Db)
-  return (db as unknown as { $client: SqlHandle }).$client
-}
+Sin --db se usa la base de datos cifrada de la plataforma.
+Clientes y proveedores: legacy:import-parties.`
 
 function printParity(t: ParityTable | null): void {
   if (!t) return console.log('  (tabla no encontrada)')
@@ -94,7 +68,7 @@ export async function main(argv: string[]): Promise<number> {
     console.error(USAGE)
     return 2
   }
-  const handle = await openTarget(values.db)
+  const handle = await openTarget(values.db, MODULES)
   const report = importContac(handle, {
     sourceDir: path.resolve(values.source), replace: values.replace, userId: values.user, siglas: values.siglas,
   })

@@ -12,6 +12,7 @@
     "test": "tsx --test \"tests/**/*.test.ts\"",
     "type-check": "tsc --noEmit",
     "legacy:import": "tsx src/cli/import-contac.ts",
+    "legacy:import-parties": "tsx src/cli/import-parties.ts",
     "type-check:tests": "tsc -p tsconfig.test.json"
   },
   "dependencies": {

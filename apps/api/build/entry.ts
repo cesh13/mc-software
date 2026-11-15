@@ -3,6 +3,7 @@
 import { start } from '../src/server.js'
 import { manifest as chartOfAccounts } from '../../../modules/chart-of-accounts/manifest.js'
 import { manifest as generalLedger } from '../../../modules/general-ledger/manifest.js'
+import { manifest as parties } from '../../../modules/parties/manifest.js'
 import { manifest as accountsPayable } from '../../../modules/accounts-payable/manifest.js'
 import { manifest as accountsReceivable } from '../../../modules/accounts-receivable/manifest.js'
 import { manifest as fixedAssets } from '../../../modules/fixed-assets/manifest.js'
@@ -13,7 +14,7 @@ import { manifest as reports } from '../../../modules/reports/manifest.js'
 
 start({
   manifests: [
-    chartOfAccounts, generalLedger, accountsPayable, accountsReceivable,
+    chartOfAccounts, generalLedger, parties, accountsPayable, accountsReceivable,
     fixedAssets, inventory, payroll, reports,
   ],
 }).catch((err) => {
