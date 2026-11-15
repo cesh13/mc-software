@@ -5,14 +5,14 @@ import { usePathname } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '@/lib/api'
 import { NAV } from '@/lib/nav'
-import { useCurrentUser } from '@/lib/session'
+import { usePermissions } from '@/lib/permissions'
 import { cx } from './ui/button'
 
 type Module = { id: string; isEnabled: boolean }
 
 export default function Sidebar() {
   const pathname = usePathname()
-  const { can } = useCurrentUser()
+  const { can } = usePermissions()
   const { data: modules } = useQuery<Module[]>({
     queryKey: ['modules'],
     queryFn: () => apiFetch('/api/modules'),

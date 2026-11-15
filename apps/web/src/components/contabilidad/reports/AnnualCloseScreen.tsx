@@ -6,7 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { isIsoDate, lastDayOfPeriod, periodLabel, type AnnualClosePreview as Preview, type Entry } from '@accounting/shared'
 import { apiFetch, errorMessage } from '@/lib/api'
 import { useEmpresa } from '@/lib/empresa'
-import { useCurrentUser } from '@/lib/session'
+import { usePermissions } from '@/lib/permissions'
 import { useWorkPeriod } from '@/lib/work-period'
 import { Button } from '@/components/ui/button'
 import { Alert, ConfirmDialog, PageHeader } from '@/components/ui/feedback'
@@ -18,7 +18,7 @@ import { GL_API, reportKeys, useEntryTypes, useFiscalYearOf } from './api'
 
 export function AnnualCloseScreen() {
   const { empresa } = useEmpresa()
-  const { can } = useCurrentUser()
+  const { can } = usePermissions()
   const qc = useQueryClient()
   const [work] = useWorkPeriod()
   const [year, setYear] = useState(work.slice(0, 4))
@@ -60,7 +60,7 @@ export function AnnualCloseScreen() {
     onSettled: () => setConfirm(false),
   })
 
-  if (!can('supervise')) {
+  if (!can('gl.annual_close.run')) {
     return (
       <div className="max-w-3xl">
         <PageHeader title="Cierre anual" subtitle={empresa.name} />

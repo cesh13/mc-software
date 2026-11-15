@@ -17,7 +17,7 @@ import { lockReason, useEntryScreen } from './use-entry-screen'
 export function EntryScreen() {
   const { empresa } = useEmpresa()
   const s = useEntryScreen()
-  const { entry, editing, editor, saver, canCapture, period } = s
+  const { entry, editing, editor, saver, perm, period } = s
   const [dialog, setDialog] = useState<OpenDialog>(null)
   const [gridBusy, setGridBusy] = useState(false)
   const restore = useRef<HTMLElement | null>(null)
@@ -47,7 +47,7 @@ export function EntryScreen() {
     setTimeout(() => void saver.save(), 0)
   }
 
-  const canWrite = canCapture && !monthClosed
+  const canWrite = perm.create && !monthClosed
   const actions = editing
     ? {
         agregar: undefined, buscar: undefined, eliminar: undefined, modificar: undefined, anterior: undefined,
@@ -56,18 +56,18 @@ export function EntryScreen() {
     : {
         agregar: canWrite ? s.startAdd : undefined,
         buscar: () => openDialog('search'),
-        eliminar: canWrite && entry?.isActive ? () => openDialog('void') : undefined,
-        modificar: canCapture && entry?.editable ? s.startEdit : undefined,
+        eliminar: perm.void && !monthClosed && entry?.isActive ? () => openDialog('void') : undefined,
+        modificar: perm.update && entry?.editable ? s.startEdit : undefined,
         anterior: entry?.prevId ? () => s.open(entry.prevId!) : undefined,
         siguiente: entry?.nextId ? () => s.open(entry.nextId!) : undefined,
         grabar: undefined,
         cancelar: undefined,
-        copiar: canCapture && entry ? () => openDialog('copy') : undefined,
+        copiar: perm.create && entry ? () => openDialog('copy') : undefined,
         imprimir: entry ? () => window.print() : undefined,
       }
 
   const lock = !editing ? lockReason(entry) : null
-  const showApply = !editing && canCapture && entry?.status === 'borrador' && entry.editable
+  const showApply = !editing && perm.apply && entry?.status === 'borrador' && entry.editable
 
   return (
     <div>
@@ -95,7 +95,7 @@ export function EntryScreen() {
         <div className="mb-3 flex flex-wrap items-center gap-3">
           <ActionToolbar shortcuts={!busy} actions={actions} />
           {lock && <span className="text-xs text-gray-500">{lock}</span>}
-          {!canCapture && <span className="text-xs text-gray-500">Su usuario solo puede consultar partidas.</span>}
+          {!perm.create && !perm.update && <span className="text-xs text-gray-500">Su usuario solo puede consultar partidas.</span>}
         </div>
         <div className="mb-3 flex flex-col gap-2 empty:hidden">
           {s.notice && <Alert kind={s.notice.kind}>{s.notice.text}</Alert>}

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { errorMessage } from '@/lib/api'
 import { useEmpresa } from '@/lib/empresa'
-import { useCurrentUser } from '@/lib/session'
+import { usePermissions } from '@/lib/permissions'
 import { Button, cx } from '@/components/ui/button'
 import { Alert, ConfirmDialog, Loading, PageHeader } from '@/components/ui/feedback'
 import { Checkbox } from '@/components/ui/form'
@@ -18,6 +18,7 @@ export type DialogState<T> = { mode: 'add' } | { mode: 'edit'; item: T }
 // ↑/↓ select, Enter modifies; Eliminar deactivates after confirmation.
 export function SetupScreen<T extends SetupItem>(p: {
   title: string
+  managePermission: string
   noun: string
   rows: T[] | undefined
   loading: boolean
@@ -29,8 +30,8 @@ export function SetupScreen<T extends SetupItem>(p: {
   setActive: { mutateAsync: (v: { id: string; active: boolean }) => Promise<unknown>; error: unknown; reset: () => void; isPending: boolean }
 }) {
   const { empresa } = useEmpresa()
-  const { can } = useCurrentUser()
-  const canCapture = can('capture')
+  const { can } = usePermissions()
+  const canCapture = can(p.managePermission)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [dialog, setDialog] = useState<DialogState<T> | null>(null)
   const [confirm, setConfirm] = useState<T | null>(null)

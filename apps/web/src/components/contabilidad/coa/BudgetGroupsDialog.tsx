@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { BUDGET_GROUP_CODE_MAX, type BudgetGroup } from '@accounting/shared'
 import { errorMessage } from '@/lib/api'
-import { useCurrentUser } from '@/lib/session'
+import { usePermissions } from '@/lib/permissions'
 import { Button } from '@/components/ui/button'
 import { Alert, Dialog, Loading } from '@/components/ui/feedback'
 import { Input } from '@/components/ui/form'
@@ -11,7 +11,7 @@ import { Td, Th } from '@/components/ui/table'
 import { useBudgetGroups, useCoaMutations } from './use-coa'
 
 export function BudgetGroupsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { can } = useCurrentUser()
+  const { can } = usePermissions()
   const { data, isLoading, error } = useBudgetGroups()
   const { createGroup, updateGroup, setGroupActive } = useCoaMutations()
   const [code, setCode] = useState('')
@@ -67,10 +67,10 @@ export function BudgetGroupsDialog({ open, onClose }: { open: boolean; onClose: 
           <Button size="sm" variant="primary" onClick={() => void rename()}>Grabar</Button>
         ) : (
           <>
-            {can('capture') && g.isActive && (
+            {can('coa.budget_group.manage') && g.isActive && (
               <Button size="sm" variant="ghost" onClick={() => setEditing({ id: g.id, name: g.name })}>Renombrar</Button>
             )}
-            {can('supervise') && (
+            {can('coa.budget_group.deactivate') && (
               <Button size="sm" variant="ghost" onClick={() => setGroupActive.mutate({ id: g.id, active: !g.isActive })}>
                 {g.isActive ? 'Desactivar' : 'Reactivar'}
               </Button>
@@ -95,7 +95,7 @@ export function BudgetGroupsDialog({ open, onClose }: { open: boolean; onClose: 
             <tbody>{data.map(row)}</tbody>
           </table>
         )}
-        {can('capture') && (
+        {can('coa.budget_group.manage') && (
           <form
             className="flex items-end gap-2 border-t border-gray-200 pt-3"
             onSubmit={(e) => {

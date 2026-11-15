@@ -4,6 +4,9 @@ import { useMemo, useRef, useState } from 'react'
 import { errorMessage } from '@/lib/api'
 import { useEmpresas } from '@/lib/empresa'
 import { useCurrentUser } from '@/lib/session'
+import { usePermissions } from '@/lib/permissions'
+import { Button } from '@/components/ui/button'
+import { PermissionsDialog } from './PermissionsDialog'
 import { Alert, Loading, PageHeader } from '@/components/ui/feedback'
 import { ActionToolbar } from '@/components/ui/toolbar'
 import { UserDialog } from './UserDialog'
@@ -13,8 +16,10 @@ import { useUsers, type AdminUser } from './use-users'
 type DialogState = { user: AdminUser | null } | null
 
 export function UsersScreen() {
-  const { user: me, can } = useCurrentUser()
-  const allowed = can('supervise')
+  const { user: me } = useCurrentUser()
+  const { can, loading } = usePermissions()
+  const [permsFor, setPermsFor] = useState<AdminUser | null>(null)
+  const allowed = can('core.users.manage')
   const users = useUsers(allowed)
   const empresas = useEmpresas()
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -29,8 +34,8 @@ export function UsersScreen() {
     return [...known, ...(hidden ? [`+${hidden}`] : [])].join(', ')
   }
 
-  if (!me) return <Loading />
-  if (!allowed) return <Alert kind="warning">No tiene permiso para administrar usuarios.</Alert>
+  if (!me || loading) return <Loading />
+  if (!allowed) return <Alert kind="warning">No tiene acceso a esta opción.</Alert>
 
   const selected = users.data?.find((u) => u.id === selectedId) ?? null
   const close = () => {
@@ -42,14 +47,15 @@ export function UsersScreen() {
   return (
     <div className="max-w-5xl">
       <PageHeader title="Usuarios" subtitle="Cuentas, roles y empresas en las que puede trabajar cada usuario." />
-      <div className="mb-3">
+      <div className="mb-3 flex flex-wrap items-center gap-3">
         <ActionToolbar
-          shortcuts={dialog === null}
+          shortcuts={dialog === null && permsFor === null}
           actions={{
             agregar: () => setDialog({ user: null }),
             modificar: selected ? () => openEdit(selected) : undefined,
           }}
         />
+        <Button disabled={!selected} onClick={() => setPermsFor(selected)}>Permisos</Button>
       </div>
       {users.isLoading && <Loading />}
       {users.error && <Alert>{errorMessage(users.error)}</Alert>}
@@ -62,6 +68,19 @@ export function UsersScreen() {
           onSelect={setSelectedId}
           onOpen={openEdit}
           wrapRef={tableRef}
+        />
+      )}
+      {permsFor && (
+        <PermissionsDialog
+          key={permsFor.id}
+          user={permsFor}
+          meId={me.id}
+          meIsOwner={me.role === 'owner'}
+          empresas={empresas.data ?? []}
+          onClose={() => {
+            setPermsFor(null)
+            setTimeout(() => tableRef.current?.focus(), 0)
+          }}
         />
       )}
       {dialog && (
