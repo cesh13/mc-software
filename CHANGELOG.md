@@ -3,6 +3,13 @@
 Versiones publicadas en el feed de actualizaciones, de la más nueva a la más antigua.
 Para publicar una versión: skill `ship-mc-update` (ver `docs/prueba-interna.md`).
 
+## 0.3.0 - 2026-11-16
+- Se agregó la pantalla Migración (Administración, solo el Propietario): revisa la carpeta del sistema
+  anterior (módulos, tablas, fechas de los datos), prueba la importación de Contabilidad y de clientes y
+  proveedores en una copia sin tocar la base real, y permite decidir cada hallazgo. Las pruebas quedan en
+  un historial.
+- Actualiza la base de datos al iniciar (respaldar la carpeta de datos antes).
+
 ## 0.2.0 - 2026-11-15
 - Se agregaron permisos por opción y acción: cada pantalla y botón se muestra según los permisos
   del usuario, y en Usuarios se puede conceder o negar cada permiso, para todas las empresas o una.
