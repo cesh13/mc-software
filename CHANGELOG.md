@@ -3,6 +3,10 @@
 Versiones publicadas en el feed de actualizaciones, de la más nueva a la más antigua.
 Para publicar una versión: skill `ship-mc-update` (ver `docs/prueba-interna.md`).
 
+## 0.3.1 - 2026-11-17
+- Se amplió el campo Detalle en Elaboración de partidas: la columna es más ancha y el texto largo se
+  muestra completo en varias líneas en lugar de cortarse.
+
 ## 0.3.0 - 2026-11-16
 - Se agregó la pantalla Migración (Administración, solo el Propietario): revisa la carpeta del sistema
   anterior (módulos, tablas, fechas de los datos), prueba la importación de Contabilidad y de clientes y
