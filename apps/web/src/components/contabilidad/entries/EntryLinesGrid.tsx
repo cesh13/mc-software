@@ -116,12 +116,12 @@ export function EntryLinesGrid({ editor, onBusy }: { editor: EntryEditor; onBusy
         <thead>
           <tr>
             <Th className="w-10 text-right">#</Th>
-            <Th className="w-40">Cuenta</Th>
-            <Th className="w-[18%]">Nombre de la cuenta</Th>
-            <Th className="w-36">C. costo</Th>
+            <Th className="w-32">Cuenta</Th>
+            <Th className="w-[15%]">Nombre de la cuenta</Th>
+            <Th className="w-28">C. costo</Th>
             <Th>Detalle</Th>
-            <Th className="w-36 text-right">Cargo</Th>
-            <Th className="w-36 text-right">Abono</Th>
+            <Th className="w-32 text-right">Cargo</Th>
+            <Th className="w-32 text-right">Abono</Th>
             <Th className="w-8"><span className="sr-only">Acciones</span></Th>
           </tr>
         </thead>

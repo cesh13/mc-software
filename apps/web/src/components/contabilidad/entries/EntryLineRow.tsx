@@ -67,12 +67,16 @@ export const EntryLineRow = memo(function EntryLineRow({
         </select>
       </td>
       <td className={cell} data-r={index} data-c={COL.detail}>
-        <input
+        {/* Wraps and grows with the text so the whole detail stays readable; Enter still moves
+            to the next cell (the grid handles it), so no line breaks are typed. */}
+        <textarea
           aria-label={`Detalle, línea ${n}`}
-          className={cx(inputClass, compact)}
+          className={cx(inputClass, compact, 'block min-h-[2.125rem] resize-none [field-sizing:content]')}
+          rows={1}
           maxLength={200}
           value={line.detail}
-          onChange={(e) => onPatch(line.key, { detail: e.target.value })}
+          title={line.detail || undefined}
+          onChange={(e) => onPatch(line.key, { detail: e.target.value.replace(/\r?\n/g, ' ') })}
         />
       </td>
       <td className={cell} data-r={index} data-c={COL.debit}>

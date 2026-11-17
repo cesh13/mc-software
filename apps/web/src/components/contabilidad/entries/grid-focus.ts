@@ -10,10 +10,12 @@ export type FocusTarget = { field: keyof typeof FIELD_IDS } | { r: number; c: nu
 export function focusCell(root: HTMLElement, r: number, c: number): boolean {
   const el = root
     .querySelector(`td[data-r="${r}"][data-c="${c}"]`)
-    ?.querySelector<HTMLInputElement | HTMLSelectElement>('input:not([disabled]), select:not([disabled])')
+    ?.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+      'input:not([disabled]), select:not([disabled]), textarea:not([disabled])',
+    )
   if (!el) return false
   el.focus()
-  if (el instanceof HTMLInputElement) el.select()
+  if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) el.select()
   return true
 }
 
