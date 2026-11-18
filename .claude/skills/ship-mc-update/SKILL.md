@@ -73,8 +73,15 @@ details. Use today's date. If the release adds database migrations, add the line
 
 Set `"version"` in `apps/tray/package.json` to the new version (nothing else in that file).
 
+Regenerate the project tracker so it shows the new version and changelog, and report any
+`aviso:` lines it prints (usually a stale row in `docs/seguimiento.md`):
+
 ```
-git add CHANGELOG.md apps/tray/package.json
+pnpm tracker
+```
+
+```
+git add CHANGELOG.md apps/tray/package.json docs/seguimiento.html
 git commit -m "Bump version to <version> and update changelog"
 ```
 

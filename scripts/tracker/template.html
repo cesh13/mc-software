@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seguimiento MC Software</title>
+<!-- Archivo generado por scripts/tracker/build.mts. No editar a mano: editar los documentos y correr `pnpm tracker`. -->
+<style>
+:root {
+  --bg: #f6f6f4; --panel: #ffffff; --panel-2: #f0efec; --ink: #1d1d1b; --muted: #6b6a66; --line: #e2e0db;
+  --accent: #2f5bd3; --accent-soft: #e6ecfb;
+  --s-pend: #8a8780; --s-pend-bg: #eeece8;
+  --s-run: #b06a00; --s-run-bg: #fbefd9;
+  --s-done: #1f7a45; --s-done-bg: #dff1e5;
+  --s-block: #b42318; --s-block-bg: #fbe3e1;
+  --s-part: #6a4bc4; --s-part-bg: #ece6fb;
+  --shadow: 0 1px 2px rgba(0,0,0,.05), 0 1px 1px rgba(0,0,0,.03);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161615; --panel: #1f1f1d; --panel-2: #282826; --ink: #ecebe7; --muted: #9c9a94; --line: #34332f;
+    --accent: #7d9cff; --accent-soft: #252d45;
+    --s-pend: #a3a09a; --s-pend-bg: #2b2a28;
+    --s-run: #f0b35a; --s-run-bg: #3a2e1a;
+    --s-done: #6fd39a; --s-done-bg: #1b3326;
+    --s-block: #ff8a80; --s-block-bg: #3d211f;
+    --s-part: #b9a4ff; --s-part-bg: #2e2645;
+    --shadow: none; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161615; --panel: #1f1f1d; --panel-2: #282826; --ink: #ecebe7; --muted: #9c9a94; --line: #34332f;
+  --accent: #7d9cff; --accent-soft: #252d45;
+  --s-pend: #a3a09a; --s-pend-bg: #2b2a28;
+  --s-run: #f0b35a; --s-run-bg: #3a2e1a;
+  --s-done: #6fd39a; --s-done-bg: #1b3326;
+  --s-block: #ff8a80; --s-block-bg: #3d211f;
+  --s-part: #b9a4ff; --s-part-bg: #2e2645;
+  --shadow: none; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font: 12.5px ui-monospace, "Cascadia Code", Consolas, monospace; background: var(--panel-2); padding: 0 4px; border-radius: 4px; }
+.muted { color: var(--muted); }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+
+header.top { background: var(--panel); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+.top-row { display: flex; align-items: center; gap: 16px; padding: 12px 0 0; flex-wrap: wrap; }
+.top-row h1 { font-size: 17px; margin: 0; letter-spacing: -.01em; }
+.meta { color: var(--muted); font-size: 12.5px; display: flex; gap: 12px; flex-wrap: wrap; }
+.spacer { flex: 1; }
+nav.tabs { display: flex; gap: 2px; overflow-x: auto; margin-top: 8px; scrollbar-width: none; }
+nav.tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 8px 12px; font: inherit; color: var(--muted); cursor: pointer; white-space: nowrap; }
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+nav.tabs .n { font-size: 11.5px; color: var(--muted); font-weight: 400; margin-left: 4px; }
+.iconbtn { background: var(--panel-2); border: 1px solid var(--line); color: var(--ink); border-radius: 6px; padding: 3px 9px; font: inherit; font-size: 12.5px; cursor: pointer; }
+
+main { padding: 20px 0 60px; }
+section.view { display: none; }
+section.view.on { display: block; }
+h2 { font-size: 15px; margin: 24px 0 10px; }
+h2:first-child { margin-top: 0; }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow); cursor: pointer; }
+.kpi .v { font-size: 24px; font-weight: 650; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.kpi .l { color: var(--muted); font-size: 12.5px; }
+.bar { height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; margin-top: 8px; display: flex; }
+.bar i { display: block; height: 100%; }
+
+.phases { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; }
+.phase { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 6px; }
+.phase .t { font-weight: 600; }
+.phase.cur { border-color: var(--s-run); box-shadow: 0 0 0 1px var(--s-run) inset; }
+.phase .mods { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.st-pendiente, .st-abierta, .st-por-conseguir { color: var(--s-pend); background: var(--s-pend-bg); }
+.st-en-curso, .st-pedido { color: var(--s-run); background: var(--s-run-bg); }
+.st-hecho, .st-respondida, .st-conseguido { color: var(--s-done); background: var(--s-done-bg); }
+.st-bloqueado { color: var(--s-block); background: var(--s-block-bg); }
+.st-parcial { color: var(--s-part); background: var(--s-part-bg); }
+.st-retirado { color: var(--muted); background: var(--panel-2); text-decoration: line-through; }
+.chip { display: inline-block; font-size: 11.5px; padding: 0 7px; border-radius: 5px; background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); cursor: pointer; white-space: nowrap; }
+.chip.open { border-color: var(--s-pend); }
+.chip.done { color: var(--s-done); }
+.chip.part { color: var(--s-part); }
+.tag { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+.toolbar input[type=search] { flex: 1 1 220px; min-width: 0; }
+input[type=search], select { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 6px 10px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; background: var(--panel); }
+.seg button { border: 0; background: none; font: inherit; font-size: 13px; padding: 5px 10px; color: var(--muted); cursor: pointer; }
+.seg button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.count { color: var(--muted); font-size: 12.5px; }
+
+.board { display: grid; grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: 12px; overflow-x: auto; }
+.col { background: var(--panel-2); border-radius: 10px; padding: 10px; min-height: 120px; }
+.col h3 { font-size: 13px; margin: 2px 2px 10px; display: flex; gap: 8px; align-items: center; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; margin-bottom: 8px; box-shadow: var(--shadow); }
+.card .h { display: flex; gap: 6px; align-items: center; margin-bottom: 3px; }
+.card .ti { font-weight: 600; font-size: 13.5px; }
+.card .d { font-size: 12.5px; color: var(--muted); margin-top: 4px; display: none; }
+.card.x .d { display: block; }
+.card .needs { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.card .more { background: none; border: 0; padding: 0; font: inherit; font-size: 12px; color: var(--accent); cursor: pointer; }
+
+.qlist { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.qgroup { padding: 8px 14px; background: var(--panel-2); font-size: 12.5px; font-weight: 600; color: var(--muted); border-top: 1px solid var(--line); }
+.qgroup:first-child { border-top: 0; }
+.q { border-top: 1px solid var(--line); }
+.qgroup + .q { border-top: 0; }
+.q > .row { display: grid; grid-template-columns: 78px 94px 1fr auto; gap: 10px; padding: 9px 14px; cursor: pointer; align-items: baseline; }
+.q > .row:hover { background: var(--panel-2); }
+.q .id { font: 600 12.5px ui-monospace, Consolas, monospace; }
+.q .who { color: var(--muted); font-size: 12px; text-align: right; }
+.q .body { display: none; padding: 0 14px 14px 196px; font-size: 13.5px; }
+.q.x .body { display: block; }
+.q.flash > .row { background: var(--accent-soft); }
+.q .body p { margin: 6px 0; }
+.q .body .lbl { font-weight: 600; }
+.q .body .links { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 6px; }
+
+table.docs { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+table.docs th, table.docs td { text-align: left; padding: 8px 12px; border-top: 1px solid var(--line); vertical-align: top; font-size: 13.5px; }
+table.docs th { background: var(--panel-2); font-size: 12px; color: var(--muted); border-top: 0; font-weight: 600; }
+table.docs td.date { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--muted); }
+.dirty { color: var(--s-run); font-size: 11.5px; font-weight: 600; }
+
+.list { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+.li { padding: 11px 14px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 110px 1fr; gap: 12px; }
+.li:first-child { border-top: 0; }
+.li .ti { font-weight: 600; }
+.li .tx { font-size: 13px; color: var(--muted); }
+
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.rel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+.rel h4 { margin: 0 0 6px; font-size: 14px; }
+.rel ul { margin: 0; padding-left: 18px; font-size: 13px; }
+.commit { display: grid; grid-template-columns: 64px 84px 1fr; gap: 10px; padding: 6px 12px; border-top: 1px solid var(--line); font-size: 13px; }
+.commit:first-child { border-top: 0; }
+.commit .h { font-family: ui-monospace, Consolas, monospace; }
+.commit .dt { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.warn { background: var(--s-run-bg); color: var(--ink); border: 1px solid var(--s-run); border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
+.warn ul { margin: 4px 0 0; padding-left: 18px; }
+.next { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+.next .li { grid-template-columns: 90px 1fr; }
+.empty { color: var(--muted); padding: 16px; text-align: center; font-size: 13px; }
+footer { color: var(--muted); font-size: 12px; padding: 20px 0 40px; }
+
+@media (max-width: 820px) {
+  .two { grid-template-columns: 1fr; }
+  .board { grid-template-columns: repeat(4, 78vw); }
+  .q > .row { grid-template-columns: 64px 1fr; }
+  .q > .row .who { display: none; }
+  .q > .row .pill { grid-column: 1; grid-row: 2; justify-self: start; }
+  .q > .row .ti { grid-column: 2; grid-row: 1 / span 2; }
+  .q .body { padding: 0 14px 14px; }
+  .li { grid-template-columns: 1fr; gap: 4px; }
+  table.docs .area, table.docs .st { display: none; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="top-row">
+      <h1>Seguimiento · MC Software</h1>
+      <div class="meta" id="meta"></div>
+      <div class="spacer"></div>
+      <button class="iconbtn" id="theme" title="Cambiar tema">Tema</button>
+    </div>
+    <nav class="tabs" id="tabs" role="tablist"></nav>
+  </div>
+</header>
+<main class="wrap">
+  <section class="view" id="v-resumen"></section>
+  <section class="view" id="v-tablero"></section>
+  <section class="view" id="v-preguntas"></section>
+  <section class="view" id="v-conseguir"></section>
+  <section class="view" id="v-documentos"></section>
+  <section class="view" id="v-avance"></section>
+  <footer id="foot"></footer>
+</main>
+
+<script id="data" type="application/json">/*__DATA__*/null</script>
+<script>
+(function () {
+  'use strict';
+  var D = JSON.parse(document.getElementById('data').textContent);
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var slug = function (s) { return String(s).replace(/\s+/g, '-'); };
+  var pill = function (s) { return '<span class="pill st-' + slug(s) + '">' + esc(s) + '</span>'; };
+  var store = {
+    get: function (k, d) { try { var v = localStorage.getItem('mc-seg:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem('mc-seg:' + k, JSON.stringify(v)); } catch (e) {} }
+  };
+
+  // ---- tema ----
+  var theme = store.get('theme', null);
+  if (theme) document.documentElement.setAttribute('data-theme', theme);
+  $('#theme').onclick = function () {
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+      (!document.documentElement.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    theme = dark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', theme);
+    store.set('theme', theme);
+  };
+
+  var Q = {}; D.questions.forEach(function (q) { Q[q.id] = q; });
+  var legacyName = {}; D.legacy.forEach(function (l) { legacyName[l.prefix] = l.name; });
+  var groupName = function (g) { return g === 'P' ? 'Prioritarias (P1–P30)' : g === 'M' ? 'Diseño (M1–M3)' : (legacyName[g] || g); };
+  var openQ = function (id) { var q = Q[id]; return q && q.status !== 'respondida'; };
+  var qchip = function (id) {
+    var q = Q[id];
+    if (!q) return '<span class="chip">' + esc(id) + '</span>';
+    var c = q.status === 'respondida' ? 'done' : q.status === 'parcial' ? 'part' : 'open';
+    return '<span class="chip ' + c + '" data-q="' + esc(id) + '" title="' + esc(q.status) + '">' + esc(id) + '</span>';
+  };
+
+  // ---- meta ----
+  var gen = new Date(D.generated);
+  $('#meta').innerHTML = [
+    D.version ? 'Versión <b>' + esc(D.version) + '</b>' : '',
+    D.branch ? esc(D.branch) + (D.head ? ' @ <code>' + esc(D.head) + '</code>' : '') : '',
+    'Generado ' + gen.toLocaleString('es', { dateStyle: 'medium', timeStyle: 'short' })
+  ].filter(Boolean).map(function (x) { return '<span>' + x + '</span>'; }).join('');
+  $('#foot').innerHTML = 'Generado por <code>scripts/tracker/build.mts</code> desde los documentos del repositorio. ' +
+    'Para cambiar un estado, edite el documento o <a href="' + esc(D.sources.seguimiento) + '" target="_blank" rel="noopener">docs/seguimiento.md</a> y corra <code>pnpm tracker</code>.';
+
+  // ---- pestañas ----
+  var nQopen = D.questions.filter(function (q) { return q.status !== 'respondida'; }).length;
+  var nGather = D.gather.filter(function (g) { return g.status !== 'conseguido'; }).length;
+  var TABS = [
+    ['resumen', 'Resumen', ''],
+    ['tablero', 'Tablero', D.cards.filter(function (c) { return c.status !== 'hecho' && c.status !== 'retirado'; }).length],
+    ['preguntas', 'Preguntas', nQopen],
+    ['conseguir', 'Por conseguir', nGather],
+    ['documentos', 'Documentos', D.docs.length],
+    ['avance', 'Avance', '']
+  ];
+  $('#tabs').innerHTML = TABS.map(function (t) {
+    return '<button role="tab" data-tab="' + t[0] + '">' + t[1] + (t[2] !== '' ? '<span class="n">' + t[2] + '</span>' : '') + '</button>';
+  }).join('');
+  var rendered = {};
+  function show(tab, arg) {
+    if (!document.getElementById('v-' + tab)) tab = 'resumen';
+    TABS.forEach(function (t) {
+      $('#v-' + t[0]).classList.toggle('on', t[0] === tab);
+      $('[data-tab="' + t[0] + '"]').setAttribute('aria-selected', t[0] === tab);
+    });
+    if (!rendered[tab]) { VIEWS[tab](); rendered[tab] = true; }
+    if (tab === 'preguntas') focusQ(arg);
+    store.set('tab', tab);
+  }
+  // Navegación: actualiza el hash (enlaces compartibles) pero no depende de hashchange,
+  // que no siempre se dispara (vista previa, archivo embebido).
+  function go(h) {
+    try { history.pushState(null, '', '#' + h); } catch (e) {}
+    route(h);
+  }
+  function route(h) {
+    var p = decodeURIComponent(typeof h === 'string' ? h : location.hash.slice(1)).split('/');
+    show(p[0] || store.get('tab', 'resumen'), p[1]);
+  }
+  window.addEventListener('popstate', function () { route(); });
+  $('#tabs').onclick = function (e) {
+    var b = e.target.closest('[data-tab]'); if (b) go(b.dataset.tab);
+  };
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('a[href^="#"]');
+    if (a) { e.preventDefault(); go(a.getAttribute('href').slice(1)); return; }
+    var c = e.target.closest('[data-q]');
+    if (c) { e.preventDefault(); go('preguntas/' + encodeURIComponent(c.dataset.q)); return; }
+    var g = e.target.closest('[data-go]');
+    if (g) { e.preventDefault(); go(g.dataset.go); }
+  });
+
+  // ---- vistas ----
+  var VIEWS = {};
+
+  VIEWS.resumen = function () {
+    var steps = D.cards.filter(function (c) { return c.kind === 'paso'; });
+    var stepsDone = steps.filter(function (c) { return c.status === 'hecho'; }).length;
+    var mods = D.modules.filter(function (m) { return m.status !== 'retirado'; });
+    var modsDone = mods.filter(function (m) { return m.status === 'hecho'; }).length;
+    var P = D.questions.filter(function (q) { return q.group === 'P'; });
+    var pAns = P.filter(function (q) { return q.status === 'respondida'; }).length;
+    var pPart = P.filter(function (q) { return q.status === 'parcial'; }).length;
+    var all = D.questions.length;
+    var aAns = D.questions.filter(function (q) { return q.status === 'respondida'; }).length;
+    var aPart = D.questions.filter(function (q) { return q.status === 'parcial'; }).length;
+    var gDone = D.gather.filter(function (g) { return g.status === 'conseguido'; }).length;
+    var cur = D.phases.find(function (p) { return p.status === 'en curso'; }) || D.phases.find(function (p) { return p.status === 'pendiente'; });
+
+    function bar(parts, total) {
+      return '<div class="bar">' + parts.map(function (p) { return '<i style="width:' + (total ? 100 * p[0] / total : 0) + '%;background:var(' + p[1] + ')"></i>'; }).join('') + '</div>';
+    }
+    function kpi(go, v, l, b) { return '<div class="kpi" data-go="' + go + '"><div class="v">' + v + '</div><div class="l">' + l + '</div>' + (b || '') + '</div>'; }
+
+    var h = '';
+    if (D.warnings.length) h += '<div class="warn"><b>Avisos al generar</b> (revise docs/seguimiento.md o el documento indicado):<ul>' +
+      D.warnings.map(function (w) { return '<li>' + esc(w) + '</li>'; }).join('') + '</ul></div>';
+    h += '<div class="kpis">' +
+      kpi('tablero', cur ? 'Fase ' + esc(cur.num) : '—', cur ? esc(cur.name) + ' · ' + esc(cur.status) : 'Sin fase en curso') +
+      kpi('tablero', stepsDone + '<span class="muted" style="font-size:15px">/' + steps.length + '</span>', 'Pasos de la fase 0 hechos' + (D.fase0.tests ? ' · ' + esc(D.fase0.tests) + ' pruebas' : ''),
+        bar([[stepsDone, '--s-done'], [steps.filter(function (c) { return c.status === 'en curso'; }).length, '--s-run']], steps.length)) +
+      kpi('tablero', modsDone + '<span class="muted" style="font-size:15px">/' + mods.length + '</span>', 'Módulos hechos', bar([[modsDone, '--s-done'], [mods.filter(function (m) { return m.status === 'en curso'; }).length, '--s-run']], mods.length)) +
+      kpi('preguntas', (P.length - pAns) + '<span class="muted" style="font-size:15px">/' + P.length + '</span>', 'Preguntas prioritarias sin cerrar', bar([[pAns, '--s-done'], [pPart, '--s-part']], P.length)) +
+      kpi('preguntas', (all - aAns), 'Preguntas abiertas en total (de ' + all + ')', bar([[aAns, '--s-done'], [aPart, '--s-part']], all)) +
+      kpi('conseguir', (D.gather.length - gDone) + '<span class="muted" style="font-size:15px">/' + D.gather.length + '</span>', 'Datos y archivos por conseguir', bar([[gDone, '--s-done']], D.gather.length)) +
+      '</div>';
+
+    h += '<h2>Fases</h2><div class="phases">' + D.phases.map(function (p) {
+      var open = p.needs.filter(openQ);
+      var mods = D.modules.filter(function (m) { return m.phase === p.num; });
+      return '<div class="phase' + (cur && cur.num === p.num ? ' cur' : '') + '">' +
+        '<div class="tag">Fase ' + esc(p.num) + '</div><div class="t">' + esc(p.name) + '</div>' + pill(p.status) +
+        '<div class="mods">' + mods.map(function (m) { return '<span class="chip" title="' + esc(m.status) + '" style="color:var(--' + ({ hecho: 's-done', 'en curso': 's-run', bloqueado: 's-block' }[m.status] || 'ink') + ')">' + esc(m.id) + '</span>'; }).join('') + '</div>' +
+        (p.needs.length ? '<div class="muted" style="font-size:12.5px">Necesita: ' + (open.length ? open.length + ' de ' + p.needs.length + ' preguntas sin cerrar' : 'preguntas cerradas') + '</div>' +
+          '<div class="mods">' + p.needs.map(qchip).join('') + '</div>' : '') +
+        '</div>';
+    }).join('') + '</div>';
+
+    var next = D.cards.filter(function (c) { return c.status === 'en curso' || c.status === 'bloqueado' || (c.kind === 'tarea' && c.status === 'pendiente'); });
+    h += '<h2>En curso y por hacer</h2><div class="next">' + (next.length ? next.map(function (c) {
+      return '<div class="li"><div>' + pill(c.status) + '</div><div><span class="tag">' + ({ paso: 'Paso F0', modulo: 'Módulo', tarea: 'Tarea' }[c.kind]) + '</span> <span class="ti">' + c.title + '</span><div class="tx">' + c.detail + '</div></div></div>';
+    }).join('') : '<div class="empty">Nada en curso.</div>') + '</div>';
+
+    var latest = D.changelog[0];
+    if (latest) h += '<h2>Última versión: ' + esc(latest.version) + ' <span class="muted" style="font-weight:400">· ' + esc(latest.date) + '</span></h2><div class="rel"><ul>' +
+      latest.items.map(function (i) { return '<li>' + i + '</li>'; }).join('') + '</ul></div>';
+    $('#v-resumen').innerHTML = h;
+  };
+
+  VIEWS.tablero = function () {
+    var f = store.get('board', { kind: 'todo', phase: '' });
+    var phases = D.phases.map(function (p) { return '<option value="' + esc(p.num) + '">Fase ' + esc(p.num) + ' · ' + esc(p.name) + '</option>'; }).join('');
+    $('#v-tablero').innerHTML = '<div class="toolbar"><div class="seg" id="bk">' +
+      [['todo', 'Todo'], ['paso', 'Pasos fase 0'], ['modulo', 'Módulos'], ['tarea', 'Tareas']].map(function (k) { return '<button data-k="' + k[0] + '">' + k[1] + '</button>'; }).join('') +
+      '</div><select id="bp"><option value="">Todas las fases</option>' + phases + '</select><span class="count" id="bc"></span></div><div class="board" id="board"></div>';
+    $('#bp').value = f.phase;
+    function draw() {
+      [].forEach.call(document.querySelectorAll('#bk button'), function (b) { b.classList.toggle('on', b.dataset.k === f.kind); });
+      var cards = D.cards.filter(function (c) { return (f.kind === 'todo' || c.kind === f.kind) && (!f.phase || c.phase === f.phase) && c.status !== 'retirado'; });
+      $('#bc').textContent = cards.length + ' tarjetas';
+      $('#board').innerHTML = ['pendiente', 'en curso', 'bloqueado', 'hecho'].map(function (s) {
+        var cs = cards.filter(function (c) { return c.status === s; });
+        return '<div class="col"><h3>' + pill(s) + '<span class="muted">' + cs.length + '</span></h3>' + (cs.map(function (c) {
+          var open = c.needs.filter(openQ);
+          return '<div class="card"><div class="h"><span class="tag">' + ({ paso: 'Paso F0', modulo: 'Módulo', tarea: 'Tarea' }[c.kind]) + (c.phase ? ' · F' + esc(c.phase) : '') + '</span></div>' +
+            '<div class="ti">' + c.title + '</div><div class="d">' + c.detail + ' <a href="' + esc(c.href) + '" target="_blank" rel="noopener">documento</a></div>' +
+            (c.status !== 'hecho' && open.length ? '<div class="needs"><span class="muted" style="font-size:11.5px">Espera:</span>' + open.slice(0, 8).map(qchip).join('') + (open.length > 8 ? '<span class="muted" style="font-size:11.5px">+' + (open.length - 8) + '</span>' : '') + '</div>' : '') +
+            '<button class="more">Detalle</button></div>';
+        }).join('') || '<div class="empty">—</div>') + '</div>';
+      }).join('');
+    }
+    $('#bk').onclick = function (e) { var b = e.target.closest('button'); if (!b) return; f.kind = b.dataset.k; store.set('board', f); draw(); };
+    $('#bp').onchange = function () { f.phase = this.value; store.set('board', f); draw(); };
+    $('#board').onclick = function (e) {
+      var m = e.target.closest('.more'); if (!m) return;
+      var c = m.closest('.card'); c.classList.toggle('x'); m.textContent = c.classList.contains('x') ? 'Ocultar' : 'Detalle';
+    };
+    draw();
+  };
+
+  var qState = store.get('qf', { text: '', group: '', status: 'sin-cerrar', cited: false });
+  var drawQ;
+  VIEWS.preguntas = function () {
+    var groups = ['P', 'M'].concat(D.legacy.map(function (l) { return l.prefix; }));
+    $('#v-preguntas').innerHTML = '<div class="toolbar">' +
+      '<input type="search" id="qt" placeholder="Buscar en preguntas y propuestas…" aria-label="Buscar">' +
+      '<select id="qg"><option value="">Todos los grupos</option>' + groups.map(function (g) {
+        var n = D.questions.filter(function (q) { return q.group === g && q.status !== 'respondida'; }).length;
+        return '<option value="' + g + '">' + esc(groupName(g)) + ' (' + n + ')</option>';
+      }).join('') + '</select>' +
+      '<div class="seg" id="qs">' + [['sin-cerrar', 'Sin cerrar'], ['abierta', 'Abiertas'], ['parcial', 'Parciales'], ['respondida', 'Respondidas'], ['', 'Todas']].map(function (s) { return '<button data-s="' + s[0] + '">' + s[1] + '</button>'; }).join('') + '</div>' +
+      '<label class="count"><input type="checkbox" id="qc"> Solo las que frenan una fase</label>' +
+      '<span class="count" id="qn"></span></div><div class="qlist" id="ql"></div>';
+    $('#qt').value = qState.text; $('#qg').value = qState.group; $('#qc').checked = qState.cited;
+    drawQ = function (focus) {
+      [].forEach.call(document.querySelectorAll('#qs button'), function (b) { b.classList.toggle('on', b.dataset.s === qState.status); });
+      var t = qState.text.toLowerCase().trim();
+      var list = D.questions.filter(function (q) {
+        if (focus) return q.id === focus || q.refs.indexOf(focus) >= 0 || q.usedBy.indexOf(focus) >= 0;
+        if (qState.group && q.group !== qState.group) return false;
+        if (qState.status === 'sin-cerrar' ? q.status === 'respondida' : qState.status && q.status !== qState.status) return false;
+        if (qState.cited && !q.usedBy.some(function (u) { return /^Fase/.test(u); })) return false;
+        if (t && (q.id + ' ' + q.title + ' ' + q.text + ' ' + q.proposal + ' ' + q.who).toLowerCase().replace(/<[^>]+>/g, '').indexOf(t) < 0) return false;
+        return true;
+      });
+      $('#qn').innerHTML = focus ? 'Mostrando ' + esc(focus) + ' y relacionadas · <a href="#preguntas" id="qclear">ver todas</a>' : list.length + ' preguntas';
+      var h = '', last = null;
+      list.forEach(function (q) {
+        var g = q.group + '|' + q.section;
+        if (g !== last) { h += '<div class="qgroup">' + esc(groupName(q.group)) + (q.section && q.group !== 'P' && q.group !== 'M' ? ' · ' + esc(q.section) : '') + '</div>'; last = g; }
+        h += '<div class="q" data-id="' + esc(q.id) + '"><div class="row"><span class="id">' + esc(q.id) + '</span>' + pill(q.status) + '<span class="ti">' + q.title + '</span><span class="who">' + esc(q.who) + '</span></div>' +
+          '<div class="body"><p>' + q.text + '</p>' +
+          (q.proposal ? '<p><span class="lbl">Propuesta:</span> ' + q.proposal + '</p>' : '') +
+          (q.statusNote || q.date ? '<p><span class="lbl">Estado:</span> ' + esc(q.status) + (q.date ? ' (' + esc(q.date) + ')' : '') + (q.statusNote ? '. ' + q.statusNote : '') + '</p>' : '') +
+          '<div class="links">' +
+          (q.refs.length ? '<span class="muted">Detalle en:</span> ' + q.refs.map(qchip).join(' ') : '') +
+          (q.usedBy.length ? ' <span class="muted">Citada por:</span> ' + q.usedBy.map(function (u) { return /^Fase/.test(u) ? '<span class="chip" data-go="tablero">' + esc(u) + '</span>' : qchip(u); }).join(' ') : '') +
+          ' <a href="' + esc(q.href) + '" target="_blank" rel="noopener">abrir documento</a></div></div></div>';
+      });
+      $('#ql').innerHTML = h || '<div class="empty">Sin preguntas con estos filtros.</div>';
+      if (focus) {
+        var el = document.querySelector('.q[data-id="' + CSS.escape(focus) + '"]');
+        if (el) { el.classList.add('x', 'flash'); el.scrollIntoView({ block: 'center' }); setTimeout(function () { el.classList.remove('flash'); }, 1500); }
+      }
+    };
+    var save = function () { store.set('qf', qState); drawQ(); };
+    $('#qt').oninput = function () { qState.text = this.value; save(); };
+    $('#qg').onchange = function () { qState.group = this.value; save(); };
+    $('#qc').onchange = function () { qState.cited = this.checked; save(); };
+    $('#qs').onclick = function (e) { var b = e.target.closest('button'); if (!b) return; qState.status = b.dataset.s; save(); };
+    $('#ql').onclick = function (e) {
+      if (e.target.closest('a,[data-q],[data-go]')) return;
+      var r = e.target.closest('.row'); if (r) r.parentNode.classList.toggle('x');
+    };
+    drawQ();
+  };
+  function focusQ(id) { if (drawQ) drawQ(id); }
+
+  VIEWS.conseguir = function () {
+    $('#v-conseguir').innerHTML = '<p class="muted" style="margin-top:0">De <a href="' + esc(D.sources.preguntas) + '" target="_blank" rel="noopener">PREGUNTAS.md §2</a>: lo que hay que pedir al negocio para poder comparar y migrar. El estado se marca en docs/seguimiento.md, tabla <i>Por conseguir</i>.</p>' +
+      '<div class="list">' + D.gather.map(function (g) {
+        return '<div class="li"><div>' + pill(g.status) + (g.date ? '<div class="muted" style="font-size:12px;margin-top:4px">' + esc(g.date) + '</div>' : '') + '</div><div><div class="ti">' + g.title + '</div><div class="tx">' + g.text + '</div>' +
+          (g.note ? '<div style="font-size:13px;margin-top:4px">' + g.note + '</div>' : '') + '</div></div>';
+      }).join('') + '</div>';
+  };
+
+  VIEWS.documentos = function () {
+    var f = store.get('df', { text: '', area: '' });
+    var areas = []; D.docs.forEach(function (d) { if (areas.indexOf(d.area) < 0) areas.push(d.area); });
+    areas.sort();
+    $('#v-documentos').innerHTML = '<div class="toolbar"><input type="search" id="dt" placeholder="Buscar documento…" aria-label="Buscar documento"><select id="da"><option value="">Todas las carpetas</option>' +
+      areas.map(function (a) { return '<option>' + esc(a) + '</option>'; }).join('') + '</select><span class="count" id="dn"></span></div>' +
+      '<table class="docs"><thead><tr><th>Documento</th><th class="area">Carpeta</th><th class="st">Estado</th><th>Último cambio</th></tr></thead><tbody id="db"></tbody></table>';
+    $('#dt').value = f.text; $('#da').value = f.area;
+    function draw() {
+      var t = f.text.toLowerCase();
+      var list = D.docs.filter(function (d) { return (!f.area || d.area === f.area) && (!t || (d.title + ' ' + d.path).toLowerCase().indexOf(t) >= 0); })
+        .sort(function (a, b) { return (b.date || '9').localeCompare(a.date || '9') || a.path.localeCompare(b.path); });
+      $('#dn').textContent = list.length + ' documentos';
+      $('#db').innerHTML = list.map(function (d) {
+        return '<tr><td><a href="' + esc(d.href) + '" target="_blank" rel="noopener">' + esc(d.title) + '</a>' + (d.kind === 'tldraw' ? ' <span class="chip">tldraw</span>' : '') +
+          '<div class="muted" style="font-size:12px"><code>' + esc(d.path) + '</code></div>' + (d.stateText ? '<div class="muted" style="font-size:12px">' + d.stateText + '</div>' : '') + '</td>' +
+          '<td class="area">' + esc(d.area) + '</td><td class="st">' + (d.state ? '<span class="pill st-' + (d.state === 'verificado' ? 'hecho' : d.state === 'propuesta' ? 'en-curso' : 'pendiente') + '">' + esc(d.state) + '</span>' : '') + '</td>' +
+          '<td class="date">' + (d.date ? esc(d.date) : '<span class="muted">sin commit</span>') + (d.dirty ? '<div class="dirty">cambios sin commit</div>' : '') + '</td></tr>';
+      }).join('');
+    }
+    $('#dt').oninput = function () { f.text = this.value; store.set('df', f); draw(); };
+    $('#da').onchange = function () { f.area = this.value; store.set('df', f); draw(); };
+    draw();
+  };
+
+  VIEWS.avance = function () {
+    $('#v-avance').innerHTML = '<div class="two"><div><h2>Versiones publicadas</h2>' + (D.changelog.map(function (r) {
+      return '<div class="rel"><h4>' + esc(r.version) + ' <span class="muted" style="font-weight:400">· ' + esc(r.date) + '</span></h4><ul>' + r.items.map(function (i) { return '<li>' + i + '</li>'; }).join('') + '</ul></div>';
+    }).join('') || '<div class="empty">Sin CHANGELOG.md</div>') + '</div><div><h2>Últimos commits</h2><div class="list">' + D.commits.map(function (c) {
+      return '<div class="commit"><span class="h">' + (c.href ? '<a href="' + esc(c.href) + '" target="_blank" rel="noopener">' + esc(c.hash) + '</a>' : esc(c.hash)) + '</span><span class="dt">' + esc(c.date) + '</span><span>' + esc(c.subject) + '</span></div>';
+    }).join('') + '</div></div></div>';
+  };
+
+  route();
+})();
+</script>
+</body>
+</html>

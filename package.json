@@ -14,7 +14,8 @@
     "db:generate": "pnpm --filter @accounting/api db:generate",
     "db:migrate": "pnpm --filter @accounting/api db:migrate",
     "dist:win": "pnpm --filter @accounting/tray dist:win",
-    "dist:mac": "pnpm --filter @accounting/tray dist:mac"
+    "dist:mac": "pnpm --filter @accounting/tray dist:mac",
+    "tracker": "pnpm --filter @accounting/api exec tsx ../../scripts/tracker/build.mts"
   },
   "devDependencies": {
     "typescript": "^5.6.0"
