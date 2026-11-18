@@ -7,6 +7,7 @@ import { useEmpresa } from '@/lib/empresa'
 import { usePermissions } from '@/lib/permissions'
 import { Button } from '@/components/ui/button'
 import { Alert, Loading, PageHeader } from '@/components/ui/feedback'
+import { openPrintPreview } from '@/lib/print'
 
 function today(): string {
   const d = new Date()
@@ -70,7 +71,7 @@ export function ReportFrame({ title, range, params, loading, error, empty, ready
         subtitle={range ? `${empresa.name} · ${range}` : empresa.name}
         actions={
           can('gl.report.export') && (
-            <Button onClick={() => window.print()}>
+            <Button onClick={openPrintPreview}>
               <Printer size={14} /> Imprimir
             </Button>
           )

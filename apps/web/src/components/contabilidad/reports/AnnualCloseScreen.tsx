@@ -15,6 +15,7 @@ import { AccountPicker } from '../AccountPicker'
 import { AnnualClosePreview } from './AnnualClosePreview'
 import { PrintHeader } from './ReportFrame'
 import { GL_API, reportKeys, useEntryTypes, useFiscalYearOf } from './api'
+import { openPrintPreview } from '@/lib/print'
 
 export function AnnualCloseScreen() {
   const { empresa } = useEmpresa()
@@ -147,7 +148,7 @@ export function AnnualCloseScreen() {
               <Button variant="primary" disabled={!canApply || applyM.isPending} onClick={() => setConfirm(true)}>
                 Aplicar cierre
               </Button>
-              <Button onClick={() => window.print()}>Imprimir</Button>
+              <Button onClick={openPrintPreview}>Imprimir</Button>
             </div>
           </>
         )}

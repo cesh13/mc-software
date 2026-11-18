@@ -15,6 +15,7 @@ import { BudgetGroupsDialog } from './BudgetGroupsDialog'
 import { CatalogFilters } from './CatalogFilters'
 import { useCatalogView } from './use-catalog-view'
 import { useAccounts, useCoaMutations } from './use-coa'
+import { openPrintPreview } from '@/lib/print'
 
 export function CatalogScreen() {
   const { empresa } = useEmpresa()
@@ -120,7 +121,7 @@ export function CatalogScreen() {
                     setConfirm(selected)
                   }
                 : undefined,
-            imprimir: () => window.print(),
+            imprimir: openPrintPreview,
           }}
         />
       </div>

@@ -12,6 +12,7 @@ import { EntryDialogs, type OpenDialog } from './EntryDialogs'
 import { EntryEditArea, EntryViewArea } from './EntryEditArea'
 import { EntryPrint } from './EntryPrint'
 import { lockReason, useEntryScreen } from './use-entry-screen'
+import { openPrintPreview } from '@/lib/print'
 
 // Elaboración de partidas: consulta (browse one entry) and edición (add / modify).
 export function EntryScreen() {
@@ -63,7 +64,7 @@ export function EntryScreen() {
         grabar: undefined,
         cancelar: undefined,
         copiar: perm.create && entry ? () => openDialog('copy') : undefined,
-        imprimir: entry ? () => window.print() : undefined,
+        imprimir: entry ? openPrintPreview : undefined,
       }
 
   const lock = !editing ? lockReason(entry) : null

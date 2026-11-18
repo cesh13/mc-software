@@ -1,3 +1,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* On-screen print preview (src/lib/print.ts): the page as a sheet of paper. */
+html.print-preview body {
+  background: #d1d5db;
+}
+html.print-preview main {
+  box-sizing: border-box;
+  width: min(100% - 2rem, 8.5in);
+  min-height: 11in;
+  margin: 4rem auto 2rem;
+  padding: 0.5in !important;
+  background: #fff;
+  box-shadow: 0 2px 12px rgb(0 0 0 / 0.25);
+}
+html.print-preview main > * {
+  max-width: none;
+}
+
+@media print {
+  .print-preview-bar {
+    display: none !important;
+  }
+  html.print-preview main {
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0 !important;
+    box-shadow: none;
+  }
+}

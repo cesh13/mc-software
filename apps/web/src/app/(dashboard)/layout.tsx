@@ -1,4 +1,5 @@
 import EmpresaGate from '@/components/EmpresaGate'
+import PrintPreviewBar from '@/components/PrintPreviewBar'
 import { RouteGuard } from '@/components/RouteGuard'
 import SessionGuard from '@/components/SessionGuard'
 import Sidebar from '@/components/Sidebar'
@@ -19,6 +20,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </main>
             </div>
           </div>
+          <PrintPreviewBar />
         </PermissionsProvider>
       </EmpresaGate>
     </SessionGuard>

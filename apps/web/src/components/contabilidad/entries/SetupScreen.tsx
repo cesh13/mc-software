@@ -9,6 +9,7 @@ import { Alert, ConfirmDialog, Loading, PageHeader } from '@/components/ui/feedb
 import { Checkbox } from '@/components/ui/form'
 import { Td, Th, selectedRowClass } from '@/components/ui/table'
 import { ActionToolbar } from '@/components/ui/toolbar'
+import { openPrintPreview } from '@/lib/print'
 
 export type SetupItem = { id: string; code: string; name: string; isActive: boolean }
 export type SetupColumn<T> = { label: string; className?: string; render: (item: T) => ReactNode }
@@ -102,7 +103,7 @@ export function SetupScreen<T extends SetupItem>(p: {
                   setConfirm(selected)
                 }
               : undefined,
-            imprimir: () => window.print(),
+            imprimir: openPrintPreview,
           }}
         />
         <Checkbox label="Mostrar inactivos" checked={p.showInactive} onChange={(e) => p.onShowInactive(e.target.checked)} />
