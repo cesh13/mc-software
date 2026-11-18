@@ -3,6 +3,10 @@
 Versiones publicadas en el feed de actualizaciones, de la más nueva a la más antigua.
 Para publicar una versión: skill `ship-mc-update` (ver `docs/prueba-interna.md`).
 
+## 0.4.0 - 2026-11-18
+- Se agregó una vista previa al imprimir: el botón Imprimir (o F9) muestra en pantalla la hoja tal como
+  saldrá impresa, con los botones Imprimir (F9) y Cerrar (Esc), en lugar de mandar directo a la impresora.
+
 ## 0.3.1 - 2026-11-17
 - Se amplió el campo Detalle en Elaboración de partidas: la columna es más ancha y el texto largo se
   muestra completo en varias líneas en lugar de cortarse.
