@@ -9,7 +9,6 @@ html.print-preview body {
 html.print-preview main {
   box-sizing: border-box;
   width: min(100% - 2rem, 8.5in);
-  min-height: 11in;
   margin: 4rem auto 2rem;
   padding: 0.5in !important;
   background: #fff;
@@ -19,7 +18,21 @@ html.print-preview main > * {
   max-width: none;
 }
 
+/* Controls shown on the preview sheet but never printed (e.g. entry print format). */
+.preview-only {
+  display: none;
+}
+html.print-preview .preview-only {
+  display: block;
+}
+/* Paper height of the preview sheet; a screen may override it (--sheet-height). */
+html.print-preview main {
+  flex: none;
+  min-height: var(--sheet-height, 11in);
+}
+
 @media print {
+  .preview-only,
   .print-preview-bar {
     display: none !important;
   }
