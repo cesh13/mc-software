@@ -1,4 +1,4 @@
-import type { ModuleManifest } from '@accounting/shared'
+import { balanceSignatures, type ModuleManifest } from '@accounting/shared'
 import type { ServiceFactory } from '@accounting/shared/server'
 import { GL_PERMISSIONS } from './permissions.js'
 
@@ -12,6 +12,13 @@ export const manifest: ModuleManifest = {
   dependsOn: ['chart-of-accounts'],
   navItems: [{ label: 'General Ledger', path: '/general-ledger', icon: 'BookMarked' }],
   permissions: GL_PERMISSIONS,
+  settings: [
+    {
+      namespace: 'gl', key: 'balanceSignatures',
+      label: 'Firmas y cargos al pie del Balance General',
+      schema: balanceSignatures, default: [],
+    },
+  ],
   consumes: { required: ['periods'] },
   // contratos.md §1: the only way other modules post, replace or void entries.
   provides: {

@@ -56,6 +56,35 @@ test('balance sheet: activo = pasivo + capital + resultado, before and after the
   assert.equal(y2027.json.difference, '0.00')
 })
 
+test('balance sheet mensual: only the movement of the period, still balanced', async () => {
+  const { t } = await year2026()
+  const march = await get(t, '/reports/balance-sheet?period=2026-03&saldos=mensual')
+  assert.equal(march.status, 200)
+  assert.equal(march.json.saldos, 'mensual')
+  assert.equal(march.json.activo.total, '850.00')
+  assert.equal(march.json.capital.total, '0.00')
+  assert.equal(march.json.currentYearResult, '850.00')
+  assert.equal(march.json.priorYearsResult, '0.00')
+  assert.equal(march.json.difference, '0.00')
+  const april = await get(t, '/reports/balance-sheet?period=2026-04&saldos=mensual')
+  assert.equal(april.json.activo.total, '-400.00')
+  assert.equal(april.json.currentYearResult, '-400.00')
+  assert.equal(april.json.difference, '0.00')
+  assert.equal((await get(t, '/reports/balance-sheet?period=2026-04')).json.saldos, 'acumulado')
+  assert.equal((await get(t, '/reports/balance-sheet?period=2026-04&saldos=otro')).status, 400)
+})
+
+test('balance sheet signatures: saved per empresa as a setting', async () => {
+  const { t } = await year2026()
+  const value = [{ name: 'TONY RODAS', title: 'CONTADOR' }, { name: 'JOSE CRUZ', title: 'AUDITOR EXTERNO' }]
+  const body = { namespace: 'gl', key: 'balanceSignatures', value }
+  assert.equal((await t.request('/api/empresa-settings', { method: 'PUT', body })).status, 200)
+  const list = await t.request('/api/empresa-settings?namespace=gl')
+  assert.deepEqual(list.json.find((d: { key: string }) => d.key === 'balanceSignatures').value, value)
+  const tooMany = { ...body, value: [...value, ...value] }
+  assert.equal((await t.request('/api/empresa-settings', { method: 'PUT', body: tooMany })).status, 400)
+})
+
 test('income statement: range of periods, excluding the closing entry', async () => {
   const { t, close } = await year2026()
   const q = '/reports/income-statement?from=2026-01&to=2026-12'

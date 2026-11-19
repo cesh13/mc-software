@@ -154,7 +154,15 @@ export const accountLedgerQuery = z.object({
   accountId: id, from: date, to: date, costCenterId: id.optional(),
 })
 export const journalQuery = z.object({ period })
-export const balanceSheetQuery = journalQuery
+// saldos: 'acumulado' = balance at the end of the period; 'mensual' = movement of
+// the period only (the legacy "Saldos Mensuales" option).
+export const BALANCE_SHEET_MODES = ['acumulado', 'mensual'] as const
+export type BalanceSheetMode = (typeof BALANCE_SHEET_MODES)[number]
+export const balanceSheetQuery = z.object({ period, saldos: z.enum(BALANCE_SHEET_MODES).default('acumulado') })
+// Signatures at the foot of the printed Balance General: up to three name + title pairs.
+export const balanceSignature = z.object({ name: z.string().trim().max(60), title: z.string().trim().max(60) })
+export const balanceSignatures = z.array(balanceSignature).max(3)
+export type BalanceSignature = z.infer<typeof balanceSignature>
 export const incomeStatementQuery = z.object({ from: period, to: period, includeClosing: flag.optional() })
 export type TrialBalanceQuery = z.input<typeof trialBalanceQuery>
 export type AccountLedgerQuery = z.input<typeof accountLedgerQuery>
@@ -187,7 +195,7 @@ export type JournalReport = {
 export type StatementRow = ReportAccount & { balance: Money }
 export type StatementSection = { type: GlAccountType; rows: StatementRow[]; total: Money }
 export type BalanceSheet = {
-  period: string; fiscalYear: FiscalYear
+  period: string; saldos: BalanceSheetMode; fiscalYear: FiscalYear
   activo: StatementSection; pasivo: StatementSection; capital: StatementSection
   // Open question #3: how orden/contra are presented is not decided yet.
   orden: StatementSection; contra: StatementSection

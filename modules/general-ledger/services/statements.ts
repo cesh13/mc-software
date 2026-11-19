@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { RuleError } from '@accounting/shared/server'
-import { type BalanceSheet, type IncomeStatement, type JournalReport } from '@accounting/shared'
+import { type BalanceSheet, type BalanceSheetMode, type IncomeStatement, type JournalReport } from '@accounting/shared'
 import { glJournalEntries as e } from '../schema.js'
 import { centsToMoney, toCents } from '../lib/cents.js'
 import type { Ctx } from '../lib/context.js'
@@ -29,12 +29,15 @@ export function journal(ctx: Ctx, period: string): JournalReport {
 
 // Balance General at the end of `period`. The result of the fiscal year
 // (ingresos − gastos) stands in for the closing entry until it is applied,
-// so activo = pasivo + capital + resultados.
-export function balanceSheet(ctx: Ctx, period: string): BalanceSheet {
+// so activo = pasivo + capital + resultados. 'mensual' takes only the movement
+// of the period: its result is the period's ingresos − gastos.
+export function balanceSheet(ctx: Ctx, period: string, saldos: BalanceSheetMode = 'acumulado'): BalanceSheet {
   const chart = Chart.load(ctx)
   const fiscalYear = fiscalYearOf(ctx, period)
   // prev* = before the fiscal year; debit/credit = fiscal year up to period.
-  const sums = rolledBalances(ctx, chart, { to: period, splitAt: fiscalYear.startPeriod })
+  const sums = saldos === 'mensual'
+    ? rolledBalances(ctx, chart, { from: period, to: period })
+    : rolledBalances(ctx, chart, { to: period, splitAt: fiscalYear.startPeriod })
 
   const resultOf = (pick: 'prev' | 'current') => {
     let r = 0n
@@ -55,6 +58,7 @@ export function balanceSheet(ctx: Ctx, period: string): BalanceSheet {
     sectionTotal(chart, sums, 'pasivo') + sectionTotal(chart, sums, 'capital') + currentYear + priorYears
   return {
     period,
+    saldos,
     fiscalYear,
     activo: section(chart, sums, 'activo'),
     pasivo: section(chart, sums, 'pasivo'),

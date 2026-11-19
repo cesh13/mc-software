@@ -24,9 +24,10 @@ router.get('/reports/account-ledger', (c) =>
   c.json(accountLedger(ctxOf(c), accountLedgerQuery.parse(c.req.query()))),
 )
 router.get('/reports/journal', (c) => c.json(journal(ctxOf(c), journalQuery.parse(c.req.query()).period)))
-router.get('/reports/balance-sheet', (c) =>
-  c.json(balanceSheet(ctxOf(c), balanceSheetQuery.parse(c.req.query()).period)),
-)
+router.get('/reports/balance-sheet', (c) => {
+  const q = balanceSheetQuery.parse(c.req.query())
+  return c.json(balanceSheet(ctxOf(c), q.period, q.saldos))
+})
 router.get('/reports/income-statement', (c) => {
   const q = incomeStatementQuery.parse(c.req.query())
   return c.json(incomeStatement(ctxOf(c), q.from, q.to, q.includeClosing))

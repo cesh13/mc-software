@@ -47,12 +47,14 @@ export type ReportFrameProps = {
   empty?: string | null
   // Set false to render only the notice (e.g. while a required parameter is missing).
   ready?: boolean
+  // Set false when the screen prints its own layout instead of the common header.
+  printHeader?: boolean
   children: ReactNode
 }
 
 // Common frame of every report: header, parameter bar, print header and the
 // loading / empty / error / no-permission states.
-export function ReportFrame({ title, range, params, loading, error, empty, ready = true, children }: ReportFrameProps) {
+export function ReportFrame({ title, range, params, loading, error, empty, ready = true, printHeader = true, children }: ReportFrameProps) {
   const { empresa } = useEmpresa()
   const { can } = usePermissions()
   if (!can('gl.report.view')) {
@@ -65,7 +67,7 @@ export function ReportFrame({ title, range, params, loading, error, empty, ready
   }
   return (
     <div>
-      <PrintHeader title={title} range={range} />
+      {printHeader && <PrintHeader title={title} range={range} />}
       <PageHeader
         title={title}
         subtitle={range ? `${empresa.name} · ${range}` : empresa.name}

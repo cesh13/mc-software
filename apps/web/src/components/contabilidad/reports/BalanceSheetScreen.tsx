@@ -1,35 +1,54 @@
 'use client'
 
 import { useState } from 'react'
-import { addMoney, isZeroMoney, periodLabel, type BalanceSheet } from '@accounting/shared'
+import { addMoney, isZeroMoney, periodLabel, type BalanceSheet, type BalanceSheetMode } from '@accounting/shared'
 import { formatMoney } from '@/lib/format'
 import { Alert } from '@/components/ui/feedback'
+import { Field, Select } from '@/components/ui/form'
 import { MonthPicker } from '@/components/ui/month-picker'
 import { MoneyTd, Table, Td } from '@/components/ui/table'
 import { ReportFrame, totalRowClass } from './ReportFrame'
 import { LevelSelect, usePeriodParam } from './params'
 import { StatementLine, StatementTable, StatementTotal } from './StatementTable'
 import { useReport } from './api'
+import { BalanceSheetPrint } from './BalanceSheetPrint'
 
 export function BalanceSheetScreen() {
   const [period, setPeriod] = usePeriodParam()
-  const [level, setLevel] = useState<number | null>(null)
-  const { data, isLoading, error } = useReport<BalanceSheet>('reports/balance-sheet', { period })
+  // Level 3 by default, as the legacy report; the printout always stops at a level.
+  const [level, setLevel] = useState<number | null>(3)
+  const [saldos, setSaldos] = useState<BalanceSheetMode>('acumulado')
+  const { data, isLoading, error } = useReport<BalanceSheet>('reports/balance-sheet', { period, saldos })
+  const range = saldos === 'mensual' ? `Movimiento de ${periodLabel(period)}` : `Al cierre de ${periodLabel(period)}`
 
   return (
     <ReportFrame
       title="Balance general"
-      range={`Al cierre de ${periodLabel(period)}`}
+      range={range}
       loading={isLoading}
       error={error}
+      printHeader={false}
       params={
         <>
           <MonthPicker value={period} onChange={setPeriod} />
+          <Field label="Saldos">
+            <Select value={saldos} onChange={(e) => setSaldos(e.target.value as BalanceSheetMode)}>
+              <option value="acumulado">Acumulados</option>
+              <option value="mensual">Mensuales</option>
+            </Select>
+          </Field>
           <LevelSelect value={level} onChange={setLevel} />
         </>
       }
     >
-      {data && <Body data={data} level={level} />}
+      {data && (
+        <>
+          <BalanceSheetPrint data={data} level={level ?? 99} />
+          <div className="print:hidden">
+            <Body data={data} level={level} />
+          </div>
+        </>
+      )}
     </ReportFrame>
   )
 }
