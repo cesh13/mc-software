@@ -3,6 +3,12 @@
 Versiones publicadas en el feed de actualizaciones, de la más nueva a la más antigua.
 Para publicar una versión: skill `ship-mc-update` (ver `docs/prueba-interna.md`).
 
+## 0.5.1 - 2026-11-20
+- La impresión Legal de partidas muestra la estructura del catálogo: cada cuenta bajo sus cuentas
+  de mayor, como en el sistema anterior.
+- Las fechas se escriben y se muestran siempre como dd/mm/aaaa, sin importar la configuración
+  regional de Windows; el mes de "Copiar" se elige con mes y año en español.
+
 ## 0.5.0 - 2026-11-19
 - Se agregaron formatos de impresión de partidas en la vista previa: Legal, Preliminar y ½ carta.
 - Se agregó la opción "Incluir concepto" al imprimir partidas: oculta solo el concepto general; el
