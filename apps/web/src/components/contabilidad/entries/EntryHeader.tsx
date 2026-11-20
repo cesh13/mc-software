@@ -4,6 +4,7 @@ import { forwardRef, type KeyboardEvent, type ReactNode } from 'react'
 import { GL_SOURCE_LABELS, lastDayOfPeriod, type Entry, type EntryType, type Period } from '@accounting/shared'
 import { cx } from '@/components/ui/button'
 import { Field, Input, Select } from '@/components/ui/form'
+import { DateInput } from '@/components/ui/date-input'
 import { FIELD_IDS } from './grid-focus'
 
 export type HeaderValues = { entryTypeId: string; number: string; date: string; concept: string }
@@ -76,15 +77,14 @@ export const EntryHeader = forwardRef<HTMLSelectElement, Props>(function EntryHe
         </div>
       </Field>
       <Field label="Fecha">
-        <Input
+        <DateInput
           data-h
           id={FIELD_IDS.date}
-          type="date"
           readOnly={!editing}
           min={`${p.period}-01`}
           max={lastDayOfPeriod(p.period)}
           value={v.date}
-          onChange={(e) => p.onChange({ date: e.target.value })}
+          onChange={(date) => p.onChange({ date })}
         />
       </Field>
       <Field label="Concepto">

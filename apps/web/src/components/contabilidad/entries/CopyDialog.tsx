@@ -5,7 +5,8 @@ import { isIsoDate, isPeriod, lastDayOfPeriod, type Entry, type Period } from '@
 import { errorMessage } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Alert, Dialog } from '@/components/ui/feedback'
-import { Field, Input } from '@/components/ui/form'
+import { Field } from '@/components/ui/form'
+import { DateInput, PeriodInput } from '@/components/ui/date-input'
 import { defaultDate } from './draft'
 
 // "Copiar": a new borrador with the same lines, in the chosen month and date.
@@ -49,23 +50,21 @@ export function CopyDialog({
         <p className="text-sm text-gray-600">Se crea una partida en borrador con las mismas líneas y el siguiente número.</p>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Mes destino">
-            <Input
-              type="month"
+            <PeriodInput
               autoFocus
               value={period}
-              onChange={(e) => {
-                setPeriod(e.target.value)
-                if (isPeriod(e.target.value)) setDate(defaultDate(e.target.value))
+              onChange={(next) => {
+                setPeriod(next)
+                if (isPeriod(next)) setDate(defaultDate(next))
               }}
             />
           </Field>
           <Field label="Fecha" hint={!valid && isPeriod(period) ? 'La fecha debe estar dentro del mes destino.' : undefined}>
-            <Input
-              type="date"
+            <DateInput
               value={date}
               min={isPeriod(period) ? `${period}-01` : undefined}
               max={isPeriod(period) ? lastDayOfPeriod(period) : undefined}
-              onChange={(e) => setDate(e.target.value)}
+              onChange={setDate}
             />
           </Field>
         </div>

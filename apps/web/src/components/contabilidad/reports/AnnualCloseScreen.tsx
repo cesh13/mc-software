@@ -11,6 +11,7 @@ import { useWorkPeriod } from '@/lib/work-period'
 import { Button } from '@/components/ui/button'
 import { Alert, ConfirmDialog, PageHeader } from '@/components/ui/feedback'
 import { Field, Input, Select } from '@/components/ui/form'
+import { DateInput } from '@/components/ui/date-input'
 import { AccountPicker } from '../AccountPicker'
 import { AnnualClosePreview } from './AnnualClosePreview'
 import { PrintHeader } from './ReportFrame'
@@ -114,11 +115,10 @@ export function AnnualCloseScreen() {
           />
         </Field>
         <Field label="Fecha">
-          <Input
-            type="date"
+          <DateInput
             value={date}
-            onChange={(e) => {
-              setDateText(e.target.value)
+            onChange={(iso) => {
+              setDateText(iso)
               reset()
             }}
           />

@@ -3,6 +3,7 @@
 import type { Empresa } from '@/lib/empresa'
 import { Button } from '@/components/ui/button'
 import { Field, Input, Select } from '@/components/ui/form'
+import { DateInput } from '@/components/ui/date-input'
 import { EMPTY_FILTERS, type AuditFilterState } from './use-audit'
 
 type UserOption = { id: string; name: string }
@@ -39,8 +40,8 @@ export function AuditFilters({
       </Field>
       <Field label="Módulo"><Input value={value.module} onChange={set('module')} placeholder="p. ej. core" /></Field>
       <Field label="Entidad"><Input value={value.entity} onChange={set('entity')} placeholder="p. ej. empresa" /></Field>
-      <Field label="Desde"><Input type="date" value={value.from} onChange={set('from')} /></Field>
-      <Field label="Hasta"><Input type="date" value={value.to} onChange={set('to')} /></Field>
+      <Field label="Desde"><DateInput value={value.from} onChange={(from) => onChange({ ...value, from })} /></Field>
+      <Field label="Hasta"><DateInput value={value.to} onChange={(to) => onChange({ ...value, to })} /></Field>
       <Field label="Buscar" className="md:col-span-2">
         <Input value={value.q} onChange={set('q')} placeholder="Acción, entidad o detalle" />
       </Field>

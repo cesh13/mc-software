@@ -6,7 +6,8 @@ import { useSearchParams } from 'next/navigation'
 import { isIsoDate, lastDayOfPeriod, type AccountLedger } from '@accounting/shared'
 import { formatDate } from '@/lib/format'
 import { useWorkPeriod } from '@/lib/work-period'
-import { Field, Input } from '@/components/ui/form'
+import { Field } from '@/components/ui/form'
+import { DateInput } from '@/components/ui/date-input'
 import { MoneyTd, Table, Td, Th, rowClass } from '@/components/ui/table'
 import { AccountPicker } from '../AccountPicker'
 import { ReportFrame, totalRowClass } from './ReportFrame'
@@ -44,10 +45,10 @@ export function AccountLedgerScreen() {
             <AccountPicker value={accountId} onChange={(a) => setAccountId(a?.id ?? null)} />
           </Field>
           <Field label="Desde">
-            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+            <DateInput value={from} onChange={setFrom} />
           </Field>
           <Field label="Hasta">
-            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+            <DateInput value={to} onChange={setTo} />
           </Field>
           <CostCenterSelect value={costCenterId} onChange={setCostCenterId} />
         </>
