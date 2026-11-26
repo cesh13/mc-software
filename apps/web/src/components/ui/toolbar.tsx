@@ -2,21 +2,23 @@
 
 import { useEffect } from 'react'
 import {
-  Plus, Search, Trash2, Pencil, ChevronLeft, ChevronRight, Save, XCircle, Printer, Copy,
+  Plus, Search, Trash2, Ban, Pencil, ChevronLeft, ChevronRight, Save, XCircle, Printer, Copy,
   type LucideIcon,
 } from 'lucide-react'
 import { cx } from './button'
 
 // The legacy icon bar, in the same order the old screens used:
-// Agregar, Buscar, Eliminar, Modificar, Anterior, Siguiente, Grabar, Cancelar, Imprimir.
+// Agregar, Buscar, Eliminar (o Anular), Modificar, Anterior, Siguiente, Grabar, Cancelar, Imprimir.
 export type ToolbarAction =
-  | 'agregar' | 'buscar' | 'eliminar' | 'modificar' | 'anterior'
+  | 'agregar' | 'buscar' | 'eliminar' | 'anular' | 'modificar' | 'anterior'
   | 'siguiente' | 'grabar' | 'cancelar' | 'imprimir' | 'copiar'
 
 const ACTIONS: Record<ToolbarAction, { label: string; icon: LucideIcon; key: string; hint: string }> = {
   agregar: { label: 'Agregar', icon: Plus, key: 'F2', hint: 'F2' },
   buscar: { label: 'Buscar', icon: Search, key: 'F3', hint: 'F3' },
   eliminar: { label: 'Eliminar', icon: Trash2, key: 'F8', hint: 'F8' },
+  // Same slot and key as Eliminar, for records that are voided instead of deleted.
+  anular: { label: 'Anular', icon: Ban, key: 'F8', hint: 'F8' },
   modificar: { label: 'Modificar', icon: Pencil, key: 'F4', hint: 'F4' },
   anterior: { label: 'Anterior', icon: ChevronLeft, key: 'PageUp', hint: 'Re Pág' },
   siguiente: { label: 'Siguiente', icon: ChevronRight, key: 'PageDown', hint: 'Av Pág' },
@@ -27,7 +29,7 @@ const ACTIONS: Record<ToolbarAction, { label: string; icon: LucideIcon; key: str
 }
 
 const ORDER: ToolbarAction[] = [
-  'agregar', 'buscar', 'eliminar', 'modificar', 'anterior', 'siguiente', 'grabar', 'cancelar', 'copiar', 'imprimir',
+  'agregar', 'buscar', 'eliminar', 'anular', 'modificar', 'anterior', 'siguiente', 'grabar', 'cancelar', 'copiar', 'imprimir',
 ]
 
 export type ToolbarHandlers = Partial<Record<ToolbarAction, (() => void) | undefined>>

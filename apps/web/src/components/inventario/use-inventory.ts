@@ -57,6 +57,18 @@ export function useReport<T>(path: string, params: Record<string, string | undef
   })
 }
 
+export type ItemStock = { onHand: string; total: string; averageCost: string | null; lastCost: string | null }
+
+// Stock of one item in one warehouse, for the capture grid.
+export function useItemStock(itemId: string | null, warehouseId: string) {
+  const { empresa } = useEmpresa()
+  return useQuery<ItemStock>({
+    queryKey: invKey(empresa.id, 'item-stock', itemId, warehouseId),
+    queryFn: () => apiFetch(`${INV_API}/items/${itemId}/stock${qs({ warehouseId })}`),
+    enabled: !!itemId && !!warehouseId,
+  })
+}
+
 // Generic mutation that refreshes every inventory query of the empresa.
 export function useInvMutation<V, R = unknown>(fn: (v: V) => Promise<R>) {
   const qc = useQueryClient()

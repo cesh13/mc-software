@@ -27,7 +27,7 @@ export function DocumentView({ id, onClose }: { id: string; onClose: () => void 
       <PageHeader title={d ? `${d.typeCode} ${d.number} - ${d.typeName}` : 'Movimiento'} subtitle={d?.status === 'anulado' ? 'ANULADO' : empresa.name} />
       <div className="mb-3">
         <ActionToolbar actions={{
-          eliminar: d && d.status === 'aplicado' && can('inv.document.void') ? () => setVoiding(true) : undefined,
+          anular: d && d.status === 'aplicado' && can('inv.document.void') ? () => setVoiding(true) : undefined,
           imprimir: openPrintPreview, cancelar: onClose,
         }} />
       </div>

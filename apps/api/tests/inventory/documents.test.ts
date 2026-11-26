@@ -85,7 +85,9 @@ test('lots: required when the item tracks them, stock checked per lot', async ()
   assert.equal((await doc(t, types.purchase, wh.a, [{ itemId: x, quantity: '1', unitCost: '1' }])).json.code, 'lot_required')
   await mkDoc(t, types.purchase, wh.a, [{ itemId: x, quantity: '3', unitCost: '1', lotNo: 'L1', expiresOn: '2027-01-31' }])
   assert.equal((await doc(t, types.out, wh.a, [{ itemId: x, quantity: '1', lotNo: 'L2' }])).json.code, 'insufficient_stock')
-  await mkDoc(t, types.out, wh.a, [{ itemId: x, quantity: '1', lotNo: 'L1' }])
+  const out = await mkDoc(t, types.out, wh.a, [{ itemId: x, quantity: '1', lotNo: 'L1' }])
+  // The salida shows the lot's expiry taken from the entrada.
+  assert.equal((await get(t, `/documents/${out.id}`)).json.lines[0].expiresOn, '2027-01-31')
   const stock = (await get(t, '/reports/stock?at=2026-11-30&lots=1')).json
   assert.deepEqual(stock.map((r: any) => [r.lotNo, r.expiresOn, r.quantity]), [['L1', '2027-01-31', '2.00000']])
 })
