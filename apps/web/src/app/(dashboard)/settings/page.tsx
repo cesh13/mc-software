@@ -7,6 +7,7 @@ import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Alert, Loading, PageHeader } from '@/components/ui/feedback'
 import { Table, Td, Th, rowClass } from '@/components/ui/table'
+import { EmpresaModules } from '@/components/admin/EmpresaModules'
 
 type Module = { id: string; name: string; version: string; isEnabled: boolean; isAlwaysOn: boolean }
 
@@ -74,6 +75,8 @@ export default function SettingsPage() {
           </Table>
         )}
       </section>
+
+      <EmpresaModules />
 
       <section className="mt-8">
         <h2 className="mb-1 text-sm font-semibold text-gray-800">Usuarios</h2>

@@ -3,6 +3,13 @@
 Versiones publicadas en el feed de actualizaciones, de la más nueva a la más antigua.
 Para publicar una versión: skill `ship-mc-update` (ver `docs/prueba-interna.md`).
 
+## 0.6.0 - 2026-11-26
+- Se agregó el módulo de Inventario (piloto de existencias, sin facturación): productos, bodegas, grupos,
+  tipos de movimiento, entradas, salidas, ajustes y transferencias con costo promedio y partida contable
+  por documento, anulación, cierre de mes, carga desde Excel y reportes de existencias, kárdex y valorización.
+- Se agregó en Configuración la sección "Módulos de la empresa" para activar módulos en cada empresa.
+- Actualiza la base de datos al iniciar (respaldar la carpeta de datos antes).
+
 ## 0.5.1 - 2026-11-20
 - La impresión Legal de partidas muestra la estructura del catálogo: cada cuenta bajo sus cuentas
   de mayor, como en el sistema anterior.
