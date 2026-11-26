@@ -85,6 +85,11 @@ export async function createTestApp(opts: {
     raw.prepare("insert into modules (id, name, version, is_enabled, is_always_on, installed_at) values (?, ?, ?, 1, ?, 'x')")
       .run(m.id, m.name, m.version, m.alwaysOn ? 1 : 0)
   }
+  // Requested modules count as installed (globally enabled), as after /api/modules/:id/enable.
+  for (const id of opts.modules) {
+    raw.prepare("insert or ignore into modules (id, name, version, is_enabled, is_always_on, installed_at) values (?, ?, '0', 1, 0, 'x')")
+      .run(id, id)
+  }
   const { loaded, catalog, directory } = await loadModules(app, deps, {
     modulesDir: path.join(repoRoot, 'modules'),
     only: [...opts.modules, ...(opts.extraManifests ?? []).map((m) => m.id)],

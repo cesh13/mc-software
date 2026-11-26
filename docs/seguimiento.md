@@ -29,6 +29,7 @@ Sobrescribe el estado que se deduce de `modulos-y-orden.md` ("(hecho)") y de `fa
 |---|---|---|
 | parties | hecho | Fase 0, paso 9. Sin pantalla todavía. |
 | reports | retirado | Deja de ser un módulo (modulos-y-orden §1.4). |
+| inventory | en curso | Piloto de existencias sin facturación (26/11/2026). Ver sistema/inventario-piloto.md. |
 
 ## Por conseguir
 
@@ -45,3 +46,4 @@ Tareas que no salen de ningún otro documento.
 | Tarea | Estado | Módulo | Nota |
 |---|---|---|---|
 | Revisar P1–P30 con el contador | pendiente | | Una sola ronda; "de acuerdo" es una respuesta válida. |
+| Confirmar decisiones D1–D7 del piloto de inventario con el cliente | pendiente | inventory | sistema/inventario-piloto.md §3. |

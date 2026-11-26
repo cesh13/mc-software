@@ -30,6 +30,29 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
+    title: 'Inventario',
+    moduleId: 'inventory',
+    links: [
+      { label: 'Movimientos', path: '/inventario/movimientos', permission: 'inv.document.view' },
+      { label: 'Productos', path: '/inventario/productos', permission: 'inv.item.view' },
+      { label: 'Bodegas', path: '/inventario/bodegas', permission: 'inv.config.view' },
+      { label: 'Grupos', path: '/inventario/grupos', permission: 'inv.config.view' },
+      { label: 'Tipos de movimiento', path: '/inventario/tipos-movimiento', permission: 'inv.config.view' },
+      { label: 'Cierre de mes', path: '/inventario/cierre', permission: 'inv.period.view' },
+      { label: 'Importar', path: '/inventario/importar', permission: 'inv.import.run' },
+      { label: 'Configuración', path: '/inventario/configuracion', permission: 'inv.config.view' },
+    ],
+  },
+  {
+    title: 'Reportes de inventario',
+    moduleId: 'inventory',
+    links: [
+      { label: 'Existencias', path: '/inventario/reportes/existencias', permission: 'inv.report.view' },
+      { label: 'Kárdex', path: '/inventario/reportes/kardex', permission: 'inv.report.view' },
+      { label: 'Valorización', path: '/inventario/reportes/valorizacion', permission: 'inv.cost.view' },
+    ],
+  },
+  {
     title: 'Administración',
     links: [
       { label: 'Empresas', path: '/empresas', permission: 'core.empresas.manage' },
