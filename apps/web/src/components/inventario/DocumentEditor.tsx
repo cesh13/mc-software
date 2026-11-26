@@ -97,7 +97,7 @@ export function DocumentEditor({ onClose, onSaved }: { onClose: () => void; onSa
           <Input value={h.notes} maxLength={250} onChange={(e) => set({ notes: e.target.value })} />
         </Field>
       </div>
-      <LinesGrid lines={lines} items={(items.data ?? []).filter((i) => !i.isService)} withCost={withCost} onChange={setLines} />
+      <LinesGrid lines={lines} items={(items.data ?? []).filter((i) => !i.isService)} warehouseId={h.warehouseId} withCost={withCost} onChange={setLines} />
       <div className="mt-3 flex flex-col gap-2">
         {type && type.direction !== 'in' && can('inv.stock.negative') && (
           <Checkbox label="Permitir grabar aunque no haya existencia suficiente" checked={allowNegative} onChange={(e) => setAllowNegative(e.target.checked)} />

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, isNull, lte, sql, type SQL } from 'drizzle-orm'
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lte, sql, type SQL } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import type { z } from 'zod'
 import type { documentListQuery, InvDocument, InvDocumentLine, InvDocumentSummary } from '@accounting/shared'
@@ -55,8 +55,25 @@ export function getDocument(ctx: Ctx, id: string): InvDocument {
   }).from(m).innerJoin(i, eq(i.id, m.itemId))
     .where(and(eq(m.documentId, id), isNull(m.reversalOf), eq(m.warehouseId, row.warehouseId)))
     .orderBy(asc(m.lineNo)).all()
+  fillLotExpiry(ctx, lines)
   const entry = ledgerOf(ctx).find({ source: SOURCE, sourceRef: id })
   return { ...row, lines, entry: entry ? { entryId: entry.entryId, number: entry.number, period: entry.period } : null }
+}
+
+// A salida does not store the lot's expiry: show the one of the entrada that brought the lot in
+// (the latest one when several did, same rule as the stock report).
+function fillLotExpiry(ctx: Ctx, lines: InvDocumentLine[]) {
+  const missing = lines.filter((l) => l.lotNo && !l.expiresOn)
+  if (!missing.length) return
+  const rows = ctx.db.select({ itemId: m.itemId, lotNo: m.lotNo, expiresOn: m.expiresOn }).from(m)
+    .where(and(
+      eq(m.empresaId, ctx.empresaId), eq(m.direction, 'in'), isNotNull(m.expiresOn),
+      inArray(m.itemId, [...new Set(missing.map((l) => l.itemId))]),
+      inArray(m.lotNo, [...new Set(missing.map((l) => l.lotNo as string))]),
+    ))
+    .orderBy(asc(m.date), asc(m.createdAt)).all()
+  const byLot = new Map(rows.map((r) => [`${r.itemId}|${r.lotNo}`, r.expiresOn]))
+  for (const l of missing) l.expiresOn = byLot.get(`${l.itemId}|${l.lotNo}`) ?? null
 }
 
 // Costs are sensitive (inv.cost.view): blank them for callers without it.

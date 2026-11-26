@@ -6,14 +6,17 @@ import type { Item } from '@accounting/shared'
 import { Input } from '@/components/ui/form'
 import { DateInput } from '@/components/ui/date-input'
 import { Td, Th } from '@/components/ui/table'
+import { formatQty } from './format'
+import { useItemStock } from './use-inventory'
 
 export type DraftLine = { key: number; code: string; itemId: string | null; quantity: string; unitCost: string; lotNo: string; expiresOn: string }
 
 let seq = 0
 export const blankLine = (): DraftLine => ({ key: ++seq, code: '', itemId: null, quantity: '', unitCost: '', lotNo: '', expiresOn: '' })
 
-// Capture grid (legacy inmmov02): code, quantity, cost on entradas, lot when the item tracks it.
-export function LinesGrid(p: { lines: DraftLine[]; items: Item[]; withCost: boolean; onChange: (lines: DraftLine[]) => void }) {
+// Capture grid (legacy inmmov02): code, quantity, cost on entradas, lot when the item tracks it,
+// and the stock on hand in the chosen warehouse.
+export function LinesGrid(p: { lines: DraftLine[]; items: Item[]; warehouseId: string; withCost: boolean; onChange: (lines: DraftLine[]) => void }) {
   const listId = useId()
   const byCode = new Map(p.items.map((i) => [i.code, i]))
   const byId = new Map(p.items.map((i) => [i.id, i]))
@@ -36,7 +39,7 @@ export function LinesGrid(p: { lines: DraftLine[]; items: Item[]; withCost: bool
         <thead>
           <tr>
             <Th className="w-8">#</Th><Th className="w-40">Código</Th><Th>Descripción</Th><Th className="w-20">Unidad</Th>
-            <Th className="w-28 text-right">Cantidad</Th>{p.withCost && <Th className="w-28 text-right">Costo unitario</Th>}
+            <Th className="w-28 text-right">Existencia</Th><Th className="w-28 text-right">Cantidad</Th>{p.withCost && <Th className="w-28 text-right">Costo unitario</Th>}
             <Th className="w-28">Lote</Th><Th className="w-36">Vence</Th><Th className="w-8" />
           </tr>
         </thead>
@@ -58,6 +61,7 @@ export function LinesGrid(p: { lines: DraftLine[]; items: Item[]; withCost: bool
                 </Td>
                 <Td className={item ? '' : 'text-xs italic text-gray-400'}>{item?.name ?? (l.code ? 'Código no encontrado' : '')}</Td>
                 <Td className="text-xs">{item?.unit ?? ''}</Td>
+                <StockTd itemId={item ? item.id : null} warehouseId={p.warehouseId} />
                 <Td><Input value={l.quantity} inputMode="decimal" className="text-right tabular-nums" aria-label={`Cantidad línea ${n + 1}`}
                   onChange={(e) => update(l.key, { quantity: e.target.value })} /></Td>
                 {p.withCost && (
@@ -82,4 +86,9 @@ export function LinesGrid(p: { lines: DraftLine[]; items: Item[]; withCost: bool
       </table>
     </div>
   )
+}
+
+function StockTd({ itemId, warehouseId }: { itemId: string | null; warehouseId: string }) {
+  const stock = useItemStock(itemId, warehouseId)
+  return <Td className="text-right text-xs tabular-nums text-gray-600">{stock.data ? formatQty(stock.data.onHand) : ''}</Td>
 }

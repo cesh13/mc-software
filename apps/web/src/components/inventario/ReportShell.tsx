@@ -10,6 +10,7 @@ import { ActionToolbar } from '@/components/ui/toolbar'
 // Frame of every inventory report: title, filters, print, states.
 export function ReportShell(p: {
   title: string; subtitle: string; filters: ReactNode; loading: boolean; error: unknown; empty: boolean; children: ReactNode
+  emptyMessage?: string
 }) {
   const { empresa } = useEmpresa()
   return (
@@ -25,7 +26,7 @@ export function ReportShell(p: {
       </div>
       {p.loading && <Loading />}
       {p.error != null && <Alert>{errorMessage(p.error)}</Alert>}
-      {!p.loading && p.error == null && p.empty && <p className="py-6 text-sm text-gray-500">No hay datos para los filtros elegidos.</p>}
+      {!p.loading && p.error == null && p.empty && <p className="py-6 text-sm text-gray-500">{p.emptyMessage ?? 'No hay datos para los filtros elegidos.'}</p>}
       {!p.empty && p.children}
     </div>
   )

@@ -30,6 +30,7 @@ export function KardexScreen() {
     <ReportShell
       title="Kárdex" subtitle={k ? `${k.item.code} ${k.item.name} · ${formatDate(from)} al ${formatDate(to)}` : ''}
       loading={report.isLoading && !!item} error={report.error} empty={!k}
+      emptyMessage={item ? undefined : 'Elija un producto.'}
       filters={
         <>
           <Field label="Producto">
